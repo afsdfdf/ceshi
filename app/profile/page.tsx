@@ -60,12 +60,18 @@ export default function ProfilePage() {
                 "relative w-16 h-16 rounded-full overflow-hidden border-2",
                 isDark ? "border-primary/30" : "border-primary/20"
               )}>
-                <Image 
+                <img 
                   src={userInfo.avatar} 
                   alt={userInfo.name} 
-                  fill 
-                  className="object-cover" 
-                  priority
+                  className="w-full h-full object-cover" 
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    if (target.src.endsWith('logo.jpg')) {
+                      target.src = '/logo.png';
+                    } else if (target.src.endsWith('logo.png')) {
+                      target.src = '/placeholder-logo.png';
+                    }
+                  }}
                 />
               </div>
               <div>

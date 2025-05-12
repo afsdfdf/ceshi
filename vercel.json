@@ -39,5 +39,17 @@
       "source": "/api/:path*",
       "destination": "/api/:path*"
     }
+  ],
+  "routes": [
+    {
+      "src": "/logo.jpg",
+      "headers": { "cache-control": "public, max-age=86400" },
+      "dest": "/logo.jpg"
+    },
+    {
+      "src": "/(.*)\\.(?:jpg|jpeg|gif|png|svg|ico|webp)",
+      "headers": { "cache-control": "public, max-age=86400" },
+      "dest": "/$1.$2"
+    }
   ]
 } 

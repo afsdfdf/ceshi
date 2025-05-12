@@ -86,12 +86,18 @@ export default function TradePage() {
         <div className={`p-4 flex items-center justify-between border-b ${darkMode ? "border-gray-800" : "border-gray-200"}`}>
           <div className="flex items-center gap-2">
             <div className="relative w-8 h-8 rounded-full overflow-hidden">
-              <Image 
+              <img 
                 src="/logo.jpg" 
                 alt="XAI FINANCE" 
-                fill 
-                className="object-cover" 
-                priority
+                className="object-cover w-full h-full" 
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  if (target.src.endsWith('logo.jpg')) {
+                    target.src = '/logo.png';
+                  } else if (target.src.endsWith('logo.png')) {
+                    target.src = '/placeholder-logo.png';
+                  }
+                }}
               />
             </div>
           <h1 className="text-xl font-bold">交易</h1>
@@ -106,12 +112,18 @@ export default function TradePage() {
               <Moon className="w-5 h-5" />
             </Button>
             <div className="relative w-8 h-8 rounded-full overflow-hidden">
-              <Image 
+              <img 
                 src="/logo.jpg" 
                 alt="Logo" 
-                fill 
-                className="object-cover"
-                priority
+                className="object-cover w-full h-full"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  if (target.src.endsWith('logo.jpg')) {
+                    target.src = '/logo.png';
+                  } else if (target.src.endsWith('logo.png')) {
+                    target.src = '/placeholder-logo.png';
+                  }
+                }}
               />
             </div>
           </div>

@@ -160,12 +160,20 @@ export default function SearchBar({
             )}
               style={{ width: logoSize, height: logoSize }}
             >
-              <Image
+              <img
                 src="/logo.jpg"
                 alt="XAI Finance"
                 width={logoSize}
                 height={logoSize}
-                className="object-cover"
+                className="object-cover w-full h-full"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  if (target.src.endsWith('logo.jpg')) {
+                    target.src = '/logo.png';
+                  } else if (target.src.endsWith('logo.png')) {
+                    target.src = '/placeholder-logo.png';
+                  }
+                }}
               />
             </div>
           </Link>
