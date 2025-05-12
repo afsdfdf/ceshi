@@ -47,9 +47,26 @@
       "dest": "/logo.jpg"
     },
     {
+      "src": "/logo.png",
+      "headers": { "cache-control": "public, max-age=86400" },
+      "dest": "/logo.png"
+    },
+    {
+      "src": "/placeholder-logo.png",
+      "headers": { "cache-control": "public, max-age=86400" },
+      "dest": "/placeholder-logo.png"
+    },
+    {
+      "src": "/favicon.ico",
+      "headers": { "cache-control": "public, max-age=86400" },
+      "dest": "/logo.png"
+    },
+    {
       "src": "/(.*)\\.(?:jpg|jpeg|gif|png|svg|ico|webp)",
       "headers": { "cache-control": "public, max-age=86400" },
       "dest": "/$1.$2"
     }
-  ]
+  ],
+  "public": true,
+  "cleanUrls": true
 } 

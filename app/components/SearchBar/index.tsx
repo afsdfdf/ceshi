@@ -12,6 +12,7 @@ import { TokenPrice } from "@/app/types/token"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 import SearchResults from "./SearchResults"
+import LogoBase64 from "../LogoBase64"
 
 interface SearchBarProps {
   isDark: boolean;
@@ -160,21 +161,7 @@ export default function SearchBar({
             )}
               style={{ width: logoSize, height: logoSize }}
             >
-              <img
-                src="/logo.jpg"
-                alt="XAI Finance"
-                width={logoSize}
-                height={logoSize}
-                className="object-cover w-full h-full"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  if (target.src.endsWith('logo.jpg')) {
-                    target.src = '/logo.png';
-                  } else if (target.src.endsWith('logo.png')) {
-                    target.src = '/placeholder-logo.png';
-                  }
-                }}
-              />
+              <LogoBase64 width={logoSize} height={logoSize} className="w-full h-full" />
             </div>
           </Link>
         )}
