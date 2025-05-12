@@ -40,33 +40,59 @@
       "destination": "/api/:path*"
     }
   ],
-  "routes": [
+  "headers": [
     {
-      "src": "/logo.jpg",
-      "headers": { "cache-control": "public, max-age=86400" },
-      "dest": "/logo.jpg"
+      "source": "/logo.jpg",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400"
+        }
+      ]
     },
     {
-      "src": "/logo.png",
-      "headers": { "cache-control": "public, max-age=86400" },
-      "dest": "/logo.png"
+      "source": "/logo.png",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400"
+        }
+      ]
     },
     {
-      "src": "/placeholder-logo.png",
-      "headers": { "cache-control": "public, max-age=86400" },
-      "dest": "/placeholder-logo.png"
+      "source": "/placeholder-logo.png",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400"
+        }
+      ]
     },
     {
-      "src": "/favicon.ico",
-      "headers": { "cache-control": "public, max-age=86400" },
-      "dest": "/logo.png"
+      "source": "/favicon.ico",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400"
+        }
+      ]
     },
     {
-      "src": "/(.*)\\.(?:jpg|jpeg|gif|png|svg|ico|webp)",
-      "headers": { "cache-control": "public, max-age=86400" },
-      "dest": "/$1.$2"
+      "source": "/(.*)\\.(?:jpg|jpeg|gif|png|svg|ico|webp)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400"
+        }
+      ]
     }
   ],
-  "public": true,
+  "redirects": [
+    {
+      "source": "/favicon.ico",
+      "destination": "/logo.png",
+      "permanent": true
+    }
+  ],
   "cleanUrls": true
 } 
