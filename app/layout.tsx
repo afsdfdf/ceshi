@@ -18,7 +18,7 @@ export default function RootLayout({
   return (
     <html lang="zh" suppressHydrationWarning>
       <head>
-        <link rel="icon" href="/LOGO.JPG" />
+        <link rel="icon" href="/logo.jpg" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
         <meta httpEquiv="Content-Security-Policy" content="frame-ancestors 'self'" />
         <EthereumProtectionScript />

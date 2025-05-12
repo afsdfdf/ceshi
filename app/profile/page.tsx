@@ -24,7 +24,7 @@ export default function ProfilePage() {
   // 模拟用户数据
   const userInfo = {
     name: "用户1234",
-    avatar: "/LOGO.JPG",
+    avatar: "/logo.jpg",
     joinDate: "2023-05-15"
   }
 

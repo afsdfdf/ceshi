@@ -87,7 +87,7 @@ export default function TradePage() {
           <div className="flex items-center gap-2">
             <div className="relative w-8 h-8 rounded-full overflow-hidden">
               <Image 
-                src="/LOGO.JPG" 
+                src="/logo.jpg" 
                 alt="XAI FINANCE" 
                 fill 
                 className="object-cover" 
@@ -107,7 +107,7 @@ export default function TradePage() {
             </Button>
             <div className="relative w-8 h-8 rounded-full overflow-hidden">
               <Image 
-                src="/LOGO.JPG" 
+                src="/logo.jpg" 
                 alt="Logo" 
                 fill 
                 className="object-cover"

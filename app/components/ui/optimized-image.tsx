@@ -27,7 +27,7 @@ export function OptimizedImage({
   const [error, setError] = useState(false)
   
   // Fall back to a static image path if loading fails and useStaticFallback is true
-  const imageSrc = error && useStaticFallback ? "/LOGO.JPG" : src
+  const imageSrc = error && useStaticFallback ? "/logo.jpg" : src
   
   if (debug && error) {
     console.log(`Image failed to load: ${src}`)
