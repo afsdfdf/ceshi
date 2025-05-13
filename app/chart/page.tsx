@@ -97,12 +97,38 @@ export default function KLinePage() {
     setIsSearching(true);
     setShowResults(true);
     
+    // 检查是否是以太坊地址格式
+    const isEthereumAddress = /^0x[a-fA-F0-9]{40}$/.test(searchValue.trim());
+    // 检查是否是Solana地址格式
+    const isSolanaAddress = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(searchValue.trim());
+    
     try {
+      // 无论是否是合约地址，都先尝试通过API搜索
       const results = await searchTokens(searchValue);
       setSearchResults(results);
+      
+      // 如果API搜索没有结果，但输入是合约地址格式，则尝试直接跳转
+      if (results.length === 0 && (isEthereumAddress || isSolanaAddress)) {
+        const chain = isSolanaAddress ? 'solana' : 'ethereum';
+        const address = searchValue.trim();
+        
+        // 关闭结果框
+        setShowResults(false);
+        
+        // 导航到代币详情页
+        router.push(`/token/${chain}/${address}`);
+      }
     } catch (error) {
       console.error("搜索错误:", error);
       setSearchResults([]);
+      
+      // 如果API搜索失败但是输入是合约地址格式，仍然尝试直接跳转
+      if (isEthereumAddress || isSolanaAddress) {
+        const chain = isSolanaAddress ? 'solana' : 'ethereum';
+        const address = searchValue.trim();
+        setShowResults(false);
+        router.push(`/token/${chain}/${address}`);
+      }
     } finally {
       setIsSearching(false);
     }
