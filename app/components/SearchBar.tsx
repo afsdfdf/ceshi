@@ -85,26 +85,34 @@ export default function SearchBar({
     // 检查是否是Solana地址格式
     const isSolanaAddress = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(term.trim());
     
-    // 如果是合约地址格式，尝试直接跳转
-    if (isEthereumAddress || isSolanaAddress) {
-      // 默认使用以太坊链，除非是Solana格式地址
-      const chain = isSolanaAddress ? 'solana' : 'ethereum';
-      const address = term.trim();
-      
-      // 防止在检测后立即打开空白结果窗口
-      setShowResults(false);
-      setIsSearching(false);
-      
-      // 导航到代币详情页
-      router.push(`/token/${chain}/${address}`);
-      return;
-    }
-
     try {
+      // 无论是否是合约地址，都先尝试通过API搜索
       const results = await searchTokens(term);
       setSearchResults(results);
       
-      if (results.length === 0 && term.trim()) {
+      // 如果API搜索有结果，则显示结果列表
+      if (results.length > 0) {
+        setShowResults(true);
+      } 
+      // 如果API搜索没有结果，但输入是合约地址格式，则尝试直接跳转
+      else if ((isEthereumAddress || isSolanaAddress) && term.trim()) {
+        // 默认使用以太坊链，除非是Solana格式地址
+        const chain = isSolanaAddress ? 'solana' : 'ethereum';
+        const address = term.trim();
+        
+        // 关闭结果框
+        setShowResults(false);
+        
+        // 导航到代币详情页
+        router.push(`/token/${chain}/${address}`);
+        
+        toast({
+          title: "正在加载代币数据",
+          description: "跳转到代币详情页面",
+        });
+      }
+      // 如果既不是合约地址也没有搜索结果
+      else if (term.trim()) {
         toast({
           title: "未找到结果",
           description: "没有找到匹配的代币，请尝试其他关键词",
@@ -114,11 +122,26 @@ export default function SearchBar({
     } catch (error) {
       console.error("搜索错误:", error);
       setSearchResults([]);
-      toast({
-        title: "搜索失败",
-        description: "无法获取搜索结果，请稍后再试",
-        variant: "destructive",
-      });
+      
+      // 如果API搜索失败但是输入是合约地址格式，仍然尝试直接跳转
+      if ((isEthereumAddress || isSolanaAddress) && term.trim()) {
+        const chain = isSolanaAddress ? 'solana' : 'ethereum';
+        const address = term.trim();
+        setShowResults(false);
+        router.push(`/token/${chain}/${address}`);
+        
+        toast({
+          title: "API搜索失败",
+          description: "正在尝试直接跳转到代币页面",
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "搜索失败",
+          description: "无法获取搜索结果，请稍后再试",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsSearching(false);
     }
