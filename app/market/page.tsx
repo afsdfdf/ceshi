@@ -25,15 +25,15 @@ export default function MarketPage() {
   
   const topicsScrollRef = useRef<HTMLDivElement>(null)
 
-  // 处理左右滚动箭头点击
-  const scrollTopics = (direction: 'left' | 'right') => {
+  // 修改滚动函数，只支持向右滑动
+  const scrollTopics = (direction: 'right') => {
     if (!topicsScrollRef.current) return;
     
     const scrollAmount = 200; // 每次滚动的像素
     const currentScroll = topicsScrollRef.current.scrollLeft;
     
     topicsScrollRef.current.scrollTo({
-      left: direction === 'left' ? currentScroll - scrollAmount : currentScroll + scrollAmount,
+      left: currentScroll + scrollAmount,
       behavior: 'smooth'
     });
   };
@@ -72,34 +72,19 @@ export default function MarketPage() {
 
         {/* 代币主题模块 */}
         <div className="p-4 pt-0 relative">
-          {/* 添加滑动箭头控制 */}
-          <div className="absolute right-4 top-1 z-20 flex space-x-2">
+          {/* 修改为单个滑动按钮 */}
+          <div className="absolute right-4 top-1 z-20">
             <Button 
               variant="outline" 
-              size="icon" 
               className={cn(
-                "h-7 w-7 rounded-full opacity-80",
-                isDark 
-                  ? "bg-muted border-border hover:bg-muted/80" 
-                  : "bg-secondary border-border hover:bg-muted"
-              )}
-              onClick={() => scrollTopics('left')}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              size="icon" 
-              className={cn(
-                "h-7 w-7 rounded-full opacity-80",
+                "h-7 pl-2 pr-2 rounded-full opacity-80 flex items-center gap-1 text-xs",
                 isDark 
                   ? "bg-muted border-border hover:bg-muted/80" 
                   : "bg-secondary border-border hover:bg-muted"
               )}
               onClick={() => scrollTopics('right')}
             >
-              <ChevronRight className="h-4 w-4" />
+              滑动 <ChevronRight className="h-3 w-3" />
             </Button>
           </div>
           
