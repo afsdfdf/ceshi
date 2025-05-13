@@ -160,7 +160,7 @@ export default function SearchBar({
               style={{ width: logoSize, height: logoSize }}
             >
               <Image
-                src="/logo.jpg"
+                src="/logo.png"
                 alt="XAI Finance"
                 width={logoSize}
                 height={logoSize}

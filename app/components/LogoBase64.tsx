@@ -1,7 +1,7 @@
 import React from "react";
+import Image from "next/image";
 
-// This component provides a small base64-encoded logo that will work
-// even if external image loading fails
+// This component provides a logo that will work consistently across the app
 export default function LogoBase64({ 
   width = 32, 
   height = 32, 
@@ -11,15 +11,12 @@ export default function LogoBase64({
   height?: number; 
   className?: string;
 }) {
-  // Very simple X logo in base64 (small file size)
-  const logoBase64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAA21BMVEUAAAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD/AAD///+y7nSYAAAAR3RSTlMAAQIDBQYHCAkKCw0ODxASExQVFhcYGRobHB0eHyEiJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKwhzQDQAAAAFiS0dEAIgFHUgAAAAJcEhZcwAACxMAAAsTAQCanBgAAAAHdElNRQfnBQUVMRRRQGH2AAACvklEQVQ4y2NgGLqAEUqxQCgmRiYorcrMwsoGlcDCwsrGzoFQxcnFzcPLxy8AYgsKCYuIMlCkXkxcQlJKWkZWTl5BUUlZRVVNnYEi9RqaWto6unr6BoZGxiamZuYWlgyUqbeytrG1s3dwdHJ2cXVz9/D0YiDLAG8fXz//gMCg4JDQsPCIyKjoGAby1MfGxSckJiWnpKalpWdkZmXn5FKgPi+/oLCouKS0rLyisqq6praOAvX1DY1NzS2tbe0dnV3dPb19/RQYMGHipEmTp0ydNn3GzFmz58ydR4EBC+YvWLho8ZKly5avWLlq9Zq1FKhft37Dxk2bt2zZun3Hzl27c/dQaMDevfsO7D946PCRnTuPHjtOwQEnTp46febsufMXLl66fOUqBQZcu37j5q3bd+7eu//g4aPHFBjw5Omz5y9evnr95u279+8/UGDAx0+fv3z99v3Hzx8/f/3+Q4EB//79B4KNBP5TYMBGCv1HKBP9/w8yAJE0/v//D8nV/0EGwJMWzIB/0Lzz/z80xcAMACuHGQDWBs6csOQFUgdWAjIAnDXhCSd4wtc/Bnbw6T/EzEADgOGBmhnBwAB1ALCYgRsAD2BgPoVXR5AqimQMgPoXnPcg7qBYBlYdQSUoiWJwEkWkdXAyA2d3SJ6DZXiIg4A+AKd7SAKClIGQAVCvgWsEmApx8X9EugcacP/+3v+wZISoEUBZFW4AKDn9f//eEmEAtGYApmJx0P9/f98iDUA0UIHFFjS9/f/7G9FKAXZSgGsEpXVg0v93H6pZANpOhRmASPJ/3r9DGIBoLMOaeJACIIEB8i2svQ5vMsMUgmsDcNMBpdUA1myHN12QtRkxWu4YLSeMThhGaxnUDIGUStBaS9DWGk57FaM9jtkgQDRL0Npk6G0yrEYJXqsIq+VC0HTC7JoQdMwIuqaE3VOi/unw7V8DAJjH8iLKXwZ9AAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDIzLTA1LTA1VDIxOjQ5OjIwKzAwOjAwAVVpdQAAACV0RVh0ZGF0ZTptb2RpZnkAMjAyMy0wNS0wNVQyMTo0OToyMCswMDowMHAI0ckAAAAASUVORK5CYII=";
-
   return (
-    <img 
-      src={logoBase64} 
-      alt="XAI Finance Logo" 
-      width={width} 
-      height={height} 
+    <Image
+      src="/logo.png"
+      alt="XAI Finance Logo"
+      width={width}
+      height={height}
       className={className}
       style={{
         display: "block",
