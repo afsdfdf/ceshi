@@ -80,7 +80,7 @@ export async function GET(request: Request): Promise<NextResponse> {
           return token;
         });
         
-        return {
+        const result = {
           success: true,
           data: {
             tokens,
@@ -90,6 +90,9 @@ export async function GET(request: Request): Promise<NextResponse> {
           timestamp: Date.now(),
           fallback: true
         };
+        
+        // Make sure to return a NextResponse
+        return NextResponse.json(result);
       }
     );
   } catch (error) {
