@@ -1,11 +1,25 @@
 import { createClient } from '@supabase/supabase-js';
 import bcrypt from 'bcryptjs';
 
+// Add fallback values and console warnings for missing environment variables
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-// Create a single supabase client for the entire app
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Log warnings if environment variables are missing
+if (!supabaseUrl) {
+  console.warn('WARNING: NEXT_PUBLIC_SUPABASE_URL is not set. Please set this environment variable.');
+}
+
+if (!supabaseAnonKey) {
+  console.warn('WARNING: NEXT_PUBLIC_SUPABASE_ANON_KEY is not set. Please set this environment variable.');
+}
+
+// Create a single supabase client for the entire app with error handling
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: false, // Don't persist session if environment variables are missing
+  },
+});
 
 // Helper function to get posts from Supabase
 export async function getPosts() {

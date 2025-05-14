@@ -3,6 +3,16 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 import { supabase } from '@/lib/supabase';
 
+// Check if required environment variables are set
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const nextAuthSecret = process.env.NEXTAUTH_SECRET || 'a-default-secret-for-development-only';
+
+// Warn if environment variables are missing
+if (!supabaseUrl || !supabaseKey) {
+  console.warn('WARNING: Supabase environment variables are missing. Authentication will not work correctly.');
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -13,6 +23,20 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
+          return null;
+        }
+
+        // If Supabase credentials are missing, return a mock user for development/testing
+        if (!supabaseUrl || !supabaseKey) {
+          console.warn('Using mock authentication because Supabase credentials are missing');
+          if (credentials.email === 'admin@example.com' && credentials.password === 'password') {
+            return {
+              id: '1',
+              name: 'Admin User',
+              email: 'admin@example.com',
+              isAdmin: true,
+            };
+          }
           return null;
         }
 
@@ -67,6 +91,7 @@ export const authOptions: NextAuthOptions = {
     strategy: 'jwt' as const,
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
+  secret: nextAuthSecret,
   pages: {
     signIn: '/auth/signin',
     error: '/auth/error',

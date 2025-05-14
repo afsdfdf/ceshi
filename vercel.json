@@ -60,8 +60,9 @@
     }
   ],
   "env": {
-    "NEXT_PUBLIC_SUPABASE_URL": "your-supabase-project-url",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "your-supabase-anon-key",
-    "NEXT_PUBLIC_ADMIN_TOKEN": "your-admin-token"
+    "NEXT_PUBLIC_SUPABASE_URL": "IMPORTANT: Replace with your actual Supabase URL in Vercel environment variables",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "IMPORTANT: Replace with your actual Supabase anon key in Vercel environment variables",
+    "NEXTAUTH_SECRET": "IMPORTANT: Set a secure secret for NextAuth in Vercel environment variables",
+    "NEXT_PUBLIC_ADMIN_TOKEN": "IMPORTANT: Set your admin token in Vercel environment variables"
   }
 } 
