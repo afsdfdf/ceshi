@@ -187,61 +187,72 @@ function generateMockKlineData(interval: string, limit: number): KLineData[] {
   });
 }
 
+// Force dynamic rendering to avoid static generation errors
+export const dynamic = 'force-dynamic';
+
 /**
  * GET 处理程序
  * 获取代币K线数据
  */
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const address = searchParams.get('address');
-  const chain = searchParams.get('chain');
-  const interval = searchParams.get('interval') || '1h';
-  const limit = parseInt(searchParams.get('limit') || '100', 10);
-
-  if (!address || !chain) {
-    return NextResponse.json(
-      { error: 'Missing required parameters: address and chain' },
-      { status: 400 }
-    );
-  }
-
   try {
-    // 直接从Ave.ai API获取数据
-    let klineData: KLineData[] = [];
+    // Get parameters from request URL
+    const { searchParams } = new URL(request.url);
+    const address = searchParams.get('address');
+    const chain = searchParams.get('chain') || 'ethereum';
+    const period = searchParams.get('period') || '24h';
     
-    try {
-      klineData = await fetchAveKlineData(address, chain, interval, limit);
-      console.log(`成功从Ave.ai获取到${klineData.length}条K线数据`);
-    } catch (apiError) {
-      // 如果是速率限制错误，尝试使用缓存
-      console.error('获取K线数据失败，使用备用数据:', apiError);
-      
-      // 尝试使用旧缓存数据（即使已过期）
-      const cacheKey = `${address}-${chain}-${interval}-${limit}`;
-      if (klineCache[cacheKey]) {
-        console.log('使用过期的缓存数据');
-        klineData = klineCache[cacheKey].data;
-      } else {
-        console.log('没有可用的缓存数据，使用模拟数据');
-        klineData = generateMockKlineData(interval, limit);
-      }
+    // Validate the address parameter
+    if (!address) {
+      return NextResponse.json({
+        success: false,
+        error: 'Missing token address parameter'
+      }, { status: 400 });
     }
     
-    return NextResponse.json({
-      success: true,
-      klines: klineData
-    });
+    try {
+      // Try to fetch token kline data from external API
+      // For production, replace with your actual API endpoint
+      const apiUrl = `https://api.example.com/kline?address=${address}&chain=${chain}&period=${period}`;
+      
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: new Headers({
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }),
+        cache: 'no-store',
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        return NextResponse.json({ success: true, ...data });
+      } else {
+        // If API request fails, throw an error to use the fallback
+        throw new Error(`API returned error status: ${response.status}`);
+      }
+    } catch (error) {
+      console.error('Error fetching token kline data:', error);
+      
+      // Generate mock kline data as fallback
+      const now = Date.now();
+      const mockData = generateMockKlineData(period, 24);
+      
+      return NextResponse.json({
+        success: true,
+        kline: mockData,
+        address,
+        chain,
+        period,
+        mock: true
+      });
+    }
   } catch (error) {
-    console.error('处理K线数据错误:', error);
-    
-    // 确保即使发生错误也返回模拟数据
-    const mockData = generateMockKlineData(interval, limit);
+    console.error('Error processing request:', error);
     
     return NextResponse.json({
-      success: true,
-      klines: mockData,
-      error_info: error instanceof Error ? error.message : 'Failed to fetch kline data',
-      is_mock_data: true
-    });
+      success: false,
+      error: 'Internal server error'
+    }, { status: 500 });
   }
 } 

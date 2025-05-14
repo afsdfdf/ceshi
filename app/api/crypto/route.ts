@@ -21,49 +21,54 @@ export async function GET() {
     
     try {
       const response = await fetch(apiUrl, {
-        method: "GET",
-        headers: {
-          "Accept": "application/json",
-          "Cache-Control": "no-cache",
-        },
+        method: 'GET',
+        headers: new Headers({
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }),
         signal: controller.signal,
+        cache: 'no-store'
       });
       
       clearTimeout(timeoutId);
       
-      if (!response.ok) {
-        throw new Error(`API返回错误: ${response.status}`);
+      if (response.ok) {
+        const data = await response.json();
+        
+        return NextResponse.json({
+          success: true,
+          data,
+          source: 'api'
+        });
+      } else {
+        throw new Error(`API返回错误状态: ${response.status}`);
       }
+    } catch (error) {
+      console.error('API请求错误:', error);
       
-      const data = await response.json();
-      
-      // 处理API返回的数据
+      // 超时或者请求失败，使用模拟数据
       return NextResponse.json({
         success: true,
         data: {
-          popularTokens: data.popular || [],
-          trendingTokens: data.trending || [],
-          newTokens: data.new || []
-        }
+          btc: {
+            price: 67850,
+            change: 1.2
+          },
+          eth: {
+            price: 3205,
+            change: 0.8
+          }
+        },
+        source: 'mock'
       });
-    } catch (error) {
-      clearTimeout(timeoutId);
-      throw error;
     }
-    
   } catch (error) {
-    console.error('API Error:', error);
+    console.error('处理请求时出错:', error);
     
-    // 返回模拟数据
     return NextResponse.json({
-      success: true,
-      data: {
-        popularTokens: generateMockTokens(5, 'Popular'),
-        trendingTokens: generateMockTokens(5, 'Trending'),
-        newTokens: generateMockTokens(5, 'New')
-      },
-      mock: true
-    });
+      success: false,
+      error: '服务器内部错误'
+    }, { status: 500 });
   }
 }
 
