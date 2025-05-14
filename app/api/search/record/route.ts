@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { searchDB } from "@/lib/db";
+import { searchDB } from "@/lib/supabase";
 
 export async function POST(request: Request) {
   try {
@@ -12,7 +12,7 @@ export async function POST(request: Request) {
       );
     }
 
-    searchDB.recordSearch(chain, address);
+    await searchDB.recordSearch(chain, address);
 
     return NextResponse.json({ success: true });
   } catch (error) {

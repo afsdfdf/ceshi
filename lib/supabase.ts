@@ -202,4 +202,36 @@ export async function updateUser(id: string, updates: any) {
   }
   
   return data;
-} 
+}
+
+/**
+ * 搜索数据库操作
+ */
+export const searchDB = {
+  /**
+   * 记录搜索历史
+   * @param {string} chain - 区块链
+   * @param {string} address - 代币地址
+   */
+  recordSearch: async (chain: string, address: string) => {
+    try {
+      const { error } = await supabase
+        .from('searches')
+        .insert([{
+          chain,
+          address,
+          created_at: new Date().toISOString()
+        }]);
+      
+      if (error) {
+        console.error('Error recording search:', error);
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error recording search:', error);
+      return false;
+    }
+  }
+}; 
