@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server"
 
+// Force dynamic rendering to avoid static generation errors
+export const dynamic = 'force-dynamic';
+
 // 定义热门代币接口
 export interface TrendingToken {
   id: string
@@ -730,8 +733,13 @@ function generateMockData() {
 // 获取热门代币列表
 export async function GET() {
   try {
+    // 构建完整的 URL
+    const baseUrl = process.env.VERCEL_URL 
+      ? `https://${process.env.VERCEL_URL}` 
+      : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    
     // 从 crypto API 获取热门代币
-    const response = await fetch("/api/crypto", {
+    const response = await fetch(`${baseUrl}/api/crypto`, {
       method: "GET",
       headers: {
         Accept: "application/json",
