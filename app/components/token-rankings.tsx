@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card"
 import { useTopics } from "@/app/hooks/use-topics"
 import { useTokensByTopic } from "@/app/hooks/use-tokens"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { AlertCircle, ChevronLeft, ChevronRight, RefreshCw } from "lucide-react"
+import { AlertCircle, RefreshCw, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
@@ -13,55 +13,33 @@ import { cn } from "@/lib/utils"
 // 导入子组件
 import TopicSelector from "./tokens/topic-selector"
 import TokensTable from "./tokens/tokens-table"
-import Pagination from "./tokens/pagination"
 import LoadingState from "./tokens/loading-state"
+import { MainstreamTokens } from "./MainstreamTokens"
 
 interface TokenRankingsProps {
   darkMode: boolean;
   mode?: 'homepage' | 'market';
-  scrollRef?: React.RefObject<HTMLDivElement | null>;
-  itemsPerPage?: number;
 }
 
 // 使用React.memo优化子组件渲染
 const MemoizedTokensTable = memo(TokensTable);
 const MemoizedTopicSelector = memo(TopicSelector);
-const MemoizedPagination = memo(Pagination);
+const MemoizedMainstreamTokens = memo(MainstreamTokens);
 
 /**
  * 代币排行组件
  */
 export default function TokenRankings({ 
   darkMode, 
-  mode = 'homepage', 
-  scrollRef,
-  itemsPerPage = 50
+  mode = 'homepage'
 }: TokenRankingsProps) {
   // 使用next-themes获取当前主题
   const { resolvedTheme } = useTheme()
-  const isDark = resolvedTheme === "dark"
+  const isDark = resolvedTheme === "dark" || darkMode
   
   // 状态管理
   const [activeTopicId, setActiveTopicId] = useState<string>("hot")
-  const [currentPage, setCurrentPage] = useState(1)
   const [isTransitioning, setIsTransitioning] = useState(false)
-  const internalScrollRef = useRef<HTMLDivElement>(null)
-  
-  // 使用传入的scrollRef或内部创建的ref
-  const finalScrollRef = scrollRef || internalScrollRef
-  
-  // 处理左右滚动箭头点击
-  const scrollTopics = (direction: 'left' | 'right') => {
-    if (!finalScrollRef.current) return;
-    
-    const scrollAmount = 200; // 每次滚动的像素
-    const currentScroll = finalScrollRef.current.scrollLeft;
-    
-    finalScrollRef.current.scrollTo({
-      left: direction === 'left' ? currentScroll - scrollAmount : currentScroll + scrollAmount,
-      behavior: 'smooth'
-    });
-  };
   
   // 使用自定义Hook获取数据
   const { 
@@ -90,25 +68,16 @@ export default function TokenRankings({
     setIsTransitioning(true);
     setActiveTopicId(topicId);
     
-    // 简单的过渡效果
+    // 优化的过渡效果
     setTimeout(() => {
       setIsTransitioning(false);
     }, 300);
-    
-    setCurrentPage(1); // 切换主题时重置到第一页
-  }
-
-  // 处理页码变化
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page)
   }
   
-  // 使用useMemo优化当前页显示的代币列表
-  const currentPageTokens = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return tokens.slice(startIndex, endIndex);
-  }, [tokens, currentPage, itemsPerPage]);
+  // 根据模式过滤主题
+  const filteredTopics = mode === 'homepage' 
+    ? topics.filter(topic => ['hot', 'meme', 'new', 'bsc', 'solana'].includes(topic.id))
+    : topics;
 
   // 加载状态
   if (isLoading && tokens.length === 0) {
@@ -120,10 +89,11 @@ export default function TokenRankings({
     return (
       <Card className={cn(
         "p-6 border border-border animate-fade-in",
-        isDark ? "bg-card shadow-md" : "bg-card shadow-sm"
+        "backdrop-blur-md",
+        isDark ? "bg-card/95 shadow-lg" : "bg-card/95 shadow-md"
       )}>
         <div className="flex flex-col items-center justify-center text-center gap-2">
-          <AlertCircle className="h-8 w-8 text-destructive animate-pulse-subtle" />
+          <AlertCircle className="h-8 w-8 text-destructive animate-pulse" />
           <div className="text-destructive font-medium">加载失败</div>
           <div className="text-sm text-muted-foreground mb-4">
             {error}
@@ -132,7 +102,7 @@ export default function TokenRankings({
             variant="outline"
             size="sm"
             className={cn(
-              "gap-2 rounded-full px-4 hover-scale",
+              "gap-2 rounded-full px-4 hover:scale-105 transition-transform",
               isDark ? "border-destructive/30 hover:bg-destructive/10" : "border-destructive/30 hover:bg-destructive/5"
             )}
             onClick={() => refresh()}
@@ -148,89 +118,61 @@ export default function TokenRankings({
   // 正常渲染
   return (
     <Card className={cn(
-      "p-4 border border-border overflow-hidden animate-fade-in subtle-shadow",
+      "p-3 border overflow-hidden animate-fade-in",
+      "transition-all duration-300",
+      "backdrop-blur-md",
       isDark 
-        ? "bg-card" 
-        : "bg-card"
+        ? "bg-card/90 border-border/80 shadow-lg" 
+        : "bg-card/95 border-border/50 shadow-md",
+      "hover:shadow-xl hover:border-border transition-all duration-300"
     )}>
+      <div className="flex items-center justify-between mb-1">
       {usingFallback && (
-        <Alert className={cn(
-          "mb-4 border rounded-lg",
+          <div className={cn(
+            "text-xs px-2 py-1 rounded-full",
+            "flex items-center gap-1",
+            "animate-pulse-subtle",
+            "transition-all duration-300",
           isDark 
-            ? "bg-warning/10 border-warning/20" 
-            : "bg-warning/10 border-warning/20"
+              ? "bg-warning/15 text-warning/90 border border-warning/30" 
+              : "bg-warning/15 text-warning/90 border border-warning/30"
         )}>
-          <AlertCircle className={cn(
-            "h-4 w-4", 
-            isDark ? "text-warning" : "text-warning"
-          )} />
-          <AlertDescription className={isDark ? "text-warning/90" : "text-warning/90"}>
-            数据获取失败，当前显示的是备用数据。您可以尝试刷新页面或稍后再试。
-          </AlertDescription>
-        </Alert>
+            <AlertCircle className="h-3 w-3" />
+            <span>使用备用数据</span>
+          </div>
       )}
-      
-      <div className="relative mb-2">
-        {/* 添加滚动箭头 */}
-        <div className="absolute right-0 top-1 z-10 flex space-x-2">
-          <Button 
-            variant="outline" 
-            size="icon" 
-            className={cn(
-              "h-6 w-6 rounded-full opacity-80 hover-scale",
-              isDark 
-                ? "bg-muted/40 border-muted/50 hover:bg-muted/60" 
-                : "bg-secondary/80 border-border/50 hover:bg-muted/60"
-            )}
-            onClick={() => scrollTopics('left')}
-          >
-            <ChevronLeft className="h-3 w-3" />
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            size="icon" 
-            className={cn(
-              "h-6 w-6 rounded-full opacity-80 hover-scale",
-              isDark 
-                ? "bg-muted/40 border-muted/50 hover:bg-muted/60" 
-                : "bg-secondary/80 border-border/50 hover:bg-muted/60"
-            )}
-            onClick={() => scrollTopics('right')}
-          >
-            <ChevronRight className="h-3 w-3" />
-          </Button>
+      </div>
+
+      {/* 主流币展示区域 */}
+      <div className="mb-1">
+        <MemoizedMainstreamTokens darkMode={isDark} />
         </div>
         
+      {/* 主题选择器组件 */}
+      <div className="mb-1">
         <MemoizedTopicSelector 
-          topics={topics} 
+          topics={filteredTopics} 
           activeTopic={activeTopicId}
-          onTopicChange={handleTopicChange}
-          mode={mode}
-          scrollRef={finalScrollRef}
+          onChange={handleTopicChange}
+          darkMode={isDark}
+          isTransitioning={isTransitioning}
         />
       </div>
       
       <div className={cn(
-        isTransitioning ? "opacity-70" : "opacity-100",
-        "transition-opacity duration-300"
+        "transition-all duration-300 transform-gpu",
+        isTransitioning 
+          ? "opacity-0 translate-x-4 blur-sm" 
+          : "opacity-100 translate-x-0 blur-0"
       )}>
         <MemoizedTokensTable 
-          tokens={currentPageTokens}
-          currentPage={currentPage}
+          tokens={tokens}
+          currentPage={1}
           darkMode={isDark} 
-          itemsPerPage={itemsPerPage}
           onRefresh={refresh}
           lastUpdated={lastUpdated}
         />
       </div>
-      
-      <MemoizedPagination 
-        currentPage={currentPage}
-        totalItems={tokens.length}
-        itemsPerPage={itemsPerPage}
-        onPageChange={handlePageChange}
-      />
     </Card>
   )
 }

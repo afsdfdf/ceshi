@@ -89,11 +89,22 @@ const config: Config = {
   				'50%': { width: '100%', marginLeft: '0%' },
   				'100%': { width: '0%', marginLeft: '100%' },
   			},
+          'fadeIn': {
+            from: { opacity: '0' },
+            to: { opacity: '1' },
+          },
+          'fadeInUp': {
+            from: { opacity: '0', transform: 'translateY(10px)' },
+            to: { opacity: '1', transform: 'translateY(0)' },
+          },
   		},
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
   			'accordion-up': 'accordion-up 0.2s ease-out',
   			'loadingBar': 'loadingBar 2s ease-in-out infinite',
+          'fade-in': 'fadeIn 0.3s ease-in-out forwards',
+          'fade-in-up': 'fadeInUp 0.4s ease-out forwards',
+          'pulse-subtle': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
   		}
   	}
   },

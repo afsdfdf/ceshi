@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Moon, Sun } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import { Toaster } from "@/components/ui/toaster"
 import SplashScreen from './components/splash-screen'
 import BottomNav from './components/BottomNav'
@@ -14,33 +14,47 @@ import EthereumProtection from './components/EthereumProtection'
 import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
 import { useThemedBanners } from "./components/DefaultBanners"
+import { shouldShowSplash } from "./lib/splash-state"
 
 export default function CryptoTracker() {
   const router = useRouter()
+  const pathname = usePathname()
   const { resolvedTheme, setTheme } = useTheme()
   const isDark = resolvedTheme === "dark"
   
-  const [showSplash, setShowSplash] = useState(false)
+  const [showSplash, setShowSplash] = useState<boolean | null>(null)
   const banners = useThemedBanners()
 
-  // 初始化时总是显示开屏
+  // 初始化时根据条件显示开屏
   useEffect(() => {
-    // 每次刷新都显示开屏
-    setShowSplash(true);
-    
-    // 2秒后自动关闭开屏
-    const timer = setTimeout(() => {
-      setShowSplash(false);
-    }, 2000);
-    
-    // 清理定时器
-    return () => clearTimeout(timer);
-  }, []);
+    // 只在组件第一次挂载时执行
+    if (showSplash === null) {
+      const shouldShow = shouldShowSplash()
+      setShowSplash(shouldShow)
+      
+      // 如果需要显示开屏，2秒后关闭
+      if (shouldShow) {
+        const timer = setTimeout(() => {
+          setShowSplash(false)
+        }, 2000)
+        
+        return () => clearTimeout(timer)
+      }
+    }
+  }, [showSplash])
+  
+  // 监听路由变化，用于判断是否是通过路由导航到首页
+  useEffect(() => {
+    // 路径是 / 表示在首页
+    if (pathname === '/') {
+      console.log('Home page visited via navigation')
+    }
+  }, [pathname])
   
   // 切换主题
   const toggleTheme = () => {
-    setTheme(isDark ? "light" : "dark");
-  };
+    setTheme(isDark ? "light" : "dark")
+  }
 
   return (
     <div className={cn(
@@ -64,12 +78,12 @@ export default function CryptoTracker() {
         <div className="px-4 mb-4">
           <Banner 
             banners={banners}
-            interval={6000}
+            interval={5000}
             showArrows={true}
             showIndicators={true}
             className={cn(
               "subtle-shadow rounded-xl overflow-hidden",
-              isDark ? "shadow-md" : "shadow-sm"
+              isDark ? "shadow-md shadow-black/20" : "shadow-md shadow-gray-200"
             )}
           />
         </div>
@@ -99,7 +113,7 @@ export default function CryptoTracker() {
         <BottomNav currentTab="home" isDark={isDark} />
       </div>
       
-      {/* 开屏页 */}
+      {/* 开屏页 - 只在首次访问或刷新时显示 */}
       {showSplash && <SplashScreen onFinished={() => setShowSplash(false)} />}
       
       {/* Toast通知组件 */}

@@ -180,3 +180,25 @@ MIT
 
 - 修复了Logo显示问题，优化了用户界面体验
 - 更新了图片加载方式，提高了应用稳定性
+
+## XAI Token Price Integration
+
+We now use a multi-layered approach to fetch real-time XAI token prices:
+
+1. **Dedicated Price API** - Created a specialized `/api/prices?symbol=XAI` endpoint that fetches latest price data from DEX Screener API
+2. **DEX Screener Integration** - Direct integration with DEX Screener API for reliable token price data
+3. **Fallback Mechanisms** - Multiple fallback options including local backup data
+4. **Real-time Updates** - Automated price refresh every 60 seconds
+5. **Token Row Enhancement** - Special handling for XAI tokens in token listing tables
+
+### API Integration
+
+The system now uses the [DEX Screener API](https://docs.dexscreener.com/api/reference) to retrieve real-time token data including:
+- Current price
+- 24h price change
+- Trading volume
+- Liquidity information
+
+### Usage
+
+XAI token prices are automatically updated throughout the application. The MainstreamTokens component and token listings will display the latest prices.

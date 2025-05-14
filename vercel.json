@@ -1,7 +1,8 @@
 {
-  "buildCommand": "npm run build",
+  "version": 2,
+  "buildCommand": "next build",
   "devCommand": "npm run dev",
-  "installCommand": "npm install --legacy-peer-deps",
+  "installCommand": "npm install",
   "outputDirectory": ".next",
   "framework": "nextjs",
   "images": {
@@ -57,5 +58,10 @@
       "destination": "/logo.png",
       "permanent": true
     }
-  ]
+  ],
+  "env": {
+    "NEXT_PUBLIC_SUPABASE_URL": "your-supabase-project-url",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "your-supabase-anon-key",
+    "NEXT_PUBLIC_ADMIN_TOKEN": "your-admin-token"
+  }
 } 

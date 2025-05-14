@@ -1,165 +1,132 @@
-import React from "react";
-import { Button } from "@/components/ui/button";
-import { TrendingUp, Clock, Smile, ChartBar, Coins, Rocket, Zap, Flame } from "lucide-react";
+import React, { memo, useRef, useEffect } from "react";
+import { cn } from "@/lib/utils";
 import { RankTopic } from "@/app/types/token";
 import { useTheme } from "next-themes";
-import { cn } from "@/lib/utils";
 
 interface TopicSelectorProps {
   topics: RankTopic[];
   activeTopic: string;
-  onTopicChange: (topicId: string) => void;
-  mode?: 'homepage' | 'market'; // 新增模式属性，用于区分首页和市场页面
-  scrollRef?: React.RefObject<HTMLDivElement | null>; // 滚动引用，用于外部控制滚动
+  onChange: (topic: string) => void;
+  darkMode: boolean;
+  isTransitioning?: boolean;
 }
 
 /**
  * 主题选择器组件
  */
-export default function TopicSelector({ 
+function TopicSelector({
   topics, 
   activeTopic, 
-  onTopicChange,
-  mode = 'market', // 默认为市场模式，显示所有主题
-  scrollRef
+  onChange,
+  darkMode,
+  isTransitioning = false
 }: TopicSelectorProps) {
   const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === "dark";
-  
-  // 找到活动主题的索引
-  const activeIndex = topics.findIndex(topic => topic.id === activeTopic);
-  
-  // 获取主题对应的图标和颜色
-  const getTopicIcon = (topicId: string) => {
-    switch (topicId) {
-      case 'hot':
-        return <Flame className="h-4 w-4 mr-1.5" />;
-      case 'new':
-        return <Zap className="h-4 w-4 mr-1.5" />;
-      case 'meme':
-        return <Smile className="h-4 w-4 mr-1.5" />;
-      case 'defi':
-        return <ChartBar className="h-4 w-4 mr-1.5" />;
-      case 'nft':
-        return <Coins className="h-4 w-4 mr-1.5" />;
-      case 'ai':
-        return <Rocket className="h-4 w-4 mr-1.5" />;
-      default:
-        return <TrendingUp className="h-4 w-4 mr-1.5" />;
+  const isDark = resolvedTheme === "dark" || darkMode;
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // 滚动到活动主题
+  useEffect(() => {
+    if (scrollRef.current && !isTransitioning) {
+      const activeButton = scrollRef.current.querySelector(`[data-topic-id="${activeTopic}"]`);
+      if (activeButton) {
+        const container = scrollRef.current;
+        const scrollLeft = activeButton.getBoundingClientRect().left - 
+                           container.getBoundingClientRect().left - 
+                           (container.clientWidth / 2) + 
+                           (activeButton as HTMLElement).offsetWidth / 2;
+        
+        container.scrollTo({
+          left: scrollLeft,
+          behavior: 'smooth'
+        });
+      }
     }
-  };
+  }, [activeTopic, isTransitioning]);
   
-  // 获取主题对应的风格
-  const getTopicStyle = (topicId: string, isActive: boolean) => {
-    if (!isActive) return {};
+  // 渲染每个主题标签
+  const renderTopicButton = (topic: RankTopic) => {
+    const isActive = topic.id === activeTopic;
     
-    // 根据主题设置不同的渐变背景色
-    switch (topicId) {
-      case 'hot':
-        return {
-          background: isDark 
-            ? 'linear-gradient(45deg, rgba(239,68,68,0.8), rgba(217,70,239,0.8))'
-            : 'linear-gradient(45deg, rgba(239,68,68,0.9), rgba(217,70,239,0.9))',
-          boxShadow: isDark 
-            ? '0 2px 10px rgba(239,68,68,0.2)' 
-            : '0 2px 8px rgba(239,68,68,0.25)'
-        };
-      case 'new':
-        return {
-          background: isDark 
-            ? 'linear-gradient(45deg, rgba(59,130,246,0.8), rgba(16,185,129,0.8))'
-            : 'linear-gradient(45deg, rgba(59,130,246,0.9), rgba(16,185,129,0.9))',
-          boxShadow: isDark 
-            ? '0 2px 10px rgba(59,130,246,0.2)' 
-            : '0 2px 8px rgba(59,130,246,0.25)'
-        };
-      case 'meme':
-        return {
-          background: isDark 
-            ? 'linear-gradient(45deg, rgba(245,158,11,0.8), rgba(249,115,22,0.8))'
-            : 'linear-gradient(45deg, rgba(245,158,11,0.9), rgba(249,115,22,0.9))',
-          boxShadow: isDark 
-            ? '0 2px 10px rgba(245,158,11,0.2)' 
-            : '0 2px 8px rgba(245,158,11,0.25)'
-        };
-      case 'defi':
-        return {
-          background: isDark 
-            ? 'linear-gradient(45deg, rgba(16,185,129,0.8), rgba(5,150,105,0.8))'
-            : 'linear-gradient(45deg, rgba(16,185,129,0.9), rgba(5,150,105,0.9))',
-          boxShadow: isDark 
-            ? '0 2px 10px rgba(16,185,129,0.2)' 
-            : '0 2px 8px rgba(16,185,129,0.25)'
-        };
-      case 'nft':
-        return {
-          background: isDark 
-            ? 'linear-gradient(45deg, rgba(124,58,237,0.8), rgba(139,92,246,0.8))'
-            : 'linear-gradient(45deg, rgba(124,58,237,0.9), rgba(139,92,246,0.9))',
-          boxShadow: isDark 
-            ? '0 2px 10px rgba(124,58,237,0.2)' 
-            : '0 2px 8px rgba(124,58,237,0.25)'
-        };
-      case 'ai':
-        return {
-          background: isDark 
-            ? 'linear-gradient(45deg, rgba(79,70,229,0.8), rgba(45,212,191,0.8))'
-            : 'linear-gradient(45deg, rgba(79,70,229,0.9), rgba(45,212,191,0.9))',
-          boxShadow: isDark 
-            ? '0 2px 10px rgba(79,70,229,0.2)' 
-            : '0 2px 8px rgba(79,70,229,0.25)'
-        };
-      default:
-        return {
-          background: isDark 
-            ? 'linear-gradient(45deg, rgba(59,130,246,0.8), rgba(16,185,129,0.8))'
-            : 'linear-gradient(45deg, rgba(59,130,246,0.9), rgba(16,185,129,0.9))',
-          boxShadow: isDark 
-            ? '0 2px 10px rgba(59,130,246,0.2)' 
-            : '0 2px 8px rgba(59,130,246,0.25)'
-        };
-    }
+    return (
+      <button
+        key={topic.id}
+        data-topic-id={topic.id}
+        onClick={() => onChange(topic.id)}
+        className={cn(
+          "px-2.5 py-1 text-xs rounded-full transition-all duration-300 whitespace-nowrap font-medium relative",
+          "border flex items-center gap-1",
+          "transform-gpu hover:scale-105",
+          isActive
+            ? isDark
+              ? "bg-primary text-primary-foreground border-primary/70 shadow-md shadow-primary/20"
+              : "bg-primary text-primary-foreground border-primary/80 shadow-md shadow-primary/10"
+            : isDark
+              ? "bg-muted/40 hover:bg-muted/60 text-muted-foreground hover:text-foreground border-muted/30"
+              : "bg-muted/30 hover:bg-muted/50 text-muted-foreground hover:text-foreground border-muted/20",
+          "after:absolute after:inset-0 after:rounded-full after:opacity-0 after:transition-opacity",
+          isActive && "after:opacity-100"
+        )}
+        disabled={isTransitioning}
+      >
+        {isActive && (
+          <span className="absolute h-1 w-1 rounded-full -left-0.5 -top-0.5 bg-primary-foreground animate-pulse"></span>
+        )}
+        {topic.name_zh}
+        {topic.id === "hot" && (
+          <span className={cn(
+            "relative px-1 py-0.5 rounded-sm text-[8px] leading-none inline-flex items-center justify-center ml-0.5",
+            "animate-pulse-subtle",
+            isActive
+              ? "bg-primary-foreground/30 text-primary-foreground"
+              : isDark
+                ? "bg-foreground/10 text-foreground/80"
+                : "bg-foreground/5 text-foreground/70"
+          )}>
+            HOT
+          </span>
+        )}
+      </button>
+    );
   };
 
-  // 根据模式过滤主题
-  const filteredTopics = mode === 'homepage' 
-    ? topics.filter(topic => ['hot', 'meme', 'new', 'bsc', 'solana'].includes(topic.id))
-    : topics;
-
-  // 使用横向滚动布局
   return (
     <div 
-      className="mb-4 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide"
       ref={scrollRef}
-    >
-      <div className="flex space-x-2 min-w-max py-1">
-        {filteredTopics.map((topic) => {
-          const isActive = topic.id === activeTopic;
-          const topicStyle = getTopicStyle(topic.id, isActive);
-          
-          return (
-            <Button
-              key={topic.id}
-              variant={isActive ? "default" : "outline"}
-              size="sm"
-              onClick={() => onTopicChange(topic.id)}
               className={cn(
-                "flex items-center whitespace-nowrap flex-shrink-0 rounded-full px-3 transition-all",
-                "h-8 font-medium",
-                isActive
-                  ? 'text-white border-none'
-                  : isDark 
-                    ? 'bg-muted/40 border-muted/60 hover:bg-muted/80 text-foreground hover:border-muted/90'
-                    : 'bg-secondary/80 border-border/60 hover:bg-muted/60 text-foreground hover:border-muted/90'
-              )}
-              style={topicStyle}
-            >
-              {getTopicIcon(topic.id)}
-              <span className="text-sm">{topic.name_zh}</span>
-            </Button>
-          );
-        })}
+        "w-full overflow-x-auto pb-1 mb-1 scrollbar-none -mx-1 px-1 scroll-smooth snap-x",
+        "relative"
+      )}
+    >
+      <div className={cn(
+        "inline-flex gap-1 p-1 rounded-full",
+        "bg-gradient-to-r shadow-inner", 
+        "transition-all duration-300",
+        isDark 
+          ? "from-muted/60 to-muted/40 shadow-black/5 backdrop-blur-md" 
+          : "from-muted/50 to-muted/30 shadow-black/5 backdrop-blur-md",
+        "border border-muted/30"
+      )}>
+        {topics.map((topic, index) => (
+          <div key={topic.id} className="snap-start">
+            {renderTopicButton(topic)}
+          </div>
+        ))}
       </div>
+      
+      {/* 滚动渐变阴影 */}
+      <div className={cn(
+        "pointer-events-none absolute top-0 bottom-0 left-0 w-8",
+        "bg-gradient-to-r from-card to-transparent",
+        "opacity-60 z-10"
+      )}></div>
+      <div className={cn(
+        "pointer-events-none absolute top-0 bottom-0 right-0 w-8",
+        "bg-gradient-to-l from-card to-transparent",
+        "opacity-60 z-10"
+      )}></div>
     </div>
   );
 } 
+
+export default memo(TopicSelector); 

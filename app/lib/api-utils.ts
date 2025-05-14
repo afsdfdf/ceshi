@@ -39,8 +39,8 @@ export async function apiRequest<T = any>(
   options: ApiRequestOptions = {}
 ): Promise<T> {
   const { 
-    timeout = 15000, 
-    retries = 0, 
+    timeout = 30000, 
+    retries = 2, 
     retryDelay = 1000,
     retryCondition,
     shouldRetryOnServerError = true,
@@ -108,15 +108,34 @@ export async function apiRequest<T = any>(
 
       // 获取响应数据
       let data: any;
-      try {
-        data = await response.json();
-      } catch (e) {
-        // 如果不是有效的JSON，创建一个通用错误对象
-        data = { error: 'Invalid JSON response' };
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        try {
+          data = await response.json();
+        } catch (e) {
+          console.error('JSON解析错误:', e);
+          // 如果不是有效的JSON，创建一个通用错误对象
+          data = { error: 'Invalid JSON response', original_error: e };
+        }
+      } else {
+        // 非JSON响应
+        try {
+          const textContent = await response.text();
+          data = { 
+            text: textContent.substring(0, 200), // 只保留前200个字符避免日志过大
+            content_type: contentType 
+          };
+        } catch (e) {
+          data = { error: 'Unable to read response body', original_error: e };
+        }
       }
+
+      // 记录状态码
+      console.log(`API响应状态: ${response.status} ${response.statusText}`);
 
       // 检查响应状态
       if (!response.ok) {
+        console.error(`API错误响应数据:`, data);
         const errorMessage = data?.error || data?.message || `请求失败，状态码: ${response.status}`;
         throw new ApiError(
           errorMessage,
@@ -126,6 +145,12 @@ export async function apiRequest<T = any>(
         );
       }
 
+      // 记录成功响应的数据摘要
+      if (typeof data === 'object' && data !== null) {
+        const keysStr = Object.keys(data).join(', ');
+        console.log(`API响应数据包含字段: ${keysStr}`);
+      }
+
       return data as T;
     } catch (error: any) {
       // 清除超时
@@ -133,8 +158,11 @@ export async function apiRequest<T = any>(
 
       // 处理中止错误
       if (error.name === 'AbortError') {
+        console.error(`API请求超时: ${endpoint}`);
         throw new ApiError('请求超时', 408, 'Request Timeout');
       }
+
+      console.error(`API请求失败 (尝试 ${currentAttempt + 1}/${maxAttempts}):`, error);
 
       // 超过重试次数，直接抛出错误
       currentAttempt++;

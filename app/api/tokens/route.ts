@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
-import { promises as fs } from 'fs';
-import { join } from 'path';
+import { NextRequest } from 'next/server';
+
+export const dynamic = 'force-dynamic'
+export const runtime = 'edge'
 
 // 从环境变量获取API密钥
 const AVE_API_KEY = "NMUuJmYHJB6d91bIpgLqpuLLKYVws82lj0PeDP3UEb19FoyWFJUVGLsgE95XTEmA";
@@ -9,9 +11,6 @@ const AVE_API_KEY = "NMUuJmYHJB6d91bIpgLqpuLLKYVws82lj0PeDP3UEb19FoyWFJUVGLsgE95
 if (!AVE_API_KEY) {
   console.warn('警告: AVE_API_KEY未设置，API请求可能会失败');
 }
-
-// 缓存文件路径
-const CACHE_DIR = join(process.cwd(), 'cache');
 
 // 接口定义
 interface RankTopic {
@@ -66,17 +65,11 @@ const dummyTokens: TokenData[] = Array(50).fill(0).map((_, index) => ({
   "holders": Math.floor(Math.random() * 100000)
 }));
 
-// 缓存数据结构
-interface CacheItem {
-  data: any;
-  timestamp: number;
-}
-
 // 内存缓存对象，用于存储不同主题的数据
-const memoryCache: Record<string, CacheItem> = {};
+const memoryCache: Record<string, { data: any; timestamp: number }> = {};
 
 // 缓存有效期（1小时，单位为毫秒）
-const CACHE_TTL = parseInt(process.env.CACHE_TTL_TOKENS || '3600000');
+const CACHE_TTL = 3600000;
 
 /**
  * 检查缓存是否有效
@@ -87,48 +80,6 @@ function isMemoryCacheValid(cacheKey: string): boolean {
   if (!memoryCache[cacheKey]) return false;
   const now = Date.now();
   return now - memoryCache[cacheKey].timestamp < CACHE_TTL;
-}
-
-/**
- * 从文件系统读取缓存
- * @param cacheKey 缓存键
- * @returns 缓存数据或null
- */
-async function readFileCache(cacheKey: string): Promise<any | null> {
-  try {
-    const filePath = join(CACHE_DIR, `${cacheKey}.json`);
-    const data = await fs.readFile(filePath, 'utf-8');
-    const cache = JSON.parse(data) as CacheItem;
-    
-    const now = Date.now();
-    if (now - cache.timestamp < CACHE_TTL) {
-      return cache.data;
-    }
-    
-    return null;
-  } catch (error) {
-    return null;
-  }
-}
-
-/**
- * 写入文件系统缓存
- * @param cacheKey 缓存键
- * @param data 缓存数据
- */
-async function writeFileCache(cacheKey: string, data: any): Promise<void> {
-  try {
-    const cache: CacheItem = {
-      data,
-      timestamp: Date.now()
-    };
-    
-    const filePath = join(CACHE_DIR, `${cacheKey}.json`);
-    await fs.mkdir(CACHE_DIR, { recursive: true });
-    await fs.writeFile(filePath, JSON.stringify(cache, null, 2), 'utf-8');
-  } catch (error) {
-    console.error(`Error writing file cache for ${cacheKey}:`, error);
-  }
 }
 
 /**
@@ -217,10 +168,9 @@ function transformTokenData(apiData: any[]): TokenData[] {
   });
 }
 
-// Get token rank topics
-export async function GET(request: Request) {
-  console.log("API route called:", request.url);
-  const { searchParams } = new URL(request.url);
+export async function GET(request: NextRequest) {
+  try {
+    const searchParams = request.nextUrl.searchParams;
   const topic = searchParams.get('topic') || 'hot';
   console.log("Topic requested:", topic);
   
@@ -235,22 +185,6 @@ export async function GET(request: Request) {
         return NextResponse.json({ 
           success: true, 
           data: { topics: memoryCache[cacheKey].data }, 
-          timestamp: Date.now() 
-        }, { status: 200 });
-      }
-      
-      // 检查文件缓存
-      const fileCache = await readFileCache(cacheKey);
-      if (fileCache) {
-        console.log("Returning cached topics data from file");
-        // 同时更新内存缓存
-        memoryCache[cacheKey] = {
-          data: fileCache,
-          timestamp: Date.now()
-        };
-        return NextResponse.json({ 
-          success: true, 
-          data: { topics: fileCache }, 
           timestamp: Date.now() 
         }, { status: 200 });
       }
@@ -271,9 +205,6 @@ export async function GET(request: Request) {
           data: data.data,
           timestamp: Date.now()
         };
-        
-        // 更新文件缓存
-        await writeFileCache(cacheKey, data.data);
         
         console.log("Returning fresh topics data and updating cache");
         return NextResponse.json({ 
@@ -315,26 +246,6 @@ export async function GET(request: Request) {
         }, { status: 200 });
       }
       
-      // 检查文件缓存
-      const fileCache = await readFileCache(cacheKey);
-      if (fileCache) {
-        console.log(`Returning cached tokens data for topic: ${topic} from file`);
-        // 同时更新内存缓存
-        memoryCache[cacheKey] = {
-          data: fileCache,
-          timestamp: Date.now()
-        };
-        return NextResponse.json({ 
-          success: true,
-          data: {
-            topic: topic,
-            tokens: fileCache,
-            count: fileCache.length
-          },
-          timestamp: Date.now()
-        }, { status: 200 });
-      }
-      
       console.log(`Fetching fresh tokens data for topic: ${topic} from Ave.ai API`);
       
       // 尝试获取真实数据
@@ -355,9 +266,6 @@ export async function GET(request: Request) {
           data: transformedData,
           timestamp: Date.now()
         };
-        
-        // 更新文件缓存
-        await writeFileCache(cacheKey, transformedData);
         
         console.log(`Returning fresh tokens data for topic: ${topic} and updating cache`);
         return NextResponse.json({ 
@@ -434,5 +342,13 @@ export async function GET(request: Request) {
         timestamp: Date.now()
       }, { status: 200 });
     }
+    }
+  } catch (error) {
+    console.error("Unexpected error:", error);
+    return NextResponse.json({
+      success: false,
+      error: "Internal server error",
+      message: error instanceof Error ? error.message : "Unknown error"
+    }, { status: 500 });
   }
 } 

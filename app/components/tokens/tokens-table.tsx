@@ -1,4 +1,4 @@
-import React, { useMemo, useState, memo } from "react";
+import React, { useMemo, useState, memo, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { TokenRanking } from "@/app/types/token";
 import TokenRow from "./token-row";
@@ -31,7 +31,7 @@ const RefreshButton = memo(({
 }) => {
   return (
     <div className={cn(
-      "flex items-center justify-end mt-4 text-xs",
+      "flex items-center justify-end mt-2 text-xs",
       isDark ? "text-muted-foreground" : "text-muted-foreground/80"
     )}>
       {lastUpdated && (
@@ -45,7 +45,8 @@ const RefreshButton = memo(({
         onClick={onRefresh}
         disabled={isRefreshing}
         className={cn(
-          "px-3 h-7 rounded-full gap-1 transition-all",
+          "px-3 h-6 rounded-full gap-1 transition-all",
+          "hover:scale-105 hover:shadow-md",
           isDark 
             ? "border-muted hover:bg-muted hover:border-muted/80" 
             : "border-border hover:bg-secondary hover:border-muted/50",
@@ -53,7 +54,7 @@ const RefreshButton = memo(({
         )}
       >
         <RefreshCw className={cn(
-          "h-3.5 w-3.5",
+          "h-3 w-3",
           isRefreshing ? "animate-spin" : ""
         )} />
         {isRefreshing ? "刷新中..." : "刷新"}
@@ -68,23 +69,54 @@ RefreshButton.displayName = 'RefreshButton';
 const TableHeader = memo(({ isDark }: { isDark: boolean }) => {
   return (
     <div className={cn(
-      "grid grid-cols-12 gap-2 py-3 px-4 text-xs font-medium mb-3 rounded-lg",
-      "backdrop-blur-sm sticky top-0 z-10",
+      "grid grid-cols-12 gap-1 py-1.5 px-3 text-[10px] font-medium mb-2 rounded-lg",
+      "backdrop-blur-sm sticky top-0 z-10 transition-all duration-300",
+      "shadow-sm border",
       isDark 
-        ? "text-primary-foreground bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/10" 
-        : "text-primary/90 bg-gradient-to-r from-primary/5 to-transparent border border-primary/10"
+        ? "bg-gradient-to-r from-primary/15 via-primary/10 to-primary/5 text-primary-foreground/90 border-primary/20" 
+        : "bg-gradient-to-r from-primary/10 via-primary/5 to-transparent text-primary/90 border-primary/15"
     )}>
       <div className="col-span-6 flex items-center">
-        <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary/70 mr-2"></span>
+        <span className={cn(
+          "inline-block h-1 w-1 rounded-full mr-1.5",
+          "shadow-sm",
+          isDark ? "bg-primary/90 shadow-primary/30" : "bg-primary/80 shadow-primary/20"
+        )}></span>
+        <span className="relative">
         代币/链池
-      </div>
-      <div className="col-span-3 flex items-center">
-        <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary/70 mr-2"></span>
-        价格
+          <span className={cn(
+            "absolute -bottom-1 left-0 w-full h-px",
+            isDark ? "bg-primary/30" : "bg-primary/20"
+          )}></span>
+        </span>
       </div>
       <div className="col-span-3 flex items-center justify-end">
-        <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary/70 mr-2"></span>
+        <span className={cn(
+          "inline-block h-1 w-1 rounded-full mr-1.5",
+          "shadow-sm",
+          isDark ? "bg-primary/90 shadow-primary/30" : "bg-primary/80 shadow-primary/20"
+        )}></span>
+        <span className="relative pr-2">
+        价格
+          <span className={cn(
+            "absolute -bottom-1 left-0 w-full h-px",
+            isDark ? "bg-primary/30" : "bg-primary/20"
+          )}></span>
+        </span>
+      </div>
+      <div className="col-span-3 flex items-center justify-end">
+        <span className="relative mr-1.5">
         24h涨幅
+          <span className={cn(
+            "absolute -bottom-1 left-0 w-full h-px",
+            isDark ? "bg-primary/30" : "bg-primary/20"
+          )}></span>
+        </span>
+        <span className={cn(
+          "inline-block h-1 w-1 rounded-full",
+          "shadow-sm",
+          isDark ? "bg-primary/90 shadow-primary/30" : "bg-primary/80 shadow-primary/20"
+        )}></span>
       </div>
     </div>
   );
@@ -96,8 +128,9 @@ TableHeader.displayName = 'TableHeader';
 const EmptyState = memo(({ isDark }: { isDark: boolean }) => {
   return (
     <div className={cn(
-      "text-center py-12 rounded-lg",
+      "text-center py-8 rounded-lg",
       "border border-dashed",
+      "backdrop-blur-md",
       isDark 
         ? "text-muted-foreground bg-muted/5 border-muted/30" 
         : "text-muted-foreground/80 bg-secondary/20 border-muted/20"
@@ -126,11 +159,10 @@ function TokensTable({
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark" || darkMode;
 
-  // 计算当前页面的代币
-  const currentPageTokens = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    return tokens.slice(startIndex, startIndex + itemsPerPage);
-  }, [tokens, currentPage, itemsPerPage]);
+  // 获取当前显示的代币
+  const displayTokens = useMemo(() => {
+    return tokens;
+  }, [tokens]);
 
   // 处理代币点击
   const handleTokenClick = (token: TokenRanking) => {
@@ -150,40 +182,45 @@ function TokensTable({
   };
 
   return (
-    <div className="w-full">
+    <div className={cn(
+      "w-full rounded-lg overflow-hidden",
+      "transition-all duration-300",
+      "hover:shadow-md",
+      isDark 
+        ? "bg-black/5 border border-muted/30 shadow-sm backdrop-blur-sm" 
+        : "bg-white/40 border border-muted/20 shadow-sm backdrop-blur-sm"
+    )}>
       {/* 表头 */}
       <TableHeader isDark={isDark} />
 
       {/* 代币行 */}
       <div className={cn(
-        "space-y-1 pb-1",
-        "relative",
-        isDark 
-          ? "before:absolute before:inset-x-0 before:top-0 before:h-10 before:bg-gradient-to-b before:from-card before:to-transparent before:z-0 before:pointer-events-none" 
-          : "before:absolute before:inset-x-0 before:top-0 before:h-10 before:bg-gradient-to-b before:from-card before:to-transparent before:z-0 before:pointer-events-none"
+        "space-y-0.5 pb-1 px-1",
       )}>
-        {currentPageTokens.map((token, index) => (
+        {displayTokens.map((token, index) => (
           <TokenRow
             key={`${token.chain}-${token.token}`}
             token={token}
-            index={(currentPage - 1) * itemsPerPage + index}
+            index={index}
             darkMode={isDark}
             onClick={handleTokenClick}
           />
         ))}
 
         {/* 空状态 */}
-        {currentPageTokens.length === 0 && <EmptyState isDark={isDark} />}
+        {displayTokens.length === 0 && <EmptyState isDark={isDark} />}
       </div>
       
-      {/* 刷新按钮和最后更新时间 */}
+      {/* 刷新按钮 */}
       {onRefresh && (
+        <div className="px-3 pb-2">
         <RefreshButton 
           onRefresh={handleRefresh}
           isRefreshing={isRefreshing}
           lastUpdated={lastUpdated}
           isDark={isDark}
         />
+        </div>
       )}
     </div>
   );
