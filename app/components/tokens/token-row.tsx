@@ -48,7 +48,8 @@ function TokenRow({
       // 如果URL包含不允许的域名，则视为无效
       const isAllowedDomain = url && !disallowedDomains.some(domain => url.hostname.includes(domain));
       
-      setHasValidLogo(isValidUrl && isAllowedDomain);
+      // Ensure we always set a boolean value (fix type error)
+      setHasValidLogo(isValidUrl && !!isAllowedDomain);
     } catch (e) {
       // URL解析错误，视为无效
       setHasValidLogo(false);
