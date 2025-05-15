@@ -6,7 +6,7 @@
   "framework": "nextjs",
   "images": {
     "sizes": [16, 32, 48, 64, 96, 128, 256, 384],
-    "domains": ["assets.coingecko.com", "www.logofacade.com", "www.iconaves.com", "cryptologos.cc", "example.com"],
+    "domains": ["assets.coingecko.com", "www.logofacade.com", "www.iconaves.com", "cryptologos.cc", "example.com", "api.dicebear.com", "pbs.twimg.com", "dd.dexscreener.com"],
     "remotePatterns": [
       {
         "protocol": "https",
@@ -31,6 +31,18 @@
       {
         "protocol": "https",
         "hostname": "example.com"
+      },
+      {
+        "protocol": "https",
+        "hostname": "api.dicebear.com"
+      },
+      {
+        "protocol": "https",
+        "hostname": "pbs.twimg.com"
+      },
+      {
+        "protocol": "https",
+        "hostname": "dd.dexscreener.com"
       }
     ]
   },

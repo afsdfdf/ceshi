@@ -8,6 +8,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
 import { TrendingDown, TrendingUp } from "lucide-react";
+import { FallbackImage } from "@/app/components/ui/fallback-image";
 
 interface TokenRowProps {
   token: TokenRanking;
@@ -29,15 +30,29 @@ function TokenRow({
   const [isHovered, setIsHovered] = useState(false);
   const [hasValidLogo, setHasValidLogo] = useState(false);
   const [priceChanged, setPriceChanged] = useState(false);
-  const [priceIncreased, setPriceIncreased] = useState<boolean | null>(null);
+  const [priceIncreased, setPriceIncreased] = useState(false);
   const prevPriceRef = useRef(token.current_price_usd);
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark" || darkMode;
   
   // 检查logo_url是否有效
   useEffect(() => {
-    // 预先检查logo_url是否为有效字符串
-    setHasValidLogo(!!token.logo_url && token.logo_url.trim() !== '');
+    try {
+      // 检查是否为有效URL，且不是未配置的域名
+      const isValidUrl = !!token.logo_url && token.logo_url.trim() !== '';
+      
+      // 检查是否包含不支持的域名
+      const url = isValidUrl ? new URL(token.logo_url) : null;
+      const disallowedDomains = ['example.com'];
+      
+      // 如果URL包含不允许的域名，则视为无效
+      const isAllowedDomain = url && !disallowedDomains.some(domain => url.hostname.includes(domain));
+      
+      setHasValidLogo(isValidUrl && isAllowedDomain);
+    } catch (e) {
+      // URL解析错误，视为无效
+      setHasValidLogo(false);
+    }
   }, [token.logo_url]);
   
   // 价格变化检测
@@ -125,11 +140,29 @@ function TokenRow({
   
   // 处理图片加载错误
   const handleImageError = () => {
+    console.log(`Image failed to load: ${token.logo_url}`);
     setImageError(true);
   };
 
   // 生成默认图标，当图片加载失败时显示
   const getDefaultIcon = () => {
+    // 首先尝试使用本地占位符图片
+    if (process.env.NODE_ENV === "production") {
+      return (
+        <div className="w-7 h-7 rounded-full overflow-hidden shadow-sm">
+          <Image
+            src="/placeholder-token.png"
+            alt={token.symbol}
+            width={28}
+            height={28}
+            className="w-full h-full object-cover"
+            unoptimized={true}
+          />
+        </div>
+      );
+    }
+    
+    // 如果本地图片也失败或在开发环境中，使用渐变背景
     // 根据代币符号创建渐变背景
     const generateGradient = () => {
       // 使用代币符号的字符码生成颜色
@@ -258,7 +291,7 @@ function TokenRow({
           "transition-all duration-200",
           isHovered ? "scale-110 rotate-3" : ""
         )}>
-          {!hasValidLogo || imageError ? (
+          {!hasValidLogo ? (
             getDefaultIcon()
           ) : (
             <div className={cn(
@@ -268,7 +301,7 @@ function TokenRow({
               "border-2",
               isDark ? "border-muted/30" : "border-background/80"
             )}>
-              <Image
+              <FallbackImage
                 src={token.logo_url}
                 alt={token.name || token.symbol}
                 width={28}
@@ -277,8 +310,7 @@ function TokenRow({
                   "w-full h-full object-cover",
                   isHovered ? "scale-110" : ""
                 )}
-                style={{ transition: "transform 0.2s ease" }}
-                onError={handleImageError}
+                fallbackSrc="/placeholder-token.png"
               />
             </div>
           )}

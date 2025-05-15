@@ -152,6 +152,6 @@ export function getTokenIconUrl(token: TrendingToken): string {
     return token.logo
   }
 
-  // 否则使用占位符
-  return `/placeholder.svg?height=32&width=32`
+  // 否则使用占位符，确保使用正确的路径
+  return `/placeholder-token.png`
 }
