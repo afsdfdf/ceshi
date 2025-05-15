@@ -98,8 +98,8 @@ export default function LoginPage() {
       setRegLoading(true)
       setRegError(null)
       
-      // 注册新用户
-      const { data, error } = await supabase.auth.signUp({
+      // 1. 先注册用户
+      const { data, error: authError } = await supabase.auth.signUp({
         email: regEmail,
         password: regPassword,
         options: {
@@ -109,27 +109,62 @@ export default function LoginPage() {
         }
       })
       
-      if (error) {
-        throw error
+      if (authError) {
+        console.error('身份验证错误:', authError)
+        throw new Error(authError.message)
       }
       
-      // 创建用户资料
-      if (data.user) {
-        await supabase.from('profiles').insert({
-          id: data.user.id,
-          username: regUsername,
-          email: regEmail,
-          is_admin: false,
-          created_at: new Date().toISOString()
-        })
-      }
+      console.log('用户注册成功:', data)
       
-      // 注册成功，跳转到首页
-      router.push('/chat')
+      // 2. 如果认证成功，创建用户资料
+      if (data && data.user) {
+        try {
+          const { error: profileError } = await supabase.from('profiles').insert({
+            id: data.user.id,
+            username: regUsername,
+            email: regEmail,
+            is_admin: false,
+            created_at: new Date().toISOString()
+          })
+          
+          if (profileError) {
+            console.error('创建用户资料失败:', profileError)
+            // 不抛出错误，用户已创建成功，可以登录
+          } else {
+            console.log('用户资料创建成功')
+          }
+        } catch (profileException) {
+          console.error('创建资料异常:', profileException)
+          // 继续执行，不中断流程
+        }
+        
+        // 3. 用户信息更新
+        try {
+          // 尝试更新用户元数据，确保用户名被保存
+          await supabase.auth.updateUser({
+            data: { username: regUsername }
+          })
+        } catch (updateError) {
+          console.error('更新用户数据失败:', updateError)
+        }
+        
+        // 4. 完成后跳转
+        router.push('/chat')
+      } else {
+        // 如果没有用户数据但也没有错误，可能是Supabase的确认邮件功能
+        console.log('注册成功，但可能需要邮箱验证')
+        setRegError('注册邮件已发送，请检查邮箱并确认注册')
+      }
       
     } catch (error: any) {
-      console.error('注册失败:', error)
-      setRegError(error.message || '注册失败，请稍后重试')
+      console.error('注册失败详细信息:', error)
+      if (error.message.includes('User already registered')) {
+        setRegError('该邮箱已注册，请直接登录或使用其他邮箱')
+      } else if (error.message.includes('Password')) {
+        setRegError('密码格式错误: ' + error.message)
+      } else {
+        setRegError(error.message || '注册失败，请稍后重试')
+      }
     } finally {
       setRegLoading(false)
     }
