@@ -1,43 +1,62 @@
-// 简单的内存数据库实现
-interface SearchRecord {
-  chain: string;
-  address: string;
-  count: number;
-  lastSearched: Date;
+import { MongoClient, Db } from 'mongodb';
+
+const uri = process.env.MONGODB_URI || "mongodb://localhost:27017/forum-db";
+const options = {};
+
+// Define interface for global with MongoDB client
+interface GlobalWithMongo {
+  _mongoClientPromise?: Promise<MongoClient>;
 }
 
-class SearchDB {
-  private searchRecords: Map<string, SearchRecord> = new Map();
+// Extend the global object with our custom type
+declare global {
+  var _mongoClientPromise: Promise<MongoClient> | undefined;
+}
 
-  // 记录搜索
-  recordSearch(chain: string, address: string): void {
-    const key = `${chain}:${address}`;
-    const existing = this.searchRecords.get(key);
+let client: MongoClient;
+let clientPromise: Promise<MongoClient>;
 
-    if (existing) {
-      existing.count += 1;
-      existing.lastSearched = new Date();
-    } else {
-      this.searchRecords.set(key, {
+if (!process.env.MONGODB_URI) {
+  console.warn('请在.env.local文件中设置MONGODB_URI环境变量。目前使用默认本地连接。');
+}
+
+if (process.env.NODE_ENV === 'development') {
+  // 在开发模式下使用全局变量以保持热重载期间的连接
+  if (!global._mongoClientPromise) {
+    client = new MongoClient(uri, options);
+    global._mongoClientPromise = client.connect();
+  }
+  clientPromise = global._mongoClientPromise;
+} else {
+  // 在生产环境中为每个请求创建新的连接
+  client = new MongoClient(uri, options);
+  clientPromise = client.connect();
+}
+
+/**
+ * 连接到MongoDB数据库
+ * @returns {Promise<Db>} 返回数据库实例
+ */
+export async function connectDB(): Promise<Db> {
+  const client = await clientPromise;
+  return client.db(process.env.MONGODB_DB || 'forum-db');
+}
+
+// Export a searchDB object with recordSearch method
+export const searchDB = {
+  async recordSearch(chain: string, address: string): Promise<void> {
+    try {
+      const db = await connectDB();
+      await db.collection('searches').insertOne({
         chain,
         address,
-        count: 1,
-        lastSearched: new Date(),
+        timestamp: new Date()
       });
+      console.log(`Recorded search for ${chain}:${address}`);
+    } catch (error) {
+      console.error('Error recording search:', error);
     }
   }
+};
 
-  // 获取所有搜索记录，按搜索次数排序
-  getAllSearchRecords(): SearchRecord[] {
-    return Array.from(this.searchRecords.values()).sort((a, b) => b.count - a.count);
-  }
-
-  // 获取特定代币的搜索次数
-  getSearchCount(chain: string, address: string): number {
-    const key = `${chain}:${address}`;
-    return this.searchRecords.get(key)?.count || 0;
-  }
-}
-
-// 导出单例实例
-export const searchDB = new SearchDB(); 
+export default clientPromise; 

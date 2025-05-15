@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { searchDB } from "@/lib/db";
+import { searchDB } from "../../../../lib/db";
 
 export async function POST(request: Request) {
   try {
@@ -12,6 +12,7 @@ export async function POST(request: Request) {
       );
     }
 
+    // Use the searchDB module from lib/db.js
     searchDB.recordSearch(chain, address);
 
     return NextResponse.json({ success: true });
