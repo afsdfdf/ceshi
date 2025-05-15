@@ -30,16 +30,25 @@ function TopicSelector({
     if (scrollRef.current && !isTransitioning) {
       const activeButton = scrollRef.current.querySelector(`[data-topic-id="${activeTopic}"]`);
       if (activeButton) {
+        // 存储上次点击的主题ID，只有在外部变化时才滚动，防止点击时重置位置
         const container = scrollRef.current;
-        const scrollLeft = activeButton.getBoundingClientRect().left - 
-                           container.getBoundingClientRect().left - 
-                           (container.clientWidth / 2) + 
-                           (activeButton as HTMLElement).offsetWidth / 2;
         
-        container.scrollTo({
-          left: scrollLeft,
-          behavior: 'smooth'
-        });
+        // 只在自动设置主题时滚动，不在用户点击时滚动
+        // 可以通过点击事件vs自动触发事件来区分
+        if (!container.hasAttribute('data-user-clicked')) {
+          const scrollLeft = activeButton.getBoundingClientRect().left - 
+                             container.getBoundingClientRect().left - 
+                             (container.clientWidth / 2) + 
+                             (activeButton as HTMLElement).offsetWidth / 2;
+          
+          container.scrollTo({
+            left: scrollLeft,
+            behavior: 'smooth'
+          });
+        }
+        
+        // 重置用户点击标志
+        container.removeAttribute('data-user-clicked');
       }
     }
   }, [activeTopic, isTransitioning]);
@@ -52,7 +61,13 @@ function TopicSelector({
       <button
         key={topic.id}
         data-topic-id={topic.id}
-        onClick={() => onChange(topic.id)}
+        onClick={() => {
+          // 设置用户点击标志
+          if (scrollRef.current) {
+            scrollRef.current.setAttribute('data-user-clicked', 'true');
+          }
+          onChange(topic.id);
+        }}
         className={cn(
           "px-2.5 py-1 text-xs rounded-full transition-all duration-300 whitespace-nowrap font-medium relative",
           "border flex items-center gap-1",
@@ -94,7 +109,7 @@ function TopicSelector({
     <div 
       ref={scrollRef}
               className={cn(
-        "w-full overflow-x-auto pb-1 mb-1 scrollbar-none -mx-1 px-1 scroll-smooth snap-x",
+        "w-full overflow-x-auto pb-1 mb-1 scrollbar-none -mx-1 px-1",
         "relative"
       )}
     >

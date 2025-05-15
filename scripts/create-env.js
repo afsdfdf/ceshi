@@ -2,12 +2,9 @@ const fs = require('fs');
 const path = require('path');
 
 // .env.local文件内容
-const envContent = `# Supabase配置
-NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-
-# Admin权限配置
-NEXT_PUBLIC_ADMIN_TOKEN=admin123
+const envContent = `# 数据库配置
+MONGODB_URI=mongodb://localhost:27017/forum-db
+MONGODB_DB=forum-db
 
 # NextAuth配置
 NEXTAUTH_URL=http://localhost:3000
@@ -25,5 +22,4 @@ const envPath = path.join(__dirname, '..', '.env.local');
 fs.writeFileSync(envPath, envContent);
 
 console.log('.env.local文件已创建!');
-console.log(`路径: ${envPath}`);
-console.log('请替换Supabase URL和匿名密钥为您的实际项目值'); 
+console.log(`路径: ${envPath}`); 

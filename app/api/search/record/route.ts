@@ -1,9 +1,5 @@
 import { NextResponse } from "next/server";
-import { searchDB } from "@/lib/supabase";
-
-// Check if Supabase environment variables are set
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+import { searchDB } from "@/lib/db";
 
 export async function POST(request: Request) {
   try {
@@ -16,16 +12,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // If Supabase credentials are missing, return success without actually recording
-    if (!supabaseUrl || !supabaseKey) {
-      console.warn("Skipping search recording because Supabase credentials are missing");
-      return NextResponse.json({ 
-        success: true, 
-        message: "Search recording skipped due to missing Supabase configuration" 
-      });
-    }
-
-    await searchDB.recordSearch(chain, address);
+    searchDB.recordSearch(chain, address);
 
     return NextResponse.json({ success: true });
   } catch (error) {

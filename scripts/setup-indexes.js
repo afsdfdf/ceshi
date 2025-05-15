@@ -1,47 +1,56 @@
-const { createClient } = require('@supabase/supabase-js');
+const { MongoClient } = require('mongodb');
 require('dotenv').config({ path: '.env.local' });
 
-// Supabase connection
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseKey) {
-  console.error('环境变量不完整: 请在 .env.local 文件中设置 NEXT_PUBLIC_SUPABASE_URL 和 NEXT_PUBLIC_SUPABASE_ANON_KEY');
-  process.exit(1);
-}
-
-const supabase = createClient(supabaseUrl, supabaseKey);
+// 默认本地连接，如果没有设置环境变量
+const uri = process.env.MONGODB_URI || "mongodb://localhost:27017/forum-db";
 
 async function setupIndexes() {
+  const client = new MongoClient(uri);
+  
   try {
-    console.log('正在连接到 Supabase...');
+    await client.connect();
+    console.log('已连接到MongoDB');
     
-    // 在 Supabase 中，我们可以使用 RPC 调用运行自定义 SQL
-    // 注意：创建索引需要在 Supabase 的 SQL 编辑器中执行，或者通过服务端 API
-    // 以下是生成 SQL 语句以便您在 SQL 编辑器中执行
+    const db = client.db(process.env.MONGODB_DB || 'forum-db');
     
-    console.log('\n====== 请在 Supabase SQL 编辑器中执行以下 SQL 语句 ======\n');
+    console.log('正在创建集合与索引...');
     
-    // Posts 表索引
-    console.log('-- Posts 表索引');
-    console.log('CREATE INDEX IF NOT EXISTS idx_posts_created_at ON posts (created_at DESC);');
-    console.log('CREATE INDEX IF NOT EXISTS idx_posts_is_pinned_created_at ON posts (is_pinned DESC, created_at DESC);');
-    console.log('CREATE INDEX IF NOT EXISTS idx_posts_title_content ON posts USING GIN (to_tsvector(\'simple\', title || \' \' || content));');
+    // 确保集合存在
+    const collections = ['posts', 'comments', 'users'];
+    for (const collectionName of collections) {
+      try {
+        await db.createCollection(collectionName);
+        console.log(`集合 ${collectionName} 已创建或已存在`);
+      } catch (error) {
+        if (error.code !== 48) { // 忽略"集合已存在"错误
+          console.error(`创建集合 ${collectionName} 时出错:`, error);
+        }
+      }
+    }
     
-    // Comments 表索引
-    console.log('\n-- Comments 表索引');
-    console.log('CREATE INDEX IF NOT EXISTS idx_comments_post_id ON comments (post_id);');
-    console.log('CREATE INDEX IF NOT EXISTS idx_comments_created_at ON comments (created_at DESC);');
+    // Posts 集合索引
+    await db.collection('posts').createIndex({ createdAt: -1 });
+    await db.collection('posts').createIndex({ isPinned: -1, createdAt: -1 });
+    await db.collection('posts').createIndex({ authorId: 1 });
+    await db.collection('posts').createIndex({ title: "text", content: "text" });
+    console.log('Posts集合索引已创建');
     
-    // Users 表索引 - email 已经是唯一约束
-    console.log('\n-- Users 表索引 (email 已经是唯一约束)');
-    console.log('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users (email);');
+    // Comments 集合索引
+    await db.collection('comments').createIndex({ postId: 1 });
+    await db.collection('comments').createIndex({ createdAt: -1 });
+    await db.collection('comments').createIndex({ authorId: 1 });
+    console.log('Comments集合索引已创建');
     
-    console.log('\n====== 请在 Supabase SQL 编辑器中执行以上 SQL 语句 ======\n');
+    // Users 集合索引
+    await db.collection('users').createIndex({ email: 1 }, { unique: true });
+    console.log('Users集合索引已创建');
     
-    console.log('\n索引设置指南已生成。由于安全限制，您需要在 Supabase 控制面板的 SQL 编辑器中手动执行这些命令。');
+    console.log('所有索引创建成功!');
   } catch (error) {
-    console.error('生成索引设置时出错:', error);
+    console.error('创建索引时出错:', error);
+  } finally {
+    await client.close();
+    console.log('MongoDB连接已关闭');
   }
 }
 

@@ -45,8 +45,8 @@ export default function BottomNav({ darkMode, currentTab, isDark: propIsDark }: 
     {
       name: "聊天",
       icon: MessageSquare,
-      href: "/forum",
-      id: "forum"
+      href: "/chat",
+      id: "chat"
     },
     {
       name: "我的",
@@ -68,7 +68,7 @@ export default function BottomNav({ darkMode, currentTab, isDark: propIsDark }: 
           // 从当前路径或指定的currentTab确定活动标签
           const isActive = currentTab 
             ? item.id === currentTab
-            : pathname === item.href;
+            : pathname === item.href || pathname.startsWith(`${item.href}/`);
             
           const Icon = item.icon
           

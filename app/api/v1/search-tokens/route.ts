@@ -5,9 +5,6 @@ import { transformAveTokens } from '../../lib/transforms';
 import { withErrorHandling, buildErrorResponse } from '../../lib/errors';
 import { ApiResponse, TokenData } from '../../lib/types';
 
-// Force dynamic rendering to avoid static generation errors
-export const dynamic = 'force-dynamic';
-
 /**
  * 搜索代币
  */
@@ -80,7 +77,7 @@ export async function GET(request: Request): Promise<NextResponse> {
           return token;
         });
         
-        const result = {
+        return {
           success: true,
           data: {
             tokens,
@@ -90,9 +87,6 @@ export async function GET(request: Request): Promise<NextResponse> {
           timestamp: Date.now(),
           fallback: true
         };
-        
-        // Make sure to return a NextResponse
-        return NextResponse.json(result);
       }
     );
   } catch (error) {

@@ -198,7 +198,7 @@ function TokenRow({
       return `$${price.toExponential(4)}`;
     }
   };
-  
+
   // 显示链信息
   const chainDisplay = () => {
     const chainMap: Record<string, string> = {

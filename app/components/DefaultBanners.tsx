@@ -24,8 +24,8 @@ export function generateDefaultBanners(): BannerItem[] {
     },
     {
       imageUrl: "/hf/sh.png",
-      link: "/forum",
-      title: "参与社区讨论",
+      link: "/chat",
+      title: "社区讨论",
       description: "与其他投资者交流加密货币投资心得"
     }
   ];
@@ -55,10 +55,10 @@ export function useThemedBanners(): BannerItem[] {
   };
   
   // 社区讨论横幅
-  const forumBanner = {
+  const chatBanner = {
     imageUrl: "/hf/sh.png",
-    link: "/forum",
-    title: "参与社区讨论",
+    link: "/chat",
+    title: "社区讨论",
     description: "与其他投资者交流加密货币投资心得"
   };
   
@@ -73,7 +73,7 @@ export function useThemedBanners(): BannerItem[] {
     return [
       telegramBanner,
       discoverBanner,
-      forumBanner
+      chatBanner
     ];
   }
 } 

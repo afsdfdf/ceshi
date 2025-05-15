@@ -5,9 +5,6 @@ import { transformAveTokenDetail } from '../../lib/transforms';
 import { withErrorHandling, buildErrorResponse } from '../../lib/errors';
 import { ApiResponse, TokenDetail } from '../../lib/types';
 
-// Force dynamic rendering to avoid static generation errors
-export const dynamic = 'force-dynamic';
-
 /**
  * 获取代币详情
  */

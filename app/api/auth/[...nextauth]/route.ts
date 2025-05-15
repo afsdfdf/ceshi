@@ -1,17 +1,8 @@
 import NextAuth, { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
+import { connectDB } from '@/lib/db';
 import bcrypt from 'bcryptjs';
-import { supabase } from '@/lib/supabase';
-
-// Check if required environment variables are set
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const nextAuthSecret = process.env.NEXTAUTH_SECRET || 'a-default-secret-for-development-only';
-
-// Warn if environment variables are missing
-if (!supabaseUrl || !supabaseKey) {
-  console.warn('WARNING: Supabase environment variables are missing. Authentication will not work correctly.');
-}
+import { ObjectId } from 'mongodb';
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -26,48 +17,25 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
-        // If Supabase credentials are missing, return a mock user for development/testing
-        if (!supabaseUrl || !supabaseKey) {
-          console.warn('Using mock authentication because Supabase credentials are missing');
-          if (credentials.email === 'admin@example.com' && credentials.password === 'password') {
-            return {
-              id: '1',
-              name: 'Admin User',
-              email: 'admin@example.com',
-              isAdmin: true,
-            };
-          }
+        const db = await connectDB();
+        const user = await db.collection('users').findOne({ email: credentials.email });
+        
+        if (!user) {
           return null;
         }
-
-        try {
-          // Fetch user from Supabase
-          const { data: user, error } = await supabase
-            .from('users')
-            .select('*')
-            .eq('email', credentials.email)
-            .single();
-          
-          if (error || !user) {
-            return null;
-          }
-          
-          const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
-          
-          if (!isPasswordValid) {
-            return null;
-          }
-          
-          return {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            isAdmin: user.is_admin || false,
-          };
-        } catch (error) {
-          console.error('Auth error:', error);
+        
+        const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
+        
+        if (!isPasswordValid) {
           return null;
         }
+        
+        return {
+          id: user._id.toString(),
+          name: user.name,
+          email: user.email,
+          isAdmin: user.isAdmin || false,
+        };
       }
     })
   ],
@@ -91,7 +59,6 @@ export const authOptions: NextAuthOptions = {
     strategy: 'jwt' as const,
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
-  secret: nextAuthSecret,
   pages: {
     signIn: '/auth/signin',
     error: '/auth/error',
