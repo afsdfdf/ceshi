@@ -25,6 +25,7 @@ export async function GET(request: Request): Promise<NextResponse> {
     console.log(`API请求：token-details，tokenId=${tokenId}`);
     
     return await withErrorHandling(
+      // 主处理函数
       async () => {
         // 检查缓存
         const cacheKey = `token_details_${tokenId}`;
@@ -65,8 +66,23 @@ export async function GET(request: Request): Promise<NextResponse> {
         
         return NextResponse.json(result);
       },
-      // 缓存提供器，用于错误时返回旧数据
-      async () => getCache(`token_details_${tokenId}`)
+      // 回退处理函数 - 尝试使用过期缓存
+      async () => {
+        const cacheKey = `token_details_${tokenId}`;
+        const cachedData = await getCache(cacheKey); // 尝试获取缓存
+        
+        if (cachedData) {
+          return cachedData;
+        }
+        
+        // 没有缓存可用，返回错误响应
+        return {
+          success: false,
+          error: '获取代币详情失败',
+          message: '服务暂时不可用，请稍后再试',
+          timestamp: Date.now()
+        };
+      }
     );
   } catch (error) {
     console.error('token-details API错误:', error);

@@ -15,15 +15,20 @@ export async function GET(request: Request): Promise<NextResponse> {
     
     console.log(`API请求：tokens，主题=${topic}`);
     
-    return await withErrorHandling(async () => {
-      // 如果请求的是主题列表
-      if (topic === 'topics') {
-        return await getTopics();
-      }
-      
-      // 否则根据主题获取代币
-      return await getTokensByTopic(topic);
-    });
+    return await withErrorHandling(
+      // 主处理程序
+      async () => {
+        // 如果请求的是主题列表
+        if (topic === 'topics') {
+          return await getTopics();
+        }
+        
+        // 否则根据主题获取代币
+        return await getTokensByTopic(topic);
+      },
+      // 回退处理程序 - 不需要，getTopics和getTokensByTopic已有自己的错误处理
+      undefined
+    );
   } catch (error) {
     console.error('tokens API错误:', error);
     return NextResponse.json(buildErrorResponse(error), { status: 500 });

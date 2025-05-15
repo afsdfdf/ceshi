@@ -29,25 +29,12 @@ export function optimizeChartDisplay(chart: Chart, interval: string, data: KLine
   // 适配可见范围：显示近期数据但保留足够历史
   const dataLength = data.length;
   
-  // 计算合适的右空白
-  const rightRatio = 0.08;
-  chart.setRightSpace(Math.ceil(chart.getOffsetRightSpace() * rightRatio));
+  // 设置右边距
+  const rightDistance = Math.ceil(chart.getOffsetRightDistance() * 0.08);
+  chart.setOffsetRightDistance(rightDistance);
   
-  // 根据不同时间间隔设置不同的可见范围
-  let visibleRange = Math.min(dataLength, 60);
-  
-  if (interval === '1d' || interval === '1w') {
-    visibleRange = Math.min(dataLength, 90);
-  } else if (interval === '1h' || interval === '4h') {
-    visibleRange = Math.min(dataLength, 120);
-  } else {
-    visibleRange = Math.min(dataLength, 180);
-  }
-  
-  // 设置可见范围
-  if (visibleRange < dataLength) {
-    chart.setVisibleRange({ from: dataLength - visibleRange, to: dataLength - 1 });
-  }
+  // 无法直接设置可见范围，依赖图表自动调整
+  // 图表在初始化时会自动显示合适的数据范围
 }
 
 /**
@@ -112,10 +99,14 @@ export function setupIndicators(chart: Chart, mainIndicator?: string, subIndicat
   
   // 设置副图指标
   if (subIndicator) {
-    // 先清除现有的副图指标
-    chart.getIndicatorByPaneId('sub-indicator')?.forEach(name => {
-      chart.removeIndicator('sub-indicator', name);
-    });
+    // 处理现有指标
+    try {
+      // 尝试移除现有指标，如果存在的话
+      chart.removeIndicator('sub-indicator', subIndicator);
+    } catch (error) {
+      // 忽略错误，继续添加新指标
+      console.log('移除现有指标失败，可能不存在', error);
+    }
     
     // 增加新的副图指标
     chart.createIndicator(
