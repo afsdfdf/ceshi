@@ -147,42 +147,17 @@ function TokenRow({
 
   // 生成默认图标，当图片加载失败时显示
   const getDefaultIcon = () => {
-    // 首先尝试使用本地占位符图片
-    if (process.env.NODE_ENV === "production") {
-      return (
-        <div className="w-7 h-7 rounded-full overflow-hidden shadow-sm">
-          <Image
-            src="/placeholder-token.png"
-            alt={token.symbol}
-            width={28}
-            height={28}
-            className="w-full h-full object-cover"
-            unoptimized={true}
-          />
-        </div>
-      );
-    }
-    
-    // 如果本地图片也失败或在开发环境中，使用渐变背景
-    // 根据代币符号创建渐变背景
-    const generateGradient = () => {
-      // 使用代币符号的字符码生成颜色
-      const char1 = token.symbol.charCodeAt(0) % 360;
-      const char2 = (token.symbol.length > 1 ? token.symbol.charCodeAt(1) : 0) % 360;
-      
-      return {
-        background: isDark
-          ? `linear-gradient(135deg, hsl(${char1}, 80%, 40%), hsl(${char2}, 80%, 25%))`
-          : `linear-gradient(135deg, hsl(${char1}, 90%, 60%), hsl(${char2}, 90%, 45%))`
-      };
-    };
-    
+    // 使用笑脸作为默认图标
     return (
-      <div 
-        className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium text-white shadow-sm"
-        style={generateGradient()}
-      >
-        {token.symbol.substring(0, 2).toUpperCase()}
+      <div className="w-7 h-7 rounded-full overflow-hidden shadow-sm">
+        <Image
+          src="/smiley-face.svg"
+          alt={token.symbol}
+          width={28}
+          height={28}
+          className="w-full h-full object-cover"
+          unoptimized={true}
+        />
       </div>
     );
   };

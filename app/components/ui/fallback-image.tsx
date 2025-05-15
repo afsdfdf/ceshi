@@ -20,7 +20,7 @@ export function FallbackImage({
   width,
   height,
   className,
-  fallbackSrc = "/placeholder-token.png",
+  fallbackSrc = "/smiley-face.svg",
   usePlaceholder = true
 }: FallbackImageProps) {
   const [error, setError] = useState(false)
