@@ -221,15 +221,15 @@ export default function ChartWrapper({
   
   // 当副图指标变化时更新
   useEffect(() => {
-    // 重新创建副图
+    if (!chartInstance.current) return;
     if (subIndicator && subIndicator !== "VOL") {
-      chartInstance.current?.createIndicator(subIndicator, true, {
+      chartInstance.current.createIndicator(subIndicator, true, {
         id: 'sub-pane',
         height: 80
       });
     } else {
       // VOL是默认的，所以我们创建VOL指标
-      chartInstance.current?.createIndicator('VOL', true, {
+      chartInstance.current.createIndicator('VOL', true, {
         id: 'sub-pane',
         height: 80
       });
