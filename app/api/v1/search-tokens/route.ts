@@ -26,6 +26,7 @@ export async function GET(request: Request): Promise<NextResponse> {
     console.log(`API请求：search-tokens，keyword=${keyword}${chain ? ', chain=' + chain : ''}`);
     
     return await withErrorHandling(
+      // 主处理函数 - 使用真实API数据
       async () => {
         // 搜索结果较为动态，设置较短的缓存时间
         const cacheKey = `search_${keyword}${chain ? '_' + chain : ''}`;
@@ -69,7 +70,7 @@ export async function GET(request: Request): Promise<NextResponse> {
         
         return NextResponse.json(result);
       },
-      // 错误处理 - 使用模拟数据
+      // 回退处理函数 - 使用模拟数据
       async () => {
         const tokens = getDummyTokens(10).map(token => {
           token.name = `${keyword} ${token.name}`;
@@ -84,8 +85,7 @@ export async function GET(request: Request): Promise<NextResponse> {
             count: tokens.length,
             keyword
           },
-          timestamp: Date.now(),
-          fallback: true
+          timestamp: Date.now()
         };
       }
     );

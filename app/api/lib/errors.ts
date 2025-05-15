@@ -1,6 +1,7 @@
 /**
  * API错误处理模块
  */
+import { NextResponse } from 'next/server';
 
 // API错误类
 export class ApiError extends Error {
@@ -38,28 +39,28 @@ export function buildErrorResponse(error: any) {
 
 // API请求错误处理包装器
 export async function withErrorHandling<T>(
-  handler: () => Promise<T>,
-  cacheProvider?: () => Promise<T | null>
-): Promise<T> {
+  handler: () => Promise<NextResponse<T>>,
+  fallbackHandler?: () => Promise<T>
+): Promise<NextResponse<T>> {
   try {
     return await handler();
   } catch (error) {
     console.error('API处理器错误:', error);
     
-    // 如果提供了缓存提供器，尝试使用缓存
-    if (cacheProvider) {
+    // 如果提供了回退处理程序，尝试使用它
+    if (fallbackHandler) {
       try {
-        const cachedData = await cacheProvider();
-        if (cachedData) {
-          console.log('发生错误后返回过期缓存');
-          return {
-            ...cachedData,
-            stale: true,
-            stale_reason: error instanceof Error ? error.message : '未知错误'
-          } as unknown as T;
-        }
-      } catch (cacheError) {
-        console.error('访问缓存时出错:', cacheError);
+        const fallbackData = await fallbackHandler();
+        console.log('使用回退数据');
+        
+        // 确保返回NextResponse对象
+        return NextResponse.json({
+          ...fallbackData,
+          fallback: true,
+          fallback_reason: error instanceof Error ? error.message : '未知错误'
+        });
+      } catch (fallbackError) {
+        console.error('执行回退处理程序时出错:', fallbackError);
       }
     }
     
