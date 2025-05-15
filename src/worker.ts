@@ -1,5 +1,17 @@
 import { getAssetFromKV, serveSinglePageApp } from '@cloudflare/kv-asset-handler'
 
+// Define Cloudflare Workers types
+interface ExecutionContext {
+  waitUntil(promise: Promise<any>): void;
+}
+
+interface KVNamespace {
+  get(key: string, options?: any): Promise<string | null>;
+  put(key: string, value: string | ReadableStream | ArrayBuffer, options?: any): Promise<void>;
+  delete(key: string): Promise<void>;
+  list(options?: any): Promise<any>;
+}
+
 interface Env {
   STATIC_CONTENT: KVNamespace
 }

@@ -178,27 +178,28 @@ export default function ChartWrapper({
       }
       
       // 设置技术指标
-      const mainIndicator = "MA"; // 默认显示移动平均线
-      // 副图指标
-      if (subIndicator && subIndicator !== "VOL") {
-        chartInstance.current.createIndicator(subIndicator, true, {
-          id: 'sub-pane',
-          height: 80
+      if (chartInstance.current) {
+        // 副图指标
+        if (subIndicator && subIndicator !== "VOL") {
+          chartInstance.current.createIndicator(subIndicator, true, {
+            id: 'sub-pane',
+            height: 80
+          });
+        }
+        
+        // 设置基本移动平均线指标
+        chartInstance.current.createIndicator('MA', false, {
+          id: 'candle_pane'
         });
       }
-      
-      // 设置基本移动平均线指标
-      chartInstance.current.createIndicator('MA', false, {
-        id: 'candle_pane'
-      });
       
       // 获取数据
       fetchKlineData();
       
       // 清理函数
       return () => {
-        if (chartInstance.current) {
-          dispose(chartRef.current!);
+        if (chartInstance.current && chartRef.current) {
+          dispose(chartRef.current);
           chartInstance.current = null;
         }
       };
@@ -222,6 +223,7 @@ export default function ChartWrapper({
   // 当副图指标变化时更新
   useEffect(() => {
     if (!chartInstance.current) return;
+    
     if (subIndicator && subIndicator !== "VOL") {
       chartInstance.current.createIndicator(subIndicator, true, {
         id: 'sub-pane',

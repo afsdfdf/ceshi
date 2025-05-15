@@ -8,26 +8,21 @@ export function createServerClient() {
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
   
   return createClient(supabaseUrl, supabaseKey, {
-    cookies: {
-      get(name) {
-        return cookieStore.get(name)?.value;
-      },
-      set(name, value, options) {
-        try {
-          cookieStore.set({ name, value, ...options });
-        } catch (error) {
-          // cookies读取器在一些上下文中是只读的
-          console.error('无法设置cookie:', error);
-        }
-      },
-      remove(name, options) {
-        try {
-          cookieStore.set({ name, value: '', ...options });
-        } catch (error) {
-          console.error('无法移除cookie:', error);
-        }
-      },
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true
     },
+    global: {
+      fetch: (url, options) => {
+        return fetch(url, {
+          ...options,
+          headers: {
+            ...options?.headers,
+            Cookie: cookieStore.toString()
+          }
+        });
+      }
+    }
   });
 }
 

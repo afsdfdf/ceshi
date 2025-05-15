@@ -1,5 +1,10 @@
 import { getAssetFromKV } from '@cloudflare/kv-asset-handler';
 
+// Define the ExecutionContext interface if it's not available
+interface ExecutionContext {
+  waitUntil(promise: Promise<any>): void;
+}
+
 export default {
   async fetch(request: Request, env: any, ctx: ExecutionContext): Promise<Response> {
     try {

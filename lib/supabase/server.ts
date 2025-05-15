@@ -8,14 +8,17 @@ export async function createClient() {
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0b2t2YXh1YnhkdGRya3hidXNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyNTg0OTAsImV4cCI6MjA2MjgzNDQ5MH0.D2prtXAZpNZG91Ph80gvIZXNTHRAXX_ZIUwEAsnq7ew',
     {
       cookies: {
-        get(name: string) {
-          return cookies().get(name)?.value
+        async get(name: string) {
+          const cookieStore = await cookies()
+          return cookieStore.get(name)?.value
         },
-        set(name: string, value: string, options: CookieOptions) {
-          cookies().set({ name, value, ...options })
+        async set(name: string, value: string, options: CookieOptions) {
+          const cookieStore = await cookies()
+          cookieStore.set({ name, value, ...options })
         },
-        remove(name: string, options: CookieOptions) {
-          cookies().set({ name, value: '', ...options })
+        async remove(name: string, options: CookieOptions) {
+          const cookieStore = await cookies()
+          cookieStore.set({ name, value: '', ...options })
         },
       },
     }
