@@ -173,7 +173,9 @@ export default function ChartWrapper({
       chartInstance.current = init(chartRef.current);
       
       // 应用主题
-      chartInstance.current.applyStyles(darkMode ? DARK_THEME : LIGHT_THEME);
+      if (chartInstance.current) {
+        chartInstance.current.setStyles(darkMode ? DARK_THEME : LIGHT_THEME);
+      }
       
       // 设置技术指标
       const mainIndicator = "MA"; // 默认显示移动平均线
@@ -206,7 +208,7 @@ export default function ChartWrapper({
   // 当暗色模式改变时更新主题
   useEffect(() => {
     if (chartInstance.current) {
-      chartInstance.current.applyStyles(darkMode ? DARK_THEME : LIGHT_THEME);
+      chartInstance.current.setStyles(darkMode ? DARK_THEME : LIGHT_THEME);
     }
   }, [darkMode]);
   
@@ -219,28 +221,19 @@ export default function ChartWrapper({
   
   // 当副图指标变化时更新
   useEffect(() => {
-    if (chartInstance.current) {
-      // 清除所有副图
-      const panes = chartInstance.current.getAllPanes();
-      panes.forEach(pane => {
-        if (pane.id !== 'candle_pane') {
-          chartInstance.current?.removePane(pane.id);
-        }
+    if (!chartInstance.current) return;
+    // 重新创建副图
+    if (subIndicator !== "VOL") {
+      chartInstance.current.createIndicator(subIndicator, true, {
+        id: 'sub-pane',
+        height: 80
       });
-      
-      // 重新创建副图
-      if (subIndicator !== "VOL") {
-        chartInstance.current.createIndicator(subIndicator, true, {
-          id: 'sub-pane',
-          height: 80
-        });
-      } else {
-        // VOL是默认的，所以我们创建VOL指标
-        chartInstance.current.createIndicator('VOL', true, {
-          id: 'sub-pane',
-          height: 80
-        });
-      }
+    } else {
+      // VOL是默认的，所以我们创建VOL指标
+      chartInstance.current.createIndicator('VOL', true, {
+        id: 'sub-pane',
+        height: 80
+      });
     }
   }, [subIndicator]);
 
