@@ -1,229 +1,166 @@
-import React, { useMemo, useState, memo, useRef, useEffect } from "react";
+"use client";
+
+import React, { useState, CSSProperties, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { TokenRanking } from "@/app/types/token";
 import TokenRow from "./token-row";
-import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
 import { formatUpdatedTime } from "@/app/lib/formatters";
-import { useTheme } from "next-themes";
-import { cn } from "@/lib/utils";
 
 interface TokensTableProps {
   tokens: TokenRanking[];
   currentPage: number;
   darkMode: boolean;
-  itemsPerPage?: number;
   onRefresh?: () => void;
   lastUpdated?: Date | null;
 }
 
-// 刷新按钮组件
-const RefreshButton = memo(({ 
-  onRefresh, 
-  isRefreshing, 
-  lastUpdated, 
-  isDark 
-}: { 
-  onRefresh: () => void; 
-  isRefreshing: boolean; 
-  lastUpdated?: Date | null; 
-  isDark: boolean;
-}) => {
-  return (
-    <div className={cn(
-      "flex items-center justify-end mt-2 text-xs",
-      isDark ? "text-muted-foreground" : "text-muted-foreground/80"
-    )}>
-      {lastUpdated && (
-        <span className="mr-2">
-          最后更新: {formatUpdatedTime(lastUpdated)}
-        </span>
-      )}
-      <Button 
-        variant="outline" 
-        size="sm" 
-        onClick={onRefresh}
-        disabled={isRefreshing}
-        className={cn(
-          "px-3 h-6 rounded-full gap-1 transition-all",
-          "hover:scale-105 hover:shadow-md",
-          isDark 
-            ? "border-muted hover:bg-muted hover:border-muted/80" 
-            : "border-border hover:bg-secondary hover:border-muted/50",
-          isRefreshing ? "opacity-80" : ""
-        )}
-      >
-        <RefreshCw className={cn(
-          "h-3 w-3",
-          isRefreshing ? "animate-spin" : ""
-        )} />
-        {isRefreshing ? "刷新中..." : "刷新"}
-      </Button>
-    </div>
-  );
-});
-
-RefreshButton.displayName = 'RefreshButton';
-
-// 表头组件
-const TableHeader = memo(({ isDark }: { isDark: boolean }) => {
-  return (
-    <div className={cn(
-      "grid grid-cols-12 gap-1 py-1.5 px-3 text-[10px] font-medium mb-2 rounded-lg",
-      "backdrop-blur-sm sticky top-0 z-10 transition-all duration-300",
-      "shadow-sm border",
-      isDark 
-        ? "bg-gradient-to-r from-primary/15 via-primary/10 to-primary/5 text-primary-foreground/90 border-primary/20" 
-        : "bg-gradient-to-r from-primary/10 via-primary/5 to-transparent text-primary/90 border-primary/15"
-    )}>
-      <div className="col-span-6 flex items-center">
-        <span className={cn(
-          "inline-block h-1 w-1 rounded-full mr-1.5",
-          "shadow-sm",
-          isDark ? "bg-primary/90 shadow-primary/30" : "bg-primary/80 shadow-primary/20"
-        )}></span>
-        <span className="relative">
-        代币/链池
-          <span className={cn(
-            "absolute -bottom-1 left-0 w-full h-px",
-            isDark ? "bg-primary/30" : "bg-primary/20"
-          )}></span>
-        </span>
-      </div>
-      <div className="col-span-3 flex items-center justify-end">
-        <span className={cn(
-          "inline-block h-1 w-1 rounded-full mr-1.5",
-          "shadow-sm",
-          isDark ? "bg-primary/90 shadow-primary/30" : "bg-primary/80 shadow-primary/20"
-        )}></span>
-        <span className="relative pr-2">
-        价格
-          <span className={cn(
-            "absolute -bottom-1 left-0 w-full h-px",
-            isDark ? "bg-primary/30" : "bg-primary/20"
-          )}></span>
-        </span>
-      </div>
-      <div className="col-span-3 flex items-center justify-end">
-        <span className="relative mr-1.5">
-        24h涨幅
-          <span className={cn(
-            "absolute -bottom-1 left-0 w-full h-px",
-            isDark ? "bg-primary/30" : "bg-primary/20"
-          )}></span>
-        </span>
-        <span className={cn(
-          "inline-block h-1 w-1 rounded-full",
-          "shadow-sm",
-          isDark ? "bg-primary/90 shadow-primary/30" : "bg-primary/80 shadow-primary/20"
-        )}></span>
-      </div>
-    </div>
-  );
-});
-
-TableHeader.displayName = 'TableHeader';
-
-// 空状态组件
-const EmptyState = memo(({ isDark }: { isDark: boolean }) => {
-  return (
-    <div className={cn(
-      "text-center py-8 rounded-lg",
-      "border border-dashed",
-      "backdrop-blur-md",
-      isDark 
-        ? "text-muted-foreground bg-muted/5 border-muted/30" 
-        : "text-muted-foreground/80 bg-secondary/20 border-muted/20"
-    )}>
-      <div className="text-base font-medium">没有找到代币数据</div>
-      <div className="text-xs text-muted-foreground mt-1">请尝试其他筛选条件或刷新页面</div>
-    </div>
-  );
-});
-
-EmptyState.displayName = 'EmptyState';
-
 /**
- * 代币表格组件
+ * 代币表格组件 - 超简化版，无分页
  */
 function TokensTable({
   tokens,
   currentPage,
   darkMode,
-  itemsPerPage = 50,
   onRefresh,
   lastUpdated
 }: TokensTableProps) {
   const router = useRouter();
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === "dark" || darkMode;
-
-  // 获取当前显示的代币
-  const displayTokens = useMemo(() => {
-    return tokens;
-  }, [tokens]);
-
+  const [isClient, setIsClient] = useState(false);
+  
+  // Mark when we're on the client
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+  
   // 处理代币点击
   const handleTokenClick = (token: TokenRanking) => {
     router.push(`/token/${token.chain}/${token.token}`);
   };
   
   // 处理刷新点击
-  const handleRefresh = async () => {
-    if (onRefresh) {
+  const handleRefresh = () => {
+    if (onRefresh && !isRefreshing) {
       setIsRefreshing(true);
-      await onRefresh();
-      // 添加短暂延迟以改善用户体验
-      setTimeout(() => {
-        setIsRefreshing(false);
-      }, 800);
+      try {
+        onRefresh();
+      } finally {
+        // 使用setTimeout确保异步完成后再设置状态
+        setTimeout(() => {
+          setIsRefreshing(false);
+        }, 500);
+      }
     }
   };
 
+  // 基础样式
+  const tableStyle: CSSProperties = {
+    width: "100%",
+    border: "1px solid " + (darkMode ? "#333" : "#eee"),
+    borderRadius: "8px",
+    overflow: "hidden",
+    background: darkMode ? "#111" : "#fff"
+  };
+  
+  const headerStyle: CSSProperties = {
+    display: "grid",
+    gridTemplateColumns: "repeat(12, 1fr)",
+    gap: "4px",
+    padding: "6px 12px",
+    fontSize: "10px",
+    fontWeight: "bold",
+    borderBottom: "1px solid " + (darkMode ? "#333" : "#eee"),
+    background: darkMode ? "#222" : "#f5f5f5"
+  };
+  
+  const tokenListStyle: CSSProperties = {
+    padding: "4px",
+    maxHeight: "70vh", // 限制最大高度，避免页面过长
+    overflowY: "auto" // 添加垂直滚动条
+  };
+  
+  const refreshAreaStyle: CSSProperties = {
+    display: "flex",
+    justifyContent: "flex-end",
+    padding: "8px 12px",
+    fontSize: "12px",
+    color: darkMode ? "#aaa" : "#666"
+  };
+  
+  const buttonStyle: CSSProperties = {
+    background: "none",
+    border: "1px solid " + (darkMode ? "#444" : "#ddd"),
+    borderRadius: "4px",
+    padding: "4px 8px",
+    fontSize: "12px",
+    cursor: "pointer",
+    color: darkMode ? "#fff" : "#333",
+    marginLeft: "8px"
+  };
+  
+  const emptyStyle: CSSProperties = {
+    textAlign: "center",
+    padding: "24px",
+    color: darkMode ? "#aaa" : "#666"
+  };
+
+  const columnStyle: CSSProperties = {
+    gridColumn: "span 6"
+  };
+  
+  const rightColumnStyle: CSSProperties = {
+    gridColumn: "span 3",
+    textAlign: "right"
+  };
+
   return (
-    <div className={cn(
-      "w-full rounded-lg overflow-hidden",
-      "transition-all duration-300",
-      "hover:shadow-md",
-      isDark 
-        ? "bg-black/5 border border-muted/30 shadow-sm backdrop-blur-sm" 
-        : "bg-white/40 border border-muted/20 shadow-sm backdrop-blur-sm"
-    )}>
+    <div style={tableStyle}>
       {/* 表头 */}
-      <TableHeader isDark={isDark} />
+      <div style={headerStyle}>
+        <div style={columnStyle}>代币/链池</div>
+        <div style={rightColumnStyle}>价格</div>
+        <div style={rightColumnStyle}>24h涨幅</div>
+      </div>
 
       {/* 代币行 */}
-      <div className={cn(
-        "space-y-0.5 pb-1 px-1",
-      )}>
-        {displayTokens.map((token, index) => (
-          <TokenRow
-            key={`${token.chain}-${token.token}`}
-            token={token}
-            index={index}
-            darkMode={isDark}
-            onClick={handleTokenClick}
-          />
-        ))}
-
-        {/* 空状态 */}
-        {displayTokens.length === 0 && <EmptyState isDark={isDark} />}
+      <div style={tokenListStyle}>
+        {tokens.length > 0 ? (
+          tokens.map((token, index) => (
+            <TokenRow
+              key={`${token.chain}-${token.token}`}
+              token={token}
+              index={index}
+              darkMode={darkMode}
+              onClick={handleTokenClick}
+            />
+          ))
+        ) : (
+          <div style={emptyStyle}>
+            <div>没有找到代币数据</div>
+            <div style={{fontSize: "12px", marginTop: "4px"}}>
+              请尝试其他筛选条件或刷新页面
+            </div>
+          </div>
+        )}
       </div>
       
       {/* 刷新按钮 */}
       {onRefresh && (
-        <div className="px-3 pb-2">
-        <RefreshButton 
-          onRefresh={handleRefresh}
-          isRefreshing={isRefreshing}
-          lastUpdated={lastUpdated}
-          isDark={isDark}
-        />
+        <div style={refreshAreaStyle}>
+          {lastUpdated && (
+            <span>最后更新: {formatUpdatedTime(lastUpdated)}</span>
+          )}
+          <button 
+            style={buttonStyle}
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+          >
+            {isRefreshing ? "刷新中..." : "刷新"}
+          </button>
         </div>
       )}
     </div>
   );
 }
 
-export default memo(TokensTable); 
+export default TokensTable; 

@@ -1,15 +1,12 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { cn } from "@/lib/utils"
-import { useTheme } from "next-themes"
 
 interface MainstreamToken {
   symbol: string
-  name: string
   price: number
   priceChange24h: number
-  logoUrl: string
+  logo_url?: string
 }
 
 interface MainstreamTokensProps {
@@ -17,215 +14,179 @@ interface MainstreamTokensProps {
 }
 
 export function MainstreamTokens({ darkMode }: MainstreamTokensProps) {
-  const [tokens, setTokens] = useState<MainstreamToken[]>([])
-  const [loading, setLoading] = useState(true)
-  const { resolvedTheme } = useTheme()
-  const isDark = resolvedTheme === "dark" || darkMode
-
+  const [tokens, setTokens] = useState<MainstreamToken[]>([
+    { 
+      symbol: 'BTC', 
+      price: 68000, 
+      priceChange24h: -0.91,
+      logo_url: 'https://assets.coingecko.com/coins/images/1/large/bitcoin.png'
+    },
+    { 
+      symbol: 'ETH', 
+      price: 3500, 
+      priceChange24h: -1.2,
+      logo_url: 'https://assets.coingecko.com/coins/images/279/large/ethereum.png'
+    },
+    { 
+      symbol: 'BNB', 
+      price: 652, 
+      priceChange24h: -1.6,
+      logo_url: 'https://assets.coingecko.com/coins/images/825/large/bnb-icon2_2x.png'
+    },
+    { 
+      symbol: 'SOL', 
+      price: 175, 
+      priceChange24h: -1.44,
+      logo_url: 'https://assets.coingecko.com/coins/images/4128/large/solana.png'
+    },
+    { 
+      symbol: 'XAI', 
+      price: 0.00005238, 
+      priceChange24h: 21.38,
+      logo_url: 'https://assets.coingecko.com/coins/images/33413/large/xai-logo-256px.png'
+    }
+  ]);
+  const [loading, setLoading] = useState(false);
+  
+  // 极简实现 - 直接使用默认代币
   useEffect(() => {
-    const fetchMainstreamTokens = async () => {
+    const fetchTokens = () => {
       try {
-        setLoading(true)
-        
-        // 从统一服务端缓存API获取主流币数据
-        console.log('从服务器缓存API获取主流币数据');
-        const response = await fetch('/api/mainstream-prices', {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json',
-            'Cache-Control': 'no-cache'
-          },
-          next: { revalidate: 0 } // 强制刷新，不使用Next.js的缓存
-        });
-        
-        if (!response.ok) {
-          throw new Error(`获取主流币价格失败: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        console.log('API响应数据:', data);
-        
-        // 处理主流币数据
-        let formattedTokens = [];
-        
-        if (data.mainstream && Array.isArray(data.mainstream)) {
-          formattedTokens = data.mainstream.map((token: any) => ({
-            symbol: token.symbol.toUpperCase(),
-            name: token.name,
-            price: token.current_price,
-            priceChange24h: token.price_change_percentage_24h,
-            logoUrl: token.image
-          }));
-        }
-        
-        // 添加XAI数据
-        if (data.xai) {
-          formattedTokens.push({
-            symbol: 'XAI',
-            name: '𝕏AI',
-            price: data.xai.current_price || 0.00005238,
-            priceChange24h: data.xai.price_change_percentage_24h || 21.38,
-            logoUrl: data.xai.image || 'https://dd.dexscreener.com/ds-data/tokens/bsc/0x1c864c55f0c5e0014e2740c36a1f2378bfabd487.png?key=d597ed'
+        fetch('/api/mainstream-prices')
+          .then(res => res.json())
+          .then(data => {
+            if (data && data.mainstream && Array.isArray(data.mainstream)) {
+              const formatted = data.mainstream.map((token: any) => ({
+                symbol: token.symbol.toUpperCase(),
+                price: token.current_price,
+                priceChange24h: token.price_change_percentage_24h,
+                logo_url: token.image
+              }));
+              
+              // 添加XAI
+              if (data.xai) {
+                formatted.push({
+                  symbol: 'XAI',
+                  price: data.xai.current_price || 0.00005238,
+                  priceChange24h: data.xai.price_change_percentage_24h || 21.38,
+                  logo_url: data.xai.image || 'https://assets.coingecko.com/coins/images/33413/large/xai-logo-256px.png'
+                });
+              }
+              
+              setTokens(formatted);
+            }
+          })
+          .catch(() => {
+            // 使用默认数据，已经在state初始化了
           });
-        }
-        
-        // 设置数据
-        setTokens(formattedTokens);
-        
-        // 显示缓存信息
-        if (data.cached) {
-          console.log(`使用缓存数据，缓存时间: ${data.cache_age || '未知'}`);
-        }
-        
-        // 如果数据来源是回退，过3分钟后重试
-        if (data.data_source === 'fallback') {
-          console.log('使用回退数据，将在3分钟后重试');
-          setTimeout(() => {
-            fetchMainstreamTokens();
-          }, 3 * 60 * 1000);
-        }
-      } catch (error) {
-        console.error('获取主流代币错误:', error)
-        // 回退数据
-        setTokens([
-          {
-            symbol: 'BTC',
-            name: 'Bitcoin',
-            price: 68000,
-            priceChange24h: -0.91,
-            logoUrl: 'https://cryptologos.cc/logos/bitcoin-btc-logo.png'
-          },
-          {
-            symbol: 'ETH',
-            name: 'Ethereum',
-            price: 3500,
-            priceChange24h: -1.2,
-            logoUrl: 'https://cryptologos.cc/logos/ethereum-eth-logo.png'
-          },
-          {
-            symbol: 'BNB',
-            name: 'Binance Coin',
-            price: 652,
-            priceChange24h: -1.6,
-            logoUrl: 'https://cryptologos.cc/logos/binance-coin-bnb-logo.png'
-          },
-          {
-            symbol: 'SOL',
-            name: 'Solana',
-            price: 175,
-            priceChange24h: -1.44,
-            logoUrl: 'https://cryptologos.cc/logos/solana-sol-logo.png'
-          },
-          {
-            symbol: 'XAI',
-            name: '𝕏AI',
-            price: 0.00005238,
-            priceChange24h: 21.38,
-            logoUrl: 'https://dd.dexscreener.com/ds-data/tokens/bsc/0x1c864c55f0c5e0014e2740c36a1f2378bfabd487.png?key=d597ed'
-          }
-        ])
-        
-        // 错误重试，2分钟后尝试重新获取数据
-        setTimeout(() => {
-          console.log('因错误重试获取数据');
-          fetchMainstreamTokens();
-        }, 2 * 60 * 1000);
-      } finally {
-        setLoading(false)
+      } catch (e) {
+        // 异常处理 - 使用默认数据
       }
-    }
+    };
     
-    fetchMainstreamTokens()
-    
-    // 每5分钟刷新一次数据
-    const intervalId = setInterval(fetchMainstreamTokens, 5 * 60 * 1000)
-    
-    return () => {
-      clearInterval(intervalId)
-    }
-  }, [])
+    fetchTokens();
+  }, []);
   
-  // 格式化价格显示
-  const formatPrice = (price: number) => {
-    if (price >= 1000) {
-      return `$${price.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-    } else if (price >= 1) {
-      return `$${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    } else if (price >= 0.01) {
-      return `$${price.toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`;
-    } else if (price >= 0.000001) {
-      return `$${price.toLocaleString('en-US', { minimumFractionDigits: 6, maximumFractionDigits: 8 })}`;
-    } else {
-      // 极小数值使用科学计数法
-      return `$${price.toExponential(2)}`;
-    }
+  // 极简格式化 - 改进版以避免溢出
+  function formatPrice(price: number): string {
+    if (price >= 10000) return "$" + (price / 1000).toFixed(1) + "K";
+    if (price >= 1000) return "$" + price.toFixed(0);
+    if (price >= 1) return "$" + price.toFixed(2);
+    if (price >= 0.01) return "$" + price.toFixed(4);
+    return "$" + price.toFixed(8).substring(0, 9); // 截断超长价格
   }
   
-  // 格式化价格变化
-  const formatPriceChange = (change: number) => {
-    return `${change >= 0 ? '+' : ''}${change.toFixed(1)}%`;
+  function formatChange(change: number): string {
+    return (change >= 0 ? "+" : "") + change.toFixed(1) + "%";
   }
 
-  // 计算每个卡片宽度，平均分配空间
-  const itemWidth = `calc(20% - 6px)`;  // 5个代币，每个占20%宽度，减去间距
+  // 计算宽度
+  const itemWidth = "calc(20% - 6px)";
   
-  if (loading) {
-    return (
-      <div className={cn(
-        "flex flex-nowrap gap-1.5 overflow-x-auto scrollbar-none py-1 px-1",
-        "scroll-smooth w-full"
-      )}>
-        {[...Array(5)].map((_, index) => (
-          <div key={index} 
-            style={{ width: itemWidth }}
-            className={cn(
-            "h-10 rounded-md px-1 py-1 flex flex-col items-center justify-between",
-            "animate-pulse",
-            isDark 
-              ? "bg-muted/40" 
-              : "bg-muted/30"
-          )}></div>
-        ))}
-      </div>
-    )
-  }
+  // 笑脸表情 - 用作LOGO加载失败或缺失时的默认显示
+  const smileyFace = "☺️";
   
+  // 超级简化版UI - 紧凑型布局
   return (
-    <div className={cn(
-      "flex flex-nowrap gap-1.5 py-1 px-1",
-      "w-full"
-    )}>
+    <div style={{display: 'flex', gap: '4px', padding: '2px 0'}}>
       {tokens.map((token) => (
         <div 
           key={token.symbol}
-          style={{ width: itemWidth }}
-          className={cn(
-            "h-10 rounded-md p-1 flex flex-col items-center justify-between",
-            "border shadow-sm backdrop-blur-sm transition-all duration-150",
-            token.priceChange24h >= 0
-              ? isDark 
-                ? "bg-emerald-500/10 border-emerald-500/20" 
-                : "bg-emerald-500/10 border-emerald-500/20"
-              : isDark
-                ? "bg-rose-500/10 border-rose-500/20" 
-                : "bg-rose-500/10 border-rose-500/20"
-          )}
+          style={{
+            width: itemWidth,
+            height: '46px', // 增加10%高度
+            padding: '3px',
+            border: '1px solid #eee',
+            borderRadius: '4px',
+            display: 'flex', 
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            background: darkMode ? '#111' : '#fff'
+          }}
         >
-          {/* Symbol + Price Change 上面一行 */}
-          <div className="flex items-center justify-between w-full">
-            <span className="text-[10px] font-semibold">{token.symbol}</span>
-            <span className={cn(
-              "text-[9px] font-semibold",
-              token.priceChange24h >= 0 ? "text-emerald-500" : "text-rose-500"
-            )}>
-              {formatPriceChange(token.priceChange24h)}
+          {/* 第一行：符号和变化百分比 */}
+          <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px'}}>
+            <div style={{display: 'flex', alignItems: 'center', maxWidth: '70%', overflow: 'hidden'}}>
+              {token.logo_url ? (
+                <img 
+                  src={token.logo_url} 
+                  alt={token.symbol}
+                  style={{
+                    width: '16px', // 增加29%
+                    height: '16px', // 增加29%
+                    borderRadius: '50%',
+                    marginRight: '3px',
+                    objectFit: 'cover',
+                    flexShrink: 0
+                  }}
+                  onError={(e) => {
+                    // 图片加载失败时显示笑脸表情
+                    (e.target as HTMLImageElement).style.display = 'none';
+                    (e.target as HTMLImageElement).parentElement!.innerHTML = smileyFace;
+                  }}
+                />
+              ) : (
+                <span style={{
+                  width: '16px',
+                  height: '16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginRight: '3px',
+                  fontSize: '14px'
+                }}>
+                  {smileyFace}
+                </span>
+              )}
+              <span style={{
+                fontSize: '8px', // 减少10%
+                fontWeight: 'bold',
+                whiteSpace: 'nowrap',
+                textOverflow: 'ellipsis',
+                overflow: 'hidden'
+              }}>{token.symbol}</span>
+            </div>
+            <span style={{
+              fontSize: '8px', 
+              color: token.priceChange24h >= 0 ? '#10b981' : '#ef4444',
+              flexShrink: 0
+            }}>
+              {formatChange(token.priceChange24h)}
             </span>
           </div>
           
-          {/* Price 下面一行 */}
-          <span className="text-[9px] font-medium truncate w-full text-center">
+          {/* 第二行：价格 */}
+          <div style={{
+            fontSize: '10px', 
+            textAlign: 'center',
+            fontWeight: '500',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            padding: '0 1px'
+          }}>
             {formatPrice(token.price)}
-          </span>
+          </div>
         </div>
       ))}
     </div>

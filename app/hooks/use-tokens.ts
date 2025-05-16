@@ -1,12 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { TokenRanking, TokensResponse, ApiResponse } from '@/app/types/token';
-import { toast } from '@/components/ui/use-toast';
-import { useApiData, clearAllApiCache } from './use-api-data';
-import { searchTokens } from '@/app/lib/ave-api-service';
+import { TokenRanking } from '@/app/types/token';
 
 // 备用数据，当API请求失败时使用
+// 使用固定值而非随机值以确保服务器和客户端一致
 const fallbackTokens: TokenRanking[] = [
   {
     "token": "0xa5957e0e2565dc93880da7be32abcbdf55788888",
@@ -32,88 +30,147 @@ const fallbackTokens: TokenRanking[] = [
   }
 ];
 
+// 添加固定的测试数据以确保服务器和客户端渲染一致
+const additionalTokens = [
+  {
+    "token": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+    "chain": "eth",
+    "symbol": "USDT",
+    "name": "Tether",
+    "logo_url": "",
+    "current_price_usd": 1.0,
+    "price_change_24h": 0.1,
+    "tx_volume_u_24h": 42000000,
+    "holders": 5000000
+  },
+  {
+    "token": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+    "chain": "eth",
+    "symbol": "USDC",
+    "name": "USD Coin",
+    "logo_url": "",
+    "current_price_usd": 0.999,
+    "price_change_24h": -0.05,
+    "tx_volume_u_24h": 31000000,
+    "holders": 4500000
+  },
+  {
+    "token": "0x2b591e99afe9f32eaa6214f7b7629768c40eeb39",
+    "chain": "eth",
+    "symbol": "HEX",
+    "name": "HEX",
+    "logo_url": "",
+    "current_price_usd": 0.0065,
+    "price_change_24h": 3.2,
+    "tx_volume_u_24h": 7000000,
+    "holders": 300000
+  },
+  {
+    "token": "0x4fabb145d64652a948d72533023f6e7a623c7c53",
+    "chain": "eth",
+    "symbol": "BUSD",
+    "name": "Binance USD",
+    "logo_url": "",
+    "current_price_usd": 0.998,
+    "price_change_24h": -0.08,
+    "tx_volume_u_24h": 12000000,
+    "holders": 3000000
+  },
+  {
+    "token": "0x0000000000085d4780b73119b644ae5ecd22b376",
+    "chain": "eth",
+    "symbol": "TUSD",
+    "name": "TrueUSD",
+    "logo_url": "",
+    "current_price_usd": 0.997,
+    "price_change_24h": -0.1,
+    "tx_volume_u_24h": 8500000,
+    "holders": 800000
+  },
+  {
+    "token": "0x00000000000045166c45af0fc6e4cf31d9e14b9a",
+    "chain": "bsc",
+    "symbol": "BNB",
+    "name": "BNB",
+    "logo_url": "",
+    "current_price_usd": 574.5,
+    "price_change_24h": 1.8,
+    "tx_volume_u_24h": 18000000,
+    "holders": 2500000
+  },
+  {
+    "token": "0x0d8775f648430679a709e98d2b0cb6250d2887ef",
+    "chain": "eth",
+    "symbol": "BAT",
+    "name": "Basic Attention Token",
+    "logo_url": "",
+    "current_price_usd": 0.25,
+    "price_change_24h": -2.5,
+    "tx_volume_u_24h": 3500000,
+    "holders": 450000
+  }
+];
+
+// 将固定测试数据添加到备用数据中
+fallbackTokens.push(...additionalTokens);
+
 /**
- * 按主题获取代币数据的自定义Hook
- * @param topicId 主题ID
- * @returns 代币数据、加载状态、错误信息和刷新函数
+ * 简化版按主题获取代币数据的Hook
  */
 export function useTokensByTopic(topicId: string) {
+  const [tokens, setTokens] = useState<TokenRanking[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [usingFallback, setUsingFallback] = useState(false);
   
-  // 构建缓存键
-  const cacheKey = `tokens_${topicId}`;
-  
-  // 获取代币数据的函数
-  const fetchTokens = useCallback(async () => {
-    try {
-      // 构建URL，添加请求参数
-      const url = `/api/tokens?topic=${topicId}`;
-      
-      const response = await fetch(url, { 
-        next: { revalidate: 300 } // 5分钟缓存 
+  // 简化的获取函数
+  const fetchTokens = useCallback(() => {
+    setIsLoading(true);
+    setError(null);
+    
+    // 简单的fetch实现
+    fetch(`/api/tokens?topic=${topicId}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error("API请求失败");
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data && data.success && data.data && Array.isArray(data.data.tokens)) {
+          setTokens(data.data.tokens);
+          setLastUpdated(new Date());
+          setUsingFallback(false);
+        } else {
+          throw new Error("数据格式无效");
+        }
+      })
+      .catch(err => {
+        console.error("获取代币数据失败:", err);
+        setError(err.message || "未知错误");
+        setTokens(fallbackTokens);
+        setUsingFallback(true);
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
-      
-      if (!response.ok) {
-        throw new Error(`API请求失败，状态码: ${response.status}`);
-      }
-      
-      const result = await response.json() as ApiResponse<TokensResponse>;
-      
-      if (result && result.success && result.data && Array.isArray(result.data.tokens)) {
-        return result.data.tokens;
-      } else {
-        // 如果响应格式不正确
-        console.error("API返回数据格式无效:", result);
-        throw new Error("API返回数据格式无效");
-      }
-    } catch (error) {
-      console.error("获取代币数据失败:", error);
-      // 抛出错误，由useApiData处理
-      throw error;
-    }
   }, [topicId]);
-
-  // 使用优化后的API数据Hook
-  const { 
-    data: tokensData, 
-    isLoading, 
-    error,
-    refresh,
-    lastUpdated
-  } = useApiData<TokenRanking[]>(
-    fetchTokens,
-    cacheKey,
-    {
-      cacheDuration: 5 * 60 * 1000, // 5分钟缓存
-      autoFetch: true,
-      maxRetries: 2,
-      dependencies: [topicId]
-    }
-  );
   
-  // 安全的代币数据 - 当为null时使用空数组
-  const tokens = tokensData || [];
-
-  // 处理备用数据
+  // 初始化和主题变更时加载数据
   useEffect(() => {
-    if (error && tokens.length === 0) {
-      // 使用备用数据并显示通知
-      setUsingFallback(true);
-      toast({
-        title: "获取数据失败",
-        description: "使用备用数据作为替代",
-        variant: "destructive",
-      });
-    } else if (!isLoading && !error && tokens.length > 0) {
-      setUsingFallback(false);
-    }
-  }, [error, isLoading, tokens]);
-
-  // 返回备用数据或API数据
+    fetchTokens();
+  }, [topicId, fetchTokens]);
+  
+  // 刷新函数
+  const refresh = () => {
+    fetchTokens();
+  };
+  
   return {
-    tokens: tokens.length > 0 ? tokens : (error ? fallbackTokens : []),
+    tokens: tokens.length > 0 ? tokens : fallbackTokens,
     isLoading,
-    error: error ? error.message : null,
+    error,
     refresh,
     lastUpdated,
     usingFallback

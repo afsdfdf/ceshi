@@ -44,7 +44,13 @@ export default function KLinePage() {
 
   // 解析URL参数
   useEffect(() => {
-    const blockchainParam = searchParams.get("blockchain")
+    // 检查是否有传统的blockchain参数
+    let blockchainParam = searchParams.get("blockchain")
+    // 兼容性处理：如果使用了chain参数而不是blockchain参数
+    if (!blockchainParam) {
+      blockchainParam = searchParams.get("chain")
+    }
+    
     const addressParam = searchParams.get("address")
     
     if (blockchainParam) {
