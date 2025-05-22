@@ -12,21 +12,24 @@ interface TokensTableProps {
   darkMode: boolean;
   onRefresh?: () => void;
   lastUpdated?: Date | null;
+  itemsPerPage?: number;
 }
 
 /**
- * 代币表格组件 - 超简化版，无分页
+ * 代币表格组件 - 增加分页功能
  */
 function TokensTable({
   tokens,
-  currentPage,
+  currentPage: initialPage = 1,
   darkMode,
   onRefresh,
-  lastUpdated
+  lastUpdated,
+  itemsPerPage = 50
 }: TokensTableProps) {
   const router = useRouter();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  const [currentPage, setCurrentPage] = useState(initialPage);
   
   // Mark when we're on the client
   useEffect(() => {
@@ -50,6 +53,25 @@ function TokensTable({
           setIsRefreshing(false);
         }, 500);
       }
+    }
+  };
+
+  // 计算分页数据
+  const totalPages = Math.ceil(tokens.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, tokens.length);
+  const paginatedTokens = tokens.slice(startIndex, endIndex);
+
+  // 分页导航处理
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
     }
   };
 
@@ -97,6 +119,12 @@ function TokensTable({
     color: darkMode ? "#fff" : "#333",
     marginLeft: "8px"
   };
+
+  const disabledButtonStyle: CSSProperties = {
+    ...buttonStyle,
+    opacity: 0.5,
+    cursor: "default"
+  };
   
   const emptyStyle: CSSProperties = {
     textAlign: "center",
@@ -113,6 +141,16 @@ function TokensTable({
     textAlign: "right"
   };
 
+  const paginationStyle: CSSProperties = {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "8px 12px",
+    borderTop: "1px solid " + (darkMode ? "#333" : "#eee"),
+    fontSize: "12px",
+    color: darkMode ? "#aaa" : "#666"
+  };
+
   return (
     <div style={tableStyle}>
       {/* 表头 */}
@@ -125,11 +163,11 @@ function TokensTable({
       {/* 代币行 */}
       <div style={tokenListStyle}>
         {tokens.length > 0 ? (
-          tokens.map((token, index) => (
+          paginatedTokens.map((token, index) => (
             <TokenRow
               key={`${token.chain}-${token.token}`}
               token={token}
-              index={index}
+              index={startIndex + index}
               darkMode={darkMode}
               onClick={handleTokenClick}
             />
@@ -143,6 +181,34 @@ function TokensTable({
           </div>
         )}
       </div>
+      
+      {/* 分页控制 */}
+      {tokens.length > itemsPerPage && (
+        <div style={paginationStyle}>
+          <div>
+            显示 {startIndex + 1}-{endIndex} / {tokens.length} 项
+          </div>
+          <div style={{display: "flex", gap: "8px"}}>
+            <button 
+              style={currentPage > 1 ? buttonStyle : disabledButtonStyle}
+              onClick={handlePrevPage}
+              disabled={currentPage <= 1}
+            >
+              上一页
+            </button>
+            <span style={{padding: "4px 0"}}>
+              {currentPage} / {totalPages}
+            </span>
+            <button 
+              style={currentPage < totalPages ? buttonStyle : disabledButtonStyle}
+              onClick={handleNextPage}
+              disabled={currentPage >= totalPages}
+            >
+              下一页
+            </button>
+          </div>
+        </div>
+      )}
       
       {/* 刷新按钮 */}
       {onRefresh && (

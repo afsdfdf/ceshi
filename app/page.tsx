@@ -106,7 +106,7 @@ export default function CryptoTracker() {
         
         {/* 代币排行榜 */}
         <div className="px-4">
-          <TokenRankings darkMode={isDark} mode="homepage" />
+          <TokenRankings darkMode={isDark} mode="homepage" itemsPerPage={50} />
         </div>
         
         {/* 底部导航 */}

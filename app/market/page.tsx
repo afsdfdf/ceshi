@@ -52,7 +52,7 @@ export default function MarketPage() {
         {/* 代币主题模块 */}
         <div className="p-4 pt-0 relative">
           {/* 主题内容与排行榜 */}
-          <TokenRankings darkMode={isDark} mode="market" />
+          <TokenRankings darkMode={isDark} mode="market" itemsPerPage={50} />
         </div>
 
         {/* 主题开关 */}

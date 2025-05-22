@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Search, TrendingUp, Zap, Download, ExternalLink, ChevronUp } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import Image from "next/image"
@@ -80,16 +80,77 @@ const appLogoUrls: Record<string, string> = {
 
 // 替代URL，用于无法访问的情况
 const fallbackLogoUrls: Record<string, string> = {
+  uniswap: "https://cdn.coinranking.com/DFXSJxUAB/uniswap.svg?size=48x48",
+  pancakeswap: "https://assets.coingecko.com/coins/images/12632/small/pancakeswap-cake-logo_%281%29.png?1629359065",
+  curve: "https://assets.coingecko.com/coins/images/12124/small/Curve.png?1597369484",
+  sushiswap: "https://assets.coingecko.com/coins/images/12271/small/sushi.png?1626676271",
+  raydium: "https://assets.coingecko.com/coins/images/13928/small/PSigc4ie_400x400.jpg?1612875614",
+  aave: "https://assets.coingecko.com/coins/images/12645/small/AAVE.png?1601374110",
+  compound: "https://assets.coingecko.com/coins/images/10775/small/COMP.png?1592625425",
+  makerdao: "https://assets.coingecko.com/coins/images/1364/small/Mark_Maker.png?1585191826",
+  lido: "https://assets.coingecko.com/coins/images/13573/small/Lido_DAO.png?1609873644",
   opensea: "https://storage.googleapis.com/opensea-static/Logomark/Logomark-Blue.png",
   blur: "https://pbs.twimg.com/profile_images/1593789199617536001/jt7WVuOh_400x400.jpg",
   magiceden: "https://pbs.twimg.com/profile_images/1568362506740543501/vMLwWXK-_400x400.jpg",
+  axieinfinity: "https://assets.coingecko.com/coins/images/13029/small/axie_infinity_logo.png?1604471082",
+  sandbox: "https://assets.coingecko.com/coins/images/12129/small/sandbox_logo.jpg?1597397942",
+  stepn: "https://assets.coingecko.com/coins/images/23597/small/gmt.png?1644658792",
+  gala: "https://assets.coingecko.com/coins/images/12493/small/GALA-COINGECKO.png?1600233435",
   metamask: "https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg",
   phantom: "https://play-lh.googleusercontent.com/mbc4b6MnM0N0hl-9H5y6N0eJDK1SKd0yhIRaYUmwIJpgk2F5CEUfYgS4yBdR7MkTXQ=w240-h480-rw",
   wallet_connect: "https://avatars.githubusercontent.com/u/37784886",
+  chainlink: "https://assets.coingecko.com/coins/images/877/small/chainlink-new-logo.png?1547034700",
+  the_graph: "https://assets.coingecko.com/coins/images/13397/small/Graph_Token.png?1608145566",
+  dydx: "https://assets.coingecko.com/coins/images/17500/small/hjnIm9bV.jpg?1628009360",
+  gmx: "https://assets.coingecko.com/coins/images/18323/small/arbit.png?1631532468",
+  alchemix: "https://assets.coingecko.com/coins/images/14113/small/Alchemix.png?1614409507",
+  euler: "https://assets.coingecko.com/coins/images/26149/small/YCvKDfl8_400x400.jpeg?1656041509",
+  venus: "https://assets.coingecko.com/coins/images/12677/small/download.jpg?1648289133",
   foundation: "https://pbs.twimg.com/profile_images/1415274313636712449/zXDEYp-V_400x400.jpg",
   sudoswap: "https://pbs.twimg.com/profile_images/1526942918403039232/zZHXj4Ba_400x400.jpg",
   element: "https://pbs.twimg.com/profile_images/1616061893577924609/fW_Xbzgo_400x400.jpg", 
-  bigtime: "https://bigtime.gg/images/social-card.png"
+  bigtime: "https://bigtime.gg/images/social-card.png",
+  illuvium: "https://assets.coingecko.com/coins/images/14468/small/ILV.JPG?1617182121",
+  splinterlands: "https://assets.coingecko.com/coins/images/14582/small/splinterlands.png?1617232123",
+  traderjoe: "https://assets.coingecko.com/coins/images/17476/small/JOE.png?1627693572"
+};
+
+// 第三组备用Logo, 使用CDN
+const cdnLogoUrls: Record<string, string> = {
+  uniswap: "https://unpkg.com/cryptocurrency-icons@0.18.1/svg/color/uni.svg",
+  pancakeswap: "https://unpkg.com/cryptocurrency-icons@0.18.1/svg/color/cake.svg",
+  curve: "https://unpkg.com/cryptocurrency-icons@0.18.1/svg/color/crv.svg",
+  sushiswap: "https://unpkg.com/cryptocurrency-icons@0.18.1/svg/color/sushi.svg",
+  aave: "https://unpkg.com/cryptocurrency-icons@0.18.1/svg/color/aave.svg",
+  compound: "https://unpkg.com/cryptocurrency-icons@0.18.1/svg/color/comp.svg",
+  makerdao: "https://unpkg.com/cryptocurrency-icons@0.18.1/svg/color/mkr.svg",
+  lido: "https://unpkg.com/cryptocurrency-icons@0.18.1/svg/color/ldo.svg",
+  chainlink: "https://unpkg.com/cryptocurrency-icons@0.18.1/svg/color/link.svg",
+  the_graph: "https://unpkg.com/cryptocurrency-icons@0.18.1/svg/color/grt.svg",
+  dydx: "https://unpkg.com/cryptocurrency-icons@0.18.1/svg/color/dydx.svg",
+  ethereum: "https://unpkg.com/cryptocurrency-icons@0.18.1/svg/color/eth.svg",
+  solana: "https://unpkg.com/cryptocurrency-icons@0.18.1/svg/color/sol.svg",
+  polygon: "https://unpkg.com/cryptocurrency-icons@0.18.1/svg/color/matic.svg",
+  bsc: "https://unpkg.com/cryptocurrency-icons@0.18.1/svg/color/bnb.svg",
+  avalanche: "https://unpkg.com/cryptocurrency-icons@0.18.1/svg/color/avax.svg",
+  arbitrum: "https://s2.coinmarketcap.com/static/img/coins/64x64/11841.png",
+  optimism: "https://s2.coinmarketcap.com/static/img/coins/64x64/11840.png"
+};
+
+// 第四组备用Logo，通用 CDN 图标服务
+const iconServiceUrls: Record<string, string> = {
+  uniswap: "https://img.icons8.com/external-black-fill-lafs/64/external-Uniswap-cryptocurrency-black-fill-lafs.png",
+  metamask: "https://img.icons8.com/color/48/metamask-logo.png",
+  ethereum: "https://img.icons8.com/color/48/ethereum.png",
+  solana: "https://img.icons8.com/color/48/solana.png",
+  polygon: "https://img.icons8.com/external-black-fill-lafs/64/external-Polygon-cryptocurrency-black-fill-lafs.png",
+  bitcoin: "https://img.icons8.com/color/48/bitcoin--v1.png",
+  opensea: "https://img.icons8.com/fluency/48/opensea.png",
+  wallet: "https://img.icons8.com/fluency/48/wallet.png",
+  exchange: "https://img.icons8.com/fluency/48/exchange.png",
+  nft: "https://img.icons8.com/fluency/48/nft.png",
+  game: "https://img.icons8.com/fluency/48/game.png",
+  token: "https://img.icons8.com/fluency/48/token.png"
 };
 
 // Web3 应用数据
@@ -469,6 +530,11 @@ const web3Apps = {
   ]
 }
 
+// CSS样式 - 添加全局滚动行为
+if (typeof window !== 'undefined') {
+  document.documentElement.style.scrollBehavior = 'smooth';
+}
+
 // 前30个热门应用
 const getTopApps = (count = 30) => {
   // 合并所有分类的应用并按热度排序
@@ -540,11 +606,150 @@ export default function DiscoverPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const topApps = getTopApps(30);
   const [scrolled, setScrolled] = useState(false)
+  const [showAnimation, setShowAnimation] = useState(true)
+  const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({})
+  const [cachedUrls, setCachedUrls] = useState<Record<string, string>>({})
 
-  // 处理滚动效果
-  typeof window !== 'undefined' && window.addEventListener('scroll', () => {
-    setScrolled(window.scrollY > 20)
-  })
+  // 从 localStorage 加载缓存的图片 URL
+  useEffect(() => {
+    try {
+      // 只在客户端执行
+      if (typeof window !== 'undefined') {
+        const cachedImageUrls = localStorage.getItem('web3AppImageCache');
+        if (cachedImageUrls) {
+          const parsedCache = JSON.parse(cachedImageUrls);
+          setCachedUrls(parsedCache);
+          
+          // 标记这些图片为已加载状态
+          const loadedState: Record<string, boolean> = {};
+          Object.keys(parsedCache).forEach(appId => {
+            loadedState[appId] = true;
+          });
+          setLoadedImages(prev => ({...prev, ...loadedState}));
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load image cache:', error);
+      // 如果加载失败，忽略缓存
+    }
+  }, []);
+
+  // 更新 localStorage 缓存
+  const updateImageCache = useCallback((appId: string, url: string) => {
+    try {
+      if (typeof window !== 'undefined') {
+        setCachedUrls(prev => {
+          const newCache = {...prev, [appId]: url};
+          // 保存到 localStorage
+          localStorage.setItem('web3AppImageCache', JSON.stringify(newCache));
+          return newCache;
+        });
+      }
+    } catch (error) {
+      console.error('Failed to update image cache:', error);
+    }
+  }, []);
+
+  // 处理滚动效果 - 性能优化：使用useEffect和节流处理
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20)
+    }
+    
+    // 添加节流以减少事件处理频率
+    let timeoutId: NodeJS.Timeout
+    window.addEventListener('scroll', () => {
+      if (!timeoutId) {
+        timeoutId = setTimeout(() => {
+          handleScroll()
+          timeoutId = null as unknown as NodeJS.Timeout
+        }, 100)
+      }
+    })
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      if (timeoutId) clearTimeout(timeoutId)
+    }
+  }, [])
+  
+  // 预加载图像
+  useEffect(() => {
+    // 获取即将显示的应用列表
+    const appsToShow = getFilteredApps();
+    
+    // 创建预加载队列
+    const preloadQueue: Array<{appId: string, url: string}> = [];
+    
+    // 将主要Logo URLs添加到预加载队列，优先使用缓存的URL
+    appsToShow.forEach(app => {
+      if (!loadedImages[app.id]) {
+        const imageUrl = cachedUrls[app.id] || appLogoUrls[app.id];
+        if (imageUrl) {
+          preloadQueue.push({
+            appId: app.id,
+            url: imageUrl
+          });
+        }
+      }
+    });
+    
+    // 如果队列为空，无需继续
+    if (preloadQueue.length === 0) return;
+    
+    // 并行预加载图像，一次最多加载5个
+    const batchSize = 5;
+    const loadBatch = (startIndex: number) => {
+      const batch = preloadQueue.slice(startIndex, startIndex + batchSize);
+      
+      // 如果当前批次为空，预加载完成
+      if (batch.length === 0) return;
+      
+      // 为每个图像创建Image对象并预加载
+      const promises = batch.map(({appId, url}) => {
+        return new Promise<string>((resolve) => {
+          const img = new window.Image();
+          img.onload = () => {
+            // 图像加载成功
+            resolve(appId);
+          };
+          img.onerror = () => {
+            // 图像加载失败，但我们仍然将其标记为已尝试加载
+            resolve(appId);
+          };
+          img.src = url;
+        });
+      });
+      
+      // 等待当前批次加载完成，然后加载下一批
+      Promise.all(promises).then(loadedAppIds => {
+        // 更新已加载的图像状态
+        setLoadedImages(prev => {
+          const newState = {...prev};
+          loadedAppIds.forEach(appId => {
+            newState[appId] = true;
+          });
+          return newState;
+        });
+        
+        // 加载下一批
+        loadBatch(startIndex + batchSize);
+      });
+    };
+    
+    // 开始加载第一批
+    loadBatch(0);
+  }, [category, searchQuery, loadedImages, cachedUrls]);
+  
+  // 入场动画控制
+  useEffect(() => {
+    // 应用加载完成后关闭动画标志
+    const timer = setTimeout(() => {
+      setShowAnimation(false)
+    }, 1000)
+    
+    return () => clearTimeout(timer)
+  }, [])
 
   // 处理应用点击
   const handleAppClick = (url: string) => {
@@ -566,6 +771,120 @@ export default function DiscoverPage() {
     ) || [];
   }
 
+  // 自定义Logo加载错误处理
+  const handleLogoError = (e: React.SyntheticEvent<HTMLImageElement, Event>, app: any) => {
+    const img = e.currentTarget;
+    const appId = app.id;
+    
+    // 获取当前URL，用于判断是处于哪一级的回退
+    const currentSrc = img.src;
+    
+    // 尝试从缓存中获取已知可用的URL
+    if (cachedUrls[appId] && !currentSrc.includes(cachedUrls[appId])) {
+      console.log(`Using cached URL for ${appId}`);
+      img.src = cachedUrls[appId];
+      return;
+    }
+    
+    // 尝试备用URL
+    if (fallbackLogoUrls[appId] && !currentSrc.includes(fallbackLogoUrls[appId])) {
+      console.log(`Trying fallback logo for ${appId}`);
+      img.src = fallbackLogoUrls[appId];
+      
+      const tempImg = new window.Image();
+      tempImg.onload = () => {
+        // 如果加载成功，更新缓存
+        updateImageCache(appId, fallbackLogoUrls[appId]);
+      };
+      tempImg.src = fallbackLogoUrls[appId];
+      return;
+    }
+    
+    // 尝试第三组CDN URL
+    if (cdnLogoUrls[appId] && !currentSrc.includes(cdnLogoUrls[appId])) {
+      console.log(`Trying CDN logo for ${appId}`);
+      img.src = cdnLogoUrls[appId];
+      
+      const tempImg = new window.Image();
+      tempImg.onload = () => {
+        // 如果加载成功，更新缓存
+        updateImageCache(appId, cdnLogoUrls[appId]);
+      };
+      tempImg.src = cdnLogoUrls[appId];
+      return;
+    }
+    
+    // 尝试通用图标服务
+    if (iconServiceUrls[appId] && !currentSrc.includes(iconServiceUrls[appId])) {
+      console.log(`Trying icon service for ${appId}`);
+      img.src = iconServiceUrls[appId];
+      
+      const tempImg = new window.Image();
+      tempImg.onload = () => {
+        // 如果加载成功，更新缓存
+        updateImageCache(appId, iconServiceUrls[appId]);
+      };
+      tempImg.src = iconServiceUrls[appId];
+      return;
+    }
+    
+    // 尝试使用类别通用图标
+    if (app.category) {
+      let categoryIcon = '';
+      switch(app.category) {
+        case 'dex':
+          categoryIcon = iconServiceUrls.exchange;
+          break;
+        case 'nft':
+          categoryIcon = iconServiceUrls.nft;
+          break;
+        case 'gaming':
+          categoryIcon = iconServiceUrls.game;
+          break;
+        case 'infra':
+          categoryIcon = iconServiceUrls.wallet;
+          break;
+        case 'lending':
+          categoryIcon = iconServiceUrls.token;
+          break;
+      }
+      
+      if (categoryIcon && !currentSrc.includes(categoryIcon)) {
+        console.log(`Trying category icon for ${appId}`);
+        img.src = categoryIcon;
+        
+        const tempImg = new window.Image();
+        tempImg.onload = () => {
+          // 如果加载成功，更新缓存
+          updateImageCache(appId, categoryIcon);
+        };
+        tempImg.src = categoryIcon;
+        return;
+      }
+    }
+    
+    // 尝试使用SVG数据
+    if (appLogos[appId]) {
+      try {
+        console.log(`Trying SVG data for ${appId}`);
+        const svgBlob = new Blob([appLogos[appId]], {type: 'image/svg+xml'});
+        const svgUrl = URL.createObjectURL(svgBlob);
+        img.src = svgUrl;
+        
+        // 无法缓存Blob URL，因为它们在页面刷新后会失效
+        return;
+      } catch (err) {
+        console.error(`Failed to use SVG data for ${appId}`, err);
+      }
+    }
+    
+    // 最后使用文本头像
+    console.log(`Using text avatar for ${appId}`);
+    const textAvatarUrl = `https://ui-avatars.com/api/?name=${app.name}&background=${app.color.replace('#', '')}&color=fff&size=128&bold=true`;
+    img.src = textAvatarUrl;
+    updateImageCache(appId, textAvatarUrl);
+  };
+
   const filteredApps = getFilteredApps();
   const currentCategoryStyle = categoryStyles[category as keyof typeof categoryStyles];
 
@@ -579,25 +898,45 @@ export default function DiscoverPage() {
       {/* 搜索框 - 固定在顶部 */}
       <div className={cn(
         "sticky top-0 z-10 py-4 px-3 transition-all duration-300",
-        scrolled ? (isDark ? "bg-[#0b101a]/90 backdrop-blur-sm" : "bg-white/90 backdrop-blur-sm") : "bg-transparent"
+        scrolled 
+          ? (isDark ? "bg-[#0b101a]/95 backdrop-blur-md shadow-md shadow-black/10" : "bg-white/95 backdrop-blur-md shadow-md") 
+          : "bg-transparent"
       )}>
         <div className="max-w-md mx-auto">
-          <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <div className="relative group">
+            <Search className={cn(
+              "absolute left-3.5 top-1/2 transform -translate-y-1/2 w-5 h-5 transition-colors",
+              searchQuery ? "text-primary" : "text-gray-400"
+            )} />
             <Input
               type="text"
               placeholder="搜索Web3应用..."
               className={cn(
-                "pl-12 pr-4 py-7 h-12 rounded-xl shadow-sm text-base",
-                "transition-all duration-200 border-opacity-80",
-                "focus:ring-2 focus:ring-primary/30 focus:border-primary/60",
+                "pl-12 pr-4 py-7 h-12 rounded-xl shadow-sm text-base border-2",
+                "transition-all duration-300 ease-in-out border-opacity-80",
+                "focus-within:ring-2 focus-within:ring-primary/30 focus-within:border-primary focus-within:shadow-md",
                 isDark 
-                  ? "bg-gray-800/90 border-gray-700/80 text-white" 
-                  : "bg-white border-gray-200 text-gray-900"
+                  ? "bg-gray-800/90 border-gray-700/80 text-white focus-within:bg-gray-800" 
+                  : "bg-white border-gray-200 text-gray-900 focus-within:bg-white/100"
               )}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
+            {searchQuery && (
+              <button 
+                className={cn(
+                  "absolute right-3.5 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 hover:text-gray-600 transition-colors",
+                  isDark ? "hover:text-gray-300" : "hover:text-gray-700"
+                )}
+                onClick={() => setSearchQuery("")}
+                aria-label="清除搜索"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -605,13 +944,32 @@ export default function DiscoverPage() {
       <div className="max-w-md mx-auto pb-20 px-3 pt-4">
         {/* 标题栏 */}
         <div className="flex justify-between items-center mb-4">
-          <h1 className={cn("text-lg font-bold", isDark ? "text-white" : "text-gray-800")}>发现Web3应用</h1>
-          <div className={cn("text-xs", isDark ? "text-gray-400" : "text-gray-500")}>
-            已收录 {filteredApps.length} 个应用
+          <h1 className={cn(
+            "text-lg font-bold flex items-center",
+            isDark ? "text-white" : "text-gray-800"
+          )}>
+            <span className="mr-2">发现Web3应用</span>
+            {category !== "hot" && (
+              <span 
+                className={cn(
+                  "text-xs py-1 px-2 rounded-full font-normal uppercase", 
+                  currentCategoryStyle.textColor,
+                  currentCategoryStyle.bgColor
+                )}
+              >
+                {category}
+              </span>
+            )}
+          </h1>
+          <div className={cn(
+            "text-xs rounded-lg px-2 py-1.5",
+            isDark ? "bg-gray-800 text-gray-300" : "bg-white/80 text-gray-600 border border-gray-200"
+          )}>
+            已收录 <span className="font-bold">{filteredApps.length}</span> 个应用
           </div>
         </div>
         
-        {/* 分类选项卡 - 水平滚动 */}
+        {/* 分类选项卡 - 水平滚动，优化UI */}
         <div className="mt-4 mb-5">
           <div className="flex space-x-2 overflow-x-auto pb-2 scrollbar-hide">
             <button
@@ -619,10 +977,10 @@ export default function DiscoverPage() {
               className={cn(
                 "flex items-center space-x-1 py-2 px-5 rounded-xl whitespace-nowrap text-sm font-medium transition-all duration-200",
                 category === "hot" 
-                  ? "bg-gradient-to-r from-rose-500 to-rose-600 text-white shadow-sm" 
+                  ? "bg-gradient-to-r from-rose-500 to-rose-600 text-white shadow-md shadow-rose-500/20" 
                   : isDark 
-                    ? "bg-gray-800/80 text-gray-300 hover:bg-gray-700/80" 
-                    : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
+                    ? "bg-gray-800/80 text-gray-300 hover:bg-gray-700/80 hover:text-gray-200 hover:shadow-sm" 
+                    : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 hover:shadow-sm hover:border-gray-300"
               )}
             >
               <TrendingUp className="w-4 h-4 mr-1.5" />
@@ -634,10 +992,10 @@ export default function DiscoverPage() {
               className={cn(
                 "flex items-center py-2 px-5 rounded-xl whitespace-nowrap text-sm font-medium transition-all duration-200",
                 category === "dex" 
-                  ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-sm" 
+                  ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md shadow-blue-500/20" 
                   : isDark 
-                    ? "bg-gray-800/80 text-gray-300 hover:bg-gray-700/80" 
-                    : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
+                    ? "bg-gray-800/80 text-gray-300 hover:bg-gray-700/80 hover:text-gray-200 hover:shadow-sm" 
+                    : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 hover:shadow-sm hover:border-gray-300"
               )}
             >
               <svg className="w-4 h-4 mr-1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -651,10 +1009,10 @@ export default function DiscoverPage() {
               className={cn(
                 "flex items-center py-2 px-5 rounded-xl whitespace-nowrap text-sm font-medium transition-all duration-200",
                 category === "lending" 
-                  ? "bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-sm" 
+                  ? "bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-md shadow-purple-500/20" 
                   : isDark 
-                    ? "bg-gray-800/80 text-gray-300 hover:bg-gray-700/80" 
-                    : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
+                    ? "bg-gray-800/80 text-gray-300 hover:bg-gray-700/80 hover:text-gray-200 hover:shadow-sm" 
+                    : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 hover:shadow-sm hover:border-gray-300"
               )}
             >
               <svg className="w-4 h-4 mr-1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -668,10 +1026,10 @@ export default function DiscoverPage() {
               className={cn(
                 "flex items-center py-2 px-5 rounded-xl whitespace-nowrap text-sm font-medium transition-all duration-200",
                 category === "nft" 
-                  ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-sm" 
+                  ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md shadow-amber-500/20" 
                   : isDark 
-                    ? "bg-gray-800/80 text-gray-300 hover:bg-gray-700/80" 
-                    : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
+                    ? "bg-gray-800/80 text-gray-300 hover:bg-gray-700/80 hover:text-gray-200 hover:shadow-sm" 
+                    : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 hover:shadow-sm hover:border-gray-300"
               )}
             >
               <svg className="w-4 h-4 mr-1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -685,10 +1043,10 @@ export default function DiscoverPage() {
               className={cn(
                 "flex items-center py-2 px-5 rounded-xl whitespace-nowrap text-sm font-medium transition-all duration-200",
                 category === "gaming" 
-                  ? "bg-gradient-to-r from-green-500 to-green-600 text-white shadow-sm" 
+                  ? "bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md shadow-green-500/20" 
                   : isDark 
-                    ? "bg-gray-800/80 text-gray-300 hover:bg-gray-700/80" 
-                    : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
+                    ? "bg-gray-800/80 text-gray-300 hover:bg-gray-700/80 hover:text-gray-200 hover:shadow-sm" 
+                    : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 hover:shadow-sm hover:border-gray-300"
               )}
             >
               <svg className="w-4 h-4 mr-1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -702,10 +1060,10 @@ export default function DiscoverPage() {
               className={cn(
                 "flex items-center py-2 px-5 rounded-xl whitespace-nowrap text-sm font-medium transition-all duration-200",
                 category === "infra" 
-                  ? "bg-gradient-to-r from-cyan-500 to-cyan-600 text-white shadow-sm" 
+                  ? "bg-gradient-to-r from-cyan-500 to-cyan-600 text-white shadow-md shadow-cyan-500/20" 
                   : isDark 
-                    ? "bg-gray-800/80 text-gray-300 hover:bg-gray-700/80" 
-                    : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
+                    ? "bg-gray-800/80 text-gray-300 hover:bg-gray-700/80 hover:text-gray-200 hover:shadow-sm" 
+                    : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 hover:shadow-sm hover:border-gray-300"
               )}
             >
               <svg className="w-4 h-4 mr-1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -716,71 +1074,124 @@ export default function DiscoverPage() {
           </div>
         </div>
         
-        {/* 轻量级统计栏 */}
+        {/* 增强的统计栏 */}
         <div className={cn(
-          "mb-5 p-3 rounded-xl grid grid-cols-3 gap-2",
-          isDark ? "bg-gray-800/60" : "bg-white/90 border border-gray-200/60"
+          "mb-5 p-3 rounded-xl",
+          isDark ? "bg-gray-800/60 border border-gray-700/40" : "bg-white/90 border border-gray-200/60"
         )}>
-          <div className="flex flex-col items-center p-2">
-            <span className={cn("text-2xl font-bold", isDark ? "text-sky-400" : "text-sky-500")}>
-              {filteredApps.length}
-            </span>
-            <span className="text-xs text-gray-400 mt-1">已收录</span>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="flex flex-col items-center p-2">
+              <span className={cn("text-2xl font-bold", isDark ? "text-sky-400" : "text-sky-500")}>
+                {filteredApps.length}
+              </span>
+              <span className="text-xs text-gray-400 mt-1">已收录</span>
+            </div>
+            <div className="flex flex-col items-center p-2">
+              <span className={cn("text-2xl font-bold", isDark ? "text-emerald-400" : "text-emerald-500")}>
+                {category === "hot" ? 98 : 
+                 category === "dex" ? 92 : 
+                 category === "lending" ? 90 : 
+                 category === "nft" ? 94 : 85}
+              </span>
+              <span className="text-xs text-gray-400 mt-1">热度</span>
+            </div>
+            <div className="flex flex-col items-center p-2">
+              <span className={cn("text-2xl font-bold", isDark ? "text-amber-400" : "text-amber-500")}>
+                {30 + filteredApps.length}
+              </span>
+              <span className="text-xs text-gray-400 mt-1">链接</span>
+            </div>
           </div>
-          <div className="flex flex-col items-center p-2">
-            <span className={cn("text-2xl font-bold", isDark ? "text-emerald-400" : "text-emerald-500")}>
-              {category === "hot" ? 98 : 
-               category === "dex" ? 92 : 
-               category === "lending" ? 90 : 
-               category === "nft" ? 94 : 85}
-            </span>
-            <span className="text-xs text-gray-400 mt-1">热度</span>
-          </div>
-          <div className="flex flex-col items-center p-2">
-            <span className={cn("text-2xl font-bold", isDark ? "text-amber-400" : "text-amber-500")}>
-              {30 + filteredApps.length}
-            </span>
-            <span className="text-xs text-gray-400 mt-1">链接</span>
+          
+          {/* 增加分类描述 */}
+          <div className={cn(
+            "mt-2 pt-2 text-xs text-center",
+            isDark ? "border-t border-gray-700/40 text-gray-400" : "border-t border-gray-200/60 text-gray-500"
+          )}>
+            {category === "hot" && "热门的Web3应用，按热度排名展示"}
+            {category === "dex" && "去中心化交易所，提供加密货币兑换服务"}
+            {category === "lending" && "去中心化借贷平台，提供加密资产借贷服务"}
+            {category === "nft" && "NFT交易市场，用于数字收藏品交易"}
+            {category === "gaming" && "区块链游戏平台，游戏内资产归玩家所有"}
+            {category === "infra" && "Web3基础设施，提供钱包和底层服务"}
           </div>
         </div>
 
-        {/* 应用列表 */}
+        {/* 优化的应用列表 - 增加入场动画 */}
         <div className="space-y-3.5">
-          {filteredApps.map((app) => (
+          {filteredApps.map((app, index) => (
             <div 
               key={app.id}
               className={cn(
                 "flex items-center p-4 rounded-xl cursor-pointer transition-all",
                 "hover:shadow-md hover:transform hover:scale-[1.01] hover:-translate-y-0.5",
                 isDark 
-                  ? "bg-gray-800/70 shadow-gray-900/20 border border-gray-700/40 hover:bg-gray-800/90 hover:border-gray-700/70" 
-                  : "bg-white shadow-sm shadow-gray-100 border border-gray-200/80 hover:border-gray-300/90"
+                  ? "bg-gray-800/80 shadow-gray-900/20 border border-gray-700/40 hover:bg-gray-800/95 hover:border-gray-700/70" 
+                  : "bg-white shadow-sm shadow-gray-100 border border-gray-200/80 hover:border-gray-300/90",
+                showAnimation ? "animate-fade-in" : "",
+                showAnimation ? `animation-delay-${Math.min(index, 10) * 100}` : ""  
               )}
               onClick={() => handleAppClick(app.url)}
+              style={{
+                animationDelay: showAnimation ? `${Math.min(index, 10) * 50}ms` : '0ms',
+                background: isDark 
+                  ? `linear-gradient(145deg, rgba(31, 41, 55, 0.8) 0%, rgba(17, 24, 39, 0.85) 100%)` 
+                  : `linear-gradient(145deg, rgba(255, 255, 255, 1) 0%, rgba(249, 250, 251, 0.95) 100%)`
+              }}
             >
-              <div className="relative flex-shrink-0 w-14 h-14 rounded-xl overflow-hidden shadow-sm mr-3.5" style={{ backgroundColor: `${app.color}20` }}>
+              {/* 优化的应用图标区域 */}
+              <div className="relative flex-shrink-0 w-14 h-14 rounded-xl overflow-hidden shadow-md mr-4" 
+                style={{ 
+                  backgroundColor: `${app.color}20`,
+                  boxShadow: `0 0 15px ${app.color}15` 
+                }}
+              >
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="w-10 h-10 relative">
+                    {/* 加载状态指示器 */}
+                    {!loadedImages[app.id] && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin"
+                          style={{ borderColor: `${app.color}40`, borderTopColor: 'transparent' }}
+                        ></div>
+                      </div>
+                    )}
                     <img 
-                      src={appLogoUrls[app.id] || `https://ui-avatars.com/api/?name=${app.name}&background=${app.color.replace('#', '')}&color=fff`}
+                      src={cachedUrls[app.id] || appLogoUrls[app.id] || `https://ui-avatars.com/api/?name=${app.name}&background=${app.color.replace('#', '')}&color=fff&size=128&bold=true`}
                       alt={`${app.name} logo`}
-                      className="w-full h-full object-contain"
+                      className={cn(
+                        "w-full h-full object-contain transition-opacity duration-300",
+                        loadedImages[app.id] ? "opacity-100" : "opacity-0"
+                      )}
                       loading="lazy"
-                      onError={(e) => {
-                        // 如果主要URL加载失败，尝试备用URL
-                        if (fallbackLogoUrls[app.id] && !e.currentTarget.src.includes(fallbackLogoUrls[app.id])) {
-                          e.currentTarget.src = fallbackLogoUrls[app.id];
-                        } else {
-                          // 如果备用URL也失败，使用文本头像
-                          e.currentTarget.src = `https://ui-avatars.com/api/?name=${app.name}&background=${app.color.replace('#', '')}&color=fff`;
+                      onLoad={(e) => {
+                        // 图片加载成功时，更新加载状态
+                        if (!loadedImages[app.id]) {
+                          setLoadedImages(prev => ({...prev, [app.id]: true}));
+                          
+                          // 如果是首次成功加载官方URL，缓存它
+                          const currentSrc = e.currentTarget.src;
+                          if (currentSrc === appLogoUrls[app.id] && !cachedUrls[app.id]) {
+                            updateImageCache(app.id, currentSrc);
+                          }
                         }
                       }}
+                      onError={(e) => handleLogoError(e, {...app, category: category !== 'hot' ? category : Object.keys(web3Apps).find(cat => 
+                        (web3Apps as any)[cat].some((a: any) => a.id === app.id)
+                      )})}
                     />
                   </div>
                 </div>
                 
-                {/* 热度标签 - 只显示在热门类别 */}
-                {category === "hot" && app.heat >= 85 && (
+                {/* Logo图片来源指示器 - 仅在开发环境显示 */}
+                {process.env.NODE_ENV === 'development' && loadedImages[app.id] && (
+                  <div className="absolute bottom-0 left-0 right-0 text-center text-[6px] bg-black/40 text-white p-0.5 overflow-hidden">
+                    {cachedUrls[app.id] ? 'cached' : 'source'}
+                  </div>
+                )}
+                
+                {/* 热度标签 - 视觉优化 */}
+                {app.heat >= 85 && (
                   <div className={cn(
                     "absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white",
                     "shadow-sm shadow-black/10 border border-white/20",
@@ -791,13 +1202,21 @@ export default function DiscoverPage() {
                 )}
               </div>
               
+              {/* 优化的应用信息区域 */}
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between items-start">
-                  <h3 className="font-bold text-base tracking-tight">{app.name}</h3>
+                  <h3 className="font-bold text-base tracking-tight flex items-center">
+                    {app.name}
+                    <span 
+                      className="inline-block w-2 h-2 rounded-full ml-1.5" 
+                      style={{ backgroundColor: app.color }}
+                    ></span>
+                  </h3>
                   <div className={cn(
-                    "text-xs px-1.5 py-0.5 rounded-md flex items-center",
+                    "text-xs px-2 py-0.5 rounded-md flex items-center ml-1",
+                    currentCategoryStyle.bgColor,
                     currentCategoryStyle.textColor,
-                    currentCategoryStyle.bgColor
+                    currentCategoryStyle.borderColor
                   )}>
                     <Zap className="w-3 h-3 mr-0.5" />
                     <span>{app.heat}</span>
@@ -827,8 +1246,10 @@ export default function DiscoverPage() {
                 </div>
               </div>
               
+              {/* 优化的链接图标 */}
               <div className={cn(
-                "ml-3 w-7 h-7 flex-shrink-0 rounded-full flex items-center justify-center",
+                "ml-3 w-7 h-7 flex-shrink-0 rounded-full flex items-center justify-center transition-all",
+                "group-hover:bg-primary/10 group-hover:text-primary",
                 isDark ? "bg-gray-700/80" : "bg-gray-100/80"
               )}>
                 <ExternalLink className={cn("w-3 h-3", isDark ? "text-gray-400" : "text-gray-500")} />
@@ -837,11 +1258,11 @@ export default function DiscoverPage() {
           ))}
         </div>
 
-        {/* 无搜索结果 */}
+        {/* 优化的无搜索结果展示 */}
         {filteredApps.length === 0 && (
           <div className={cn(
             "p-10 text-center rounded-xl mt-4",
-            isDark ? "bg-gray-800/60" : "bg-white border border-gray-200/60"
+            isDark ? "bg-gray-800/60 border border-gray-700/20" : "bg-white border border-gray-200/60"
           )}>
             <div className="flex justify-center mb-3">
               <Search className={cn("w-10 h-10", isDark ? "text-gray-600" : "text-gray-300")} />
@@ -852,16 +1273,28 @@ export default function DiscoverPage() {
             <p className="text-sm text-gray-400 mt-1">
               尝试其他关键词搜索或更改分类
             </p>
+            <button 
+              onClick={() => setSearchQuery("")}
+              className={cn(
+                "mt-4 px-4 py-2 rounded-lg text-sm font-medium transition-colors",
+                isDark ? "bg-gray-700 text-gray-300 hover:bg-gray-600" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              )}
+            >
+              清除搜索条件
+            </button>
           </div>
         )}
         
-        {/* 回到顶部按钮 */}
+        {/* 优化的回到顶部按钮 */}
         {scrolled && (
           <button
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             className={cn(
               "fixed bottom-20 right-4 w-10 h-10 rounded-full shadow-md flex items-center justify-center transition-all",
-              isDark ? "bg-gray-800 text-gray-300" : "bg-white text-gray-700"
+              "animate-fade-in hover:transform hover:scale-110",
+              isDark 
+                ? "bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700" 
+                : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
             )}
             aria-label="回到顶部"
             title="回到顶部"

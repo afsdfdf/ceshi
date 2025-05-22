@@ -1,15 +1,54 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Image, X, Smile } from 'lucide-react'
 import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { supabase } from '@/lib/supabase/client'
-import { User } from '@/lib/types'
+import { db } from '../../firebase'
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
+
+// 随机用户名和头像生成
+const randomNames = [
+  '匿名猫头鹰', '路人甲', '小透明', '神秘人', '热心网友', '匿名松鼠', '无名氏', '访客', '小可爱', '匿名海豚'
+]
+function getRandomName() {
+  const idx = Math.floor(Math.random() * randomNames.length)
+  return randomNames[idx] + Math.floor(100 + Math.random() * 900)
+}
+function getRandomAvatar(seed: string) {
+  return `https://api.dicebear.com/7.x/pixel-art/svg?seed=${seed}`
+}
+
+// 使用Cloudinary上传图片
+async function uploadImageToCloudinary(file: File): Promise<string> {
+  try {
+    // 将文件转换为base64
+    const base64 = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+    
+    // 调用上传API
+    const response = await fetch('/api/upload-image', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: base64 })
+    });
+    
+    if (!response.ok) {
+      throw new Error('图片上传失败');
+    }
+    
+    const data = await response.json();
+    return data.url;
+  } catch (error) {
+    console.error('图片上传失败:', error);
+    throw error;
+  }
+}
 
 export default function NewPostPage() {
   const router = useRouter()
@@ -17,89 +56,114 @@ export default function NewPostPage() {
   const isDark = resolvedTheme === "dark"
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
-  const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [user, setUser] = useState<User | any>(null)
-  const [isAnonymous, setIsAnonymous] = useState(false)
+  const [nickname, setNickname] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [previewImage, setPreviewImage] = useState<string | null>(null)
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   
-  // 检查用户登录状态
-  useEffect(() => {
-    const checkUser = async () => {
-      const { data } = await supabase.auth.getUser()
-      
-      if (!data.user) {
-        // 未登录，重定向到首页
-        router.push('/chat')
-        return
-      }
-      
-      setUser(data.user)
-      
-      // 获取用户资料
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('username')
-        .eq('id', data.user.id)
-        .single()
-        
-      if (profile) {
-        setUser((prev: any) => ({ ...prev, username: profile.username }))
-      }
-    }
+  // 添加表情符号的处理函数 - 简单版本，提示用户可以直接输入表情
+  const handleEmojiClick = () => {
+    alert('你可以直接在内容中输入表情符号 😊 👍 🎉')
+  }
+
+  // 处理图片选择
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
     
-    checkUser()
-  }, [router])
-  
-  // 提交表单
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (!title.trim()) {
-      setError('标题不能为空')
+    // 文件类型检查
+    if (!file.type.startsWith('image/')) {
+      alert('请选择图片文件')
       return
     }
     
-    if (!content.trim()) {
-      setError('内容不能为空')
+    // 文件大小限制检查 (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('图片大小不能超过5MB')
       return
     }
     
-    try {
-      setSubmitting(true)
-      setError(null)
-      
-      const post = {
-        title: title.trim(),
-        content: content.trim(),
-        author_name: isAnonymous ? '匿名用户' : (user.username || user.email?.split('@')[0] || '用户'),
-        author_id: isAnonymous ? null : user.id,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        is_pinned: false,
-        likes: 0,
-        comment_count: 0
-      }
-      
-      const { data, error: apiError } = await supabase
-        .from('posts')
-        .insert(post)
-        .select()
-      
-      if (apiError) {
-        throw apiError
-      }
-      
-      // 发布成功，跳转到帖子详情页
-      router.push(`/chat/post/${data[0].id}`)
-      
-    } catch (error: any) {
-      console.error('发布帖子失败:', error)
-      setError(error.message || '发布失败，请重试')
-    } finally {
-      setSubmitting(false)
+    // 创建预览
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      setPreviewImage(e.target?.result as string)
     }
+    reader.readAsDataURL(file)
+    
+    // 保存文件对象用于上传
+    setImageFile(file)
   }
   
+  // 移除选择的图片
+  const handleRemoveImage = () => {
+    setPreviewImage(null)
+    setImageFile(null)
+    setUploadProgress(0)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    if (!content.trim()) {
+      alert('内容不能为空')
+      return
+    }
+    
+    setLoading(true)
+    try {
+      // 生成随机用户名和头像
+      const username = nickname.trim() || getRandomName()
+      const avatar = getRandomAvatar(username)
+      
+      // 构建帖子数据
+      const postData: any = {
+        title,
+        content,
+        username,
+        avatar,
+        createdAt: serverTimestamp(),
+        likes: 0,
+        replyCount: 0
+      }
+      
+      // 如果有图片，上传到Cloudinary
+      if (imageFile) {
+        try {
+          setUploadProgress(10)
+          // 上传到Cloudinary
+          const imageUrl = await uploadImageToCloudinary(imageFile)
+          setUploadProgress(100)
+          
+          // 添加图片URL到帖子数据
+          postData.imageUrl = imageUrl
+        } catch (error) {
+          console.error('图片上传失败:', error)
+          // 即使图片上传失败，仍继续发布帖子（没有图片）
+          setUploadProgress(0)
+        }
+      }
+      
+      // 存储帖子到 Firestore
+      await addDoc(collection(db, 'posts'), postData)
+      
+      // 返回帖子列表页
+      router.push('/chat')
+    } catch (err) {
+      console.error('发帖失败:', err)
+      alert('发帖失败，请重试')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // 预览头像
+  const previewName = nickname.trim() || getRandomName()
+  const previewAvatar = getRandomAvatar(previewName)
+
   return (
     <div className={cn(
       "min-h-screen",
@@ -120,67 +184,125 @@ export default function NewPostPage() {
       </div>
       
       <div className="max-w-md mx-auto p-4">
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label htmlFor="title" className="block text-sm font-medium mb-1">
-              标题
-            </label>
-            <Input
-              id="title"
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="请输入标题"
-              className={cn(
-                "w-full p-3",
-                isDark ? "bg-card border-border" : "bg-white border-gray-200"
-              )}
-            />
-          </div>
-          
-          <div className="mb-4">
-            <label htmlFor="content" className="block text-sm font-medium mb-1">
-              内容
-            </label>
-            <Textarea
-              id="content"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="请输入帖子内容..."
-              rows={10}
-              className={cn(
-                "resize-none w-full p-3",
-                isDark ? "bg-card border-border" : "bg-white border-gray-200"
-              )}
-            />
-          </div>
-          
-          <div className="mb-4 flex items-center">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* 用户头像昵称 */}
+          <div className="flex items-center space-x-3">
+            <img src={previewAvatar} alt="头像" className="w-10 h-10 rounded-full border" />
             <input
-              id="anonymous"
-              type="checkbox"
-              checked={isAnonymous}
-              onChange={(e) => setIsAnonymous(e.target.checked)}
-              className="h-4 w-4 text-primary border-gray-300 focus:ring-primary rounded"
+              className={cn(
+                "border p-2 rounded flex-1",
+                isDark ? "bg-card border-border" : "bg-white border-gray-200"
+              )}
+              placeholder="昵称（可选，默认随机）"
+              value={nickname}
+              onChange={e => setNickname(e.target.value)}
+              maxLength={12}
             />
-            <label htmlFor="anonymous" className="ml-2 block text-sm">
-              匿名发布
-            </label>
           </div>
           
-          {error && (
-            <div className="p-3 mb-4 text-sm bg-destructive/10 border border-destructive/30 text-destructive rounded-md">
-              {error}
-            </div>
-          )}
+          {/* 标题 */}
+          <input
+            className={cn(
+              "w-full border p-2 rounded",
+              isDark ? "bg-card border-border" : "bg-white border-gray-200"
+            )}
+            placeholder="标题（可选）"
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+          />
           
-          <Button 
-            type="submit" 
-            className="w-full py-6 rounded-xl"
-            disabled={submitting || !title.trim() || !content.trim()}
+          {/* 内容 */}
+          <div className="relative">
+            <textarea
+              className={cn(
+                "w-full border p-2 rounded min-h-[150px]",
+                isDark ? "bg-card border-border" : "bg-white border-gray-200"
+              )}
+              placeholder="内容 (可以使用表情符号😊)"
+              value={content}
+              onChange={e => setContent(e.target.value)}
+              required
+            />
+            <button 
+              type="button" 
+              onClick={handleEmojiClick}
+              className="absolute right-2 bottom-2 text-gray-400 hover:text-gray-600"
+            >
+              <Smile className="w-5 h-5" />
+            </button>
+          </div>
+          
+          {/* 图片上传预览区域 */}
+          <div className={cn(
+            "border-2 border-dashed rounded-lg p-4 text-center",
+            isDark ? "border-gray-700" : "border-gray-300"
+          )}>
+            {previewImage ? (
+              <div className="relative">
+                <img 
+                  src={previewImage} 
+                  alt="图片预览" 
+                  className="max-h-60 mx-auto rounded-lg" 
+                />
+                <button 
+                  type="button"
+                  onClick={handleRemoveImage}
+                  className="absolute top-1 right-1 bg-gray-800 rounded-full p-1 text-white"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+                {uploadProgress > 0 && uploadProgress < 100 && (
+                  <div className="absolute left-0 right-0 bottom-0 h-1 bg-gray-200">
+                    <div 
+                      className="h-full bg-blue-500 transition-all duration-300"
+                      style={{ width: `${uploadProgress}%` }}
+                    ></div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="cursor-pointer py-6 flex flex-col items-center"
+              >
+                <Image className={cn(
+                  "w-8 h-8 mb-2",
+                  isDark ? "text-gray-500" : "text-gray-400"
+                )} />
+                <span className={cn(
+                  isDark ? "text-gray-400" : "text-gray-500"
+                )}>
+                  点击添加图片
+                </span>
+                <span className="text-xs text-gray-500 mt-1">
+                  支持 JPG、PNG 格式，最大5MB
+                </span>
+              </div>
+            )}
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImageChange}
+              accept="image/*"
+              className="hidden"
+            />
+          </div>
+          
+          {/* 发布按钮 */}
+          <button
+            type="submit"
+            className={cn(
+              "w-full py-3 rounded-lg text-white font-medium", 
+              loading 
+                ? "bg-blue-400" 
+                : isDark 
+                  ? "bg-blue-600 hover:bg-blue-500" 
+                  : "bg-blue-500 hover:bg-blue-600"
+            )}
+            disabled={loading}
           >
-            {submitting ? '发布中...' : '发布帖子'}
-          </Button>
+            {loading ? '发布中...' : '发布'}
+          </button>
         </form>
       </div>
     </div>

@@ -13,6 +13,7 @@ import { MainstreamTokens } from "./MainstreamTokens"
 interface TokenRankingsProps {
   darkMode: boolean;
   mode?: 'homepage' | 'market';
+  itemsPerPage?: number;
 }
 
 /**
@@ -20,7 +21,8 @@ interface TokenRankingsProps {
  */
 export default function TokenRankings({ 
   darkMode, 
-  mode = 'homepage'
+  mode = 'homepage',
+  itemsPerPage = 50
 }: TokenRankingsProps) {
   // 状态管理
   const [activeTopicId, setActiveTopicId] = useState<string>("hot")
@@ -121,7 +123,10 @@ export default function TokenRankings({
 
       {/* 主流币展示区域 */}
       <div style={{marginBottom: "8px"}}>
-        <MainstreamTokens darkMode={darkMode} />
+        <MainstreamTokens 
+          darkMode={darkMode} 
+          itemsPerPage={itemsPerPage}
+        />
       </div>
         
       {/* 主题选择器组件 */}
@@ -143,6 +148,7 @@ export default function TokenRankings({
           darkMode={darkMode} 
           onRefresh={refresh}
           lastUpdated={lastUpdated}
+          itemsPerPage={itemsPerPage}
         />
       </div>
     </div>
