@@ -156,7 +156,8 @@ export async function GET(request: Request) {
           console.log('[token-details] Ave API响应成功，提取补充数据');
           
           // 处理API响应
-          let tokenData = null;
+          let tokenData: any = null;
+          
           if (data.data && data.data.token) {
             tokenData = data.data.token;
           } else if (data.data) {
@@ -298,7 +299,7 @@ export async function GET(request: Request) {
     }
   ];
   
-  let lastError = null;
+  let lastError: any = null;
   let apiResponseData = null;
   
   try {
@@ -333,7 +334,7 @@ export async function GET(request: Request) {
         console.log(`[token-details] ${format.description}响应: `, JSON.stringify(data).substring(0, 200) + '...');
         
         // 检查响应格式并处理不同的响应结构
-        let tokenData = null;
+        let tokenData: any = null;
         
         if (data.data && data.data.token) {
           // 新格式 - 从示例API响应中看到的结构

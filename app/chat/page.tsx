@@ -47,7 +47,10 @@ export default function ForumPage() {
       }
       
       const querySnapshot = await getDocs(q)
-      const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+      const data = querySnapshot.docs.map(doc => {
+        const docData = doc.data() as Record<string, any>;
+        return { id: doc.id, ...docData };
+      }) as any[]
       
       // 如果是分类视图，在客户端进行排序
       if (activeCategory !== CATEGORIES.PLAZA) {

@@ -224,7 +224,7 @@ async function createAdminUser() {
     
     // 先检查用户是否已存在
     const { data: existingUser } = await supabase.auth.admin.listUsers();
-    const adminExists = existingUser?.users.some(user => user.email === adminEmail);
+    const adminExists = existingUser?.users.some((user: any) => user.email === adminEmail);
     
     if (!adminExists) {
       // 创建管理员用户
