@@ -3,28 +3,76 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { db } from '../firebase'
-import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore'
+import { collection, getDocs, query, orderBy, limit, where } from 'firebase/firestore'
 import { ThumbsUp, MessageCircle, PlusCircle, Image } from 'lucide-react'
 import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
 import BottomNav from "../components/BottomNav"
+
+// 定义帖子类别
+const CATEGORIES = {
+  PLAZA: 'plaza',
+  NEW_TOKENS: 'new_tokens',
+  MARKET: 'market',
+  NEWS: 'news'
+}
 
 export default function ForumPage() {
   const { resolvedTheme } = useTheme()
   const isDark = resolvedTheme === "dark"
   const [posts, setPosts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [activeCategory, setActiveCategory] = useState(CATEGORIES.PLAZA)
 
   useEffect(() => {
     async function fetchPosts() {
-      const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'), limit(30))
+      setLoading(true)
+      let q;
+      
+      if (activeCategory === CATEGORIES.PLAZA) {
+        // 聊天广场 - 所有帖子或未指定类别的帖子
+        q = query(
+          collection(db, 'posts'), 
+          orderBy('createdAt', 'desc'), 
+          limit(30)
+        )
+      } else {
+        // 特定类别的帖子 - 不使用排序以避免需要复合索引
+        q = query(
+          collection(db, 'posts'), 
+          where('category', '==', activeCategory),
+          // 移除 orderBy 以避免需要复合索引
+          limit(30)
+        )
+      }
+      
       const querySnapshot = await getDocs(q)
       const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+      
+      // 如果是分类视图，在客户端进行排序
+      if (activeCategory !== CATEGORIES.PLAZA) {
+        // 按创建时间降序排序
+        data.sort((a, b) => {
+          const timeA = a.createdAt?.toDate?.() || new Date(0);
+          const timeB = b.createdAt?.toDate?.() || new Date(0);
+          return timeB - timeA;
+        });
+      }
+      
       setPosts(data)
       setLoading(false)
     }
+    
     fetchPosts()
-  }, [])
+  }, [activeCategory])
+
+  // Tab 标题映射
+  const categoryTitles = {
+    [CATEGORIES.PLAZA]: '聊天广场',
+    [CATEGORIES.NEW_TOKENS]: '新币推荐',
+    [CATEGORIES.MARKET]: '二级市场',
+    [CATEGORIES.NEWS]: '新闻'
+  }
 
   return (
     <div className={cn(
@@ -34,14 +82,37 @@ export default function ForumPage() {
       {/* 头部 */}
       <div className="sticky top-0 z-10 bg-gradient-to-r from-blue-600 to-indigo-600 shadow-md">
         <div className="max-w-md mx-auto px-4 py-3">
-          <h1 className="text-xl font-bold text-white">XAI聊天广场</h1>
+          <h1 className="text-xl font-bold text-white">XAI聊天</h1>
           <p className="text-sm text-white/70">分享见解，探索加密世界</p>
+        </div>
+        
+        {/* 分类标签栏 */}
+        <div className="max-w-md mx-auto px-2 pb-2">
+          <div className="flex overflow-x-auto gap-2 scrollbar-hide">
+            {Object.entries(categoryTitles).map(([category, title]) => (
+              <button
+                key={category}
+                onClick={() => setActiveCategory(category)}
+                className={cn(
+                  "px-3 py-1 text-sm rounded-full whitespace-nowrap transition-colors",
+                  category === activeCategory
+                    ? "bg-white text-blue-600 font-medium"
+                    : "bg-blue-700/30 text-white/90 hover:bg-blue-700/50"
+                )}
+              >
+                {title}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
       <div className="max-w-md mx-auto p-2">
         {/* 发帖按钮 */}
-        <Link href="/chat/new">
+        <Link href={{
+          pathname: "/chat/new",
+          query: activeCategory !== CATEGORIES.PLAZA ? { category: activeCategory } : {}
+        }}>
           <div className={cn(
             "w-full py-2 px-4 mb-3 rounded-lg font-medium flex items-center justify-center shadow-sm",
             isDark 
@@ -49,7 +120,7 @@ export default function ForumPage() {
               : "bg-blue-500 hover:bg-blue-600 text-white"
           )}>
             <PlusCircle className="w-5 h-5 mr-2" />
-            发布新帖子
+            发布新{categoryTitles[activeCategory]}帖子
           </div>
         </Link>
 
@@ -65,7 +136,7 @@ export default function ForumPage() {
                 "p-4 text-center rounded-lg",
                 isDark ? "bg-card" : "bg-white border border-gray-200"
               )}>
-                <p className="text-muted-foreground">暂无帖子，来发布第一个帖子吧！</p>
+                <p className="text-muted-foreground">暂无{categoryTitles[activeCategory]}帖子，来发布第一个吧！</p>
               </div>
             ) : (
               posts.map((post) => (
@@ -123,6 +194,13 @@ export default function ForumPage() {
                         <MessageCircle className="w-3 h-3 mr-1" />
                         <span>{post.replyCount || 0}</span>
                       </div>
+                      {post.category && post.category !== CATEGORIES.PLAZA && (
+                        <div className="ml-auto">
+                          <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded-full text-[10px]">
+                            {categoryTitles[post.category] || post.category}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </Link>

@@ -10,6 +10,22 @@ import { db } from '../../../firebase'
 import { doc, getDoc, collection, query, orderBy, getDocs, addDoc, serverTimestamp, updateDoc } from 'firebase/firestore'
 import BottomNav from "../../../components/BottomNav" // 导入底部导航
 
+// 帖子类别
+const CATEGORIES = {
+  PLAZA: 'plaza',
+  NEW_TOKENS: 'new_tokens',
+  MARKET: 'market',
+  NEWS: 'news'
+}
+
+// 类别标题映射
+const categoryTitles = {
+  [CATEGORIES.PLAZA]: '聊天广场',
+  [CATEGORIES.NEW_TOKENS]: '新币推荐',
+  [CATEGORIES.MARKET]: '二级市场',
+  [CATEGORIES.NEWS]: '新闻'
+}
+
 // 随机用户名和头像生成 (与发帖页一致)
 const randomNames = [
   '匿名猫头鹰', '路人甲', '小透明', '神秘人', '热心网友', '匿名松鼠', '无名氏', '访客', '小可爱', '匿名海豚'
@@ -202,6 +218,15 @@ export default function PostDetailPage() {
             <ArrowLeft className="w-6 h-6" />
           </button>
           <h1 className="text-xl font-bold text-white truncate">{post.title || 'XAI聊天广场'}</h1>
+          
+          {/* 显示帖子分类标签 */}
+          {post.category && post.category !== CATEGORIES.PLAZA && (
+            <div className="ml-auto">
+              <span className="px-2 py-0.5 bg-white/20 text-white rounded-full text-xs">
+                {categoryTitles[post.category] || post.category}
+              </span>
+            </div>
+          )}
         </div>
       </div>
       
@@ -211,11 +236,20 @@ export default function PostDetailPage() {
           "p-4 rounded-xl shadow mb-6",
           isDark ? "bg-card" : "bg-white border border-gray-200"
         )}>
-          <div className="flex items-center space-x-3 mb-3">
-            <img src={post.avatar || 'https://api.dicebear.com/7.x/pixel-art/svg?seed=default'} alt="头像" className="w-10 h-10 rounded-full border" />
-            <div>
-              <div className="font-semibold">{post.username || '匿名用户'}</div>
-              <div className="text-gray-500 text-xs">{post.createdAt?.toDate?.().toLocaleString?.() || ''}</div>
+          <div className="flex items-center mb-3">
+            <img src={post.avatar || 'https://api.dicebear.com/7.x/pixel-art/svg?seed=default'} alt="头像" className="w-8 h-8 rounded-full border mr-2" />
+            <div className="flex-1">
+              <div className="font-medium">{post.username || '匿名用户'}</div>
+              <div className="text-xs text-muted-foreground">
+                {post.createdAt?.toDate ? formatDate(post.createdAt.toDate()) : ''}
+                
+                {/* 展示帖子分类 */}
+                {post.category && post.category !== CATEGORIES.PLAZA && (
+                  <span className="ml-2 px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded-full text-[10px]">
+                    {categoryTitles[post.category] || post.category}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
           
@@ -376,4 +410,35 @@ export default function PostDetailPage() {
       )}
     </div>
   )
+}
+
+// 格式化日期，更简洁地显示
+function formatDate(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffSecs = Math.floor(diffMs / 1000);
+  const diffMins = Math.floor(diffSecs / 60);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  // 今天内的帖子显示小时和分钟
+  if (diffDays === 0) {
+    if (diffHours === 0) {
+      if (diffMins === 0) {
+        return '刚刚';
+      }
+      return `${diffMins}分钟前`;
+    }
+    return `${diffHours}小时前`;
+  }
+  
+  // 7天内的帖子显示天数
+  if (diffDays < 7) {
+    return `${diffDays}天前`;
+  }
+  
+  // 超过7天的显示具体日期
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  return `${month}月${day}日`;
 } 

@@ -1,12 +1,28 @@
 "use client"
 
-import { useState, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useRef, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowLeft, Image, X, Smile } from 'lucide-react'
 import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
 import { db } from '../../firebase'
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
+
+// 帖子类别
+const CATEGORIES = {
+  PLAZA: 'plaza',
+  NEW_TOKENS: 'new_tokens',
+  MARKET: 'market',
+  NEWS: 'news'
+}
+
+// 类别标题映射
+const categoryTitles = {
+  [CATEGORIES.PLAZA]: '聊天广场',
+  [CATEGORIES.NEW_TOKENS]: '新币推荐',
+  [CATEGORIES.MARKET]: '二级市场',
+  [CATEGORIES.NEWS]: '新闻'
+}
 
 // 随机用户名和头像生成
 const randomNames = [
@@ -52,6 +68,7 @@ async function uploadImageToCloudinary(file: File): Promise<string> {
 
 export default function NewPostPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { resolvedTheme } = useTheme()
   const isDark = resolvedTheme === "dark"
   const [title, setTitle] = useState('')
@@ -61,7 +78,16 @@ export default function NewPostPage() {
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [uploadProgress, setUploadProgress] = useState(0)
+  const [category, setCategory] = useState(CATEGORIES.PLAZA)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  // 从URL参数初始化类别
+  useEffect(() => {
+    const categoryParam = searchParams.get('category')
+    if (categoryParam && Object.values(CATEGORIES).includes(categoryParam as any)) {
+      setCategory(categoryParam as any)
+    }
+  }, [searchParams])
   
   // 添加表情符号的处理函数 - 简单版本，提示用户可以直接输入表情
   const handleEmojiClick = () => {
@@ -125,6 +151,7 @@ export default function NewPostPage() {
         content,
         username,
         avatar,
+        category,
         createdAt: serverTimestamp(),
         likes: 0,
         replyCount: 0
@@ -200,6 +227,35 @@ export default function NewPostPage() {
             />
           </div>
           
+          {/* 分类选择 */}
+          <div className={cn(
+            "p-3 rounded",
+            isDark ? "bg-card/80 border border-border" : "bg-white border border-gray-200"
+          )}>
+            <label className="text-sm font-medium mb-2 block">选择分类</label>
+            <div className="flex flex-wrap gap-2 mt-1">
+              {Object.entries(categoryTitles).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setCategory(value)}
+                  className={cn(
+                    "px-3 py-1.5 text-sm rounded-full transition-all",
+                    category === value
+                      ? isDark 
+                        ? "bg-blue-600 text-white" 
+                        : "bg-blue-500 text-white"
+                      : isDark
+                        ? "bg-muted text-foreground hover:bg-muted/80"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+          
           {/* 标题 */}
           <input
             className={cn(
@@ -218,7 +274,7 @@ export default function NewPostPage() {
                 "w-full border p-2 rounded min-h-[150px]",
                 isDark ? "bg-card border-border" : "bg-white border-gray-200"
               )}
-              placeholder="内容 (可以使用表情符号😊)"
+              placeholder={`发布${categoryTitles[category]}内容...`}
               value={content}
               onChange={e => setContent(e.target.value)}
               required
