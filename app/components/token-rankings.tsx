@@ -122,15 +122,16 @@ export default function TokenRankings({
       )}
 
       {/* 主流币展示区域 */}
-      <div style={{marginBottom: "8px"}}>
-        <MainstreamTokens 
-          darkMode={darkMode} 
-          itemsPerPage={itemsPerPage}
-        />
-      </div>
-        
+      {mode === 'homepage' && (
+        <div style={{marginBottom: "2px"}}>
+          <MainstreamTokens 
+            darkMode={darkMode} 
+          />
+        </div>
+      )}
+      
       {/* 主题选择器组件 */}
-      <div style={{marginBottom: "8px"}}>
+      <div style={{marginBottom: "4px"}}>
         <TopicSelector 
           topics={filteredTopics} 
           activeTopic={activeTopicId}

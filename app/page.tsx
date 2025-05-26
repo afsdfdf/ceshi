@@ -75,7 +75,7 @@ export default function CryptoTracker() {
         </div>
         
         {/* 横幅轮播组件 */}
-        <div className="px-4 mb-4">
+        <div className="px-4 mb-2">
           <Banner 
             banners={banners}
             interval={5000}
