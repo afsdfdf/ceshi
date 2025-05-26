@@ -18,17 +18,44 @@ let lastFailedUpdate = 0;
 
 // 从DEX Screener获取XAI代币数据
 async function fetchXaiFromDexScreener() {
-  // 临时修复：始终返回本地数据，排查外部API或环境问题
-  return {
-    symbol: 'XAI',
-    name: '𝕏AI',
-    current_price: 0.00005238,
-    price_change_percentage_24h: 21.38,
-    image: 'https://dd.dexscreener.com/ds-data/tokens/bsc/0x1c864c55f0c5e0014e2740c36a1f2378bfabd487.png?key=d597ed',
-    market_cap: 10000000,
-    volume_24h: 2500000,
-    liquidity_usd: 5000000
-  };
+  try {
+    const pairUrl = 'https://api.dexscreener.com/latest/dex/pairs/bsc/0x29a459fe1dbea8a156a4c4c53eea7189cf6183b6';
+    const response = await fetch(pairUrl, {
+      headers: { 
+        'Accept': '*/*',
+        'User-Agent': 'Mozilla/5.0'
+      },
+      signal: AbortSignal.timeout(15000),
+      cache: 'no-store'
+    });
+    if (!response.ok) throw new Error('DEX Screener请求失败');
+    const data = await response.json();
+    if (!data.pairs || data.pairs.length === 0) throw new Error('无交易对数据');
+    const mainPair = data.pairs[0];
+    if (!mainPair.priceUsd) throw new Error('无价格信息');
+    return {
+      symbol: 'XAI',
+      name: '𝕏AI',
+      current_price: parseFloat(mainPair.priceUsd),
+      price_change_percentage_24h: mainPair.priceChange?.h24 !== undefined ? parseFloat(mainPair.priceChange.h24) : 0,
+      image: 'https://dd.dexscreener.com/ds-data/tokens/bsc/0x1c864c55f0c5e0014e2740c36a1f2378bfabd487.png?key=d597ed',
+      market_cap: mainPair.fdv || 0,
+      volume_24h: mainPair.volume?.h24 || 0,
+      liquidity_usd: mainPair.liquidity?.usd || 0
+    };
+  } catch (error) {
+    // fallback
+    return {
+      symbol: 'XAI',
+      name: '𝕏AI',
+      current_price: 0.00005238,
+      price_change_percentage_24h: 21.38,
+      image: 'https://dd.dexscreener.com/ds-data/tokens/bsc/0x1c864c55f0c5e0014e2740c36a1f2378bfabd487.png?key=d597ed',
+      market_cap: 10000000,
+      volume_24h: 2500000,
+      liquidity_usd: 5000000
+    };
+  }
 }
 
 // 获取XAI价格数据并更新缓存
