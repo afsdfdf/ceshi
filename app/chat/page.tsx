@@ -151,7 +151,7 @@ export default function ForumPage() {
                       : "bg-white border border-gray-200/80 hover:border-gray-300"
                   )}>
                     <div className="flex items-center mb-1.5">
-                      <img src={post.avatar || 'https://api.dicebear.com/7.x/pixel-art/svg?seed=default'} alt="头像" className="w-6 h-6 rounded-full border mr-2" />
+                      <img src={post.avatar || '/api/avatar-proxy?seed=default'} alt="头像" className="w-6 h-6 rounded-full border mr-2" />
                       <div className="flex-1 min-w-0">
                         <div className="font-medium text-xs">{post.username || '匿名用户'}</div>
                       </div>

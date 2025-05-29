@@ -1,7 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { API_PROXY_CONFIG, getProxyRequestConfig } from '@/lib/api-proxy-config'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'edge'
+
+// 简单的内存缓存
+const cache = new Map<string, { data: any; expires: number }>()
+const CACHE_TTL = 5 * 60 * 1000 // 5分钟缓存
+
+function getCacheKey(token: string, chain: string): string {
+  return `${chain}:${token}`
+}
+
+async function fetchWithTimeout(url: string, options: any = {}) {
+  const config = getProxyRequestConfig(API_PROXY_CONFIG.prices.oneInch.timeout)
+  return fetch(url, { ...config, ...options })
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,49 +29,99 @@ export async function GET(request: NextRequest) {
       }, { status: 400 })
     }
     
+    const cacheKey = getCacheKey(token, chain)
+    const now = Date.now()
+    
+    // 检查缓存
+    const cached = cache.get(cacheKey)
+    if (cached && cached.expires > now) {
+      return NextResponse.json({
+        success: true,
+        data: cached.data,
+        cached: true
+      })
+    }
+    
     let apiUrl: string
+    let formattedData: any
     
     // 选择合适的API端点
     if (chain === 'bsc') {
-      // 使用BSC链上API获取代币信息
-      apiUrl = `https://api.pancakeswap.info/api/v2/tokens/${token}`
+      // 尝试主要API - PancakeSwap
+      try {
+        apiUrl = `https://api.pancakeswap.info/api/v2/tokens/${token}`
+        const response = await fetchWithTimeout(apiUrl, {
+          headers: { 'Accept': 'application/json' },
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          const tokenData = data.data
+          
+          formattedData = {
+            symbol: tokenData.symbol,
+            name: tokenData.name,
+            current_price_usd: parseFloat(tokenData.price || '0'),
+            price_change_24h: parseFloat(tokenData.price_change_percentage_24h || '0'),
+            logo_url: `https://assets-cdn.trustwallet.com/blockchains/smartchain/assets/${token}/logo.png`,
+            chain: 'bsc',
+            source: 'pancakeswap'
+          }
+        }
+      } catch (error) {
+        console.log('PancakeSwap API failed, trying fallback...')
+      }
+      
+      // 如果主要API失败，使用备选API - 1inch
+      if (!formattedData) {
+        try {
+          const fallbackUrl = `https://api.1inch.io/v5.0/56/tokens/${token}`
+          const fallbackResponse = await fetchWithTimeout(fallbackUrl, {
+            headers: { 'Accept': 'application/json' },
+          })
+          
+          if (fallbackResponse.ok) {
+            const fallbackData = await fallbackResponse.json()
+            
+            formattedData = {
+              symbol: fallbackData.symbol,
+              name: fallbackData.name,
+              current_price_usd: 0, // 1inch API不提供价格数据
+              price_change_24h: 0,  // 1inch API不提供价格变化数据
+              logo_url: fallbackData.logoURI || `https://assets-cdn.trustwallet.com/blockchains/smartchain/assets/${token}/logo.png`,
+              chain: 'bsc',
+              decimals: fallbackData.decimals,
+              source: 'oneInch_fallback'
+            }
+          }
+        } catch (fallbackError) {
+          console.error('Both APIs failed:', fallbackError)
+        }
+      }
     } else {
-      // 如需支持其他链可以在这里添加
       return NextResponse.json({ 
         error: `Unsupported chain: ${chain}` 
       }, { status: 400 })
     }
     
-    // 获取代币数据
-    const response = await fetch(apiUrl, {
-      headers: {
-        'Accept': 'application/json',
-      },
-      cache: 'no-store'
-    })
-    
-    if (!response.ok) {
-      throw new Error(`API request failed with status ${response.status}`)
-    }
-    
-    const data = await response.json()
-    
-    // 处理不同API的响应格式
-    let formattedData
-    
-    if (chain === 'bsc') {
-      const tokenData = data.data
-      
-      // PancakeSwap API响应格式调整
+    if (!formattedData) {
+      // 如果所有API都失败，返回基本信息
       formattedData = {
-        symbol: tokenData.symbol,
-        name: tokenData.name,
-        current_price_usd: parseFloat(tokenData.price),
-        price_change_24h: parseFloat(tokenData.price_change_percentage_24h),
+        symbol: 'UNKNOWN',
+        name: `Token ${token.slice(0, 8)}...`,
+        current_price_usd: 0,
+        price_change_24h: 0,
         logo_url: `https://assets-cdn.trustwallet.com/blockchains/smartchain/assets/${token}/logo.png`,
-        chain: 'bsc'
+        chain: chain,
+        source: 'fallback_static'
       }
     }
+    
+    // 缓存结果
+    cache.set(cacheKey, {
+      data: formattedData,
+      expires: now + CACHE_TTL
+    })
     
     return NextResponse.json({
       success: true,
@@ -65,44 +129,8 @@ export async function GET(request: NextRequest) {
     })
     
   } catch (error) {
-    console.error('Error fetching token data:', error)
+    console.error('Token info API error:', error)
     
-    // 尝试使用备选API
-    try {
-      const searchParams = request.nextUrl.searchParams
-      const token = searchParams.get('token')
-      const chain = searchParams.get('chain')
-      
-      // 备选API - 使用1inch API
-      const fallbackResponse = await fetch(`https://api.1inch.io/v5.0/56/tokens/${token}`, {
-        headers: {
-          'Accept': 'application/json',
-        },
-        cache: 'no-store'
-      })
-      
-      if (fallbackResponse.ok) {
-        const fallbackData = await fallbackResponse.json()
-        
-        return NextResponse.json({
-          success: true,
-          data: {
-            symbol: fallbackData.symbol,
-            name: fallbackData.name,
-            current_price_usd: 0, // 1inch API不提供价格数据
-            price_change_24h: 0,  // 1inch API不提供价格变化数据
-            logo_url: fallbackData.logoURI || `https://assets-cdn.trustwallet.com/blockchains/smartchain/assets/${token}/logo.png`,
-            chain: 'bsc',
-            decimals: fallbackData.decimals
-          },
-          source: 'fallback'
-        })
-      }
-    } catch (fallbackError) {
-      console.error('Fallback API also failed:', fallbackError)
-    }
-    
-    // 如果主API和备选API都失败，返回一个错误响应
     return NextResponse.json({
       success: false,
       error: 'Failed to fetch token data',

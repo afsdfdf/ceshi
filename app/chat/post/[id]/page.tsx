@@ -35,7 +35,7 @@ function getRandomName() {
   return randomNames[idx] + Math.floor(100 + Math.random() * 900)
 }
 function getRandomAvatar(seed: string) {
-  return `https://api.dicebear.com/7.x/pixel-art/svg?seed=${seed}`
+  return `/api/avatar-proxy?seed=${seed}`
 }
 
 export default function PostDetailPage() {
@@ -237,7 +237,7 @@ export default function PostDetailPage() {
           isDark ? "bg-card" : "bg-white border border-gray-200"
         )}>
           <div className="flex items-center mb-3">
-            <img src={post.avatar || 'https://api.dicebear.com/7.x/pixel-art/svg?seed=default'} alt="头像" className="w-8 h-8 rounded-full border mr-2" />
+            <img src={post.avatar || '/api/avatar-proxy?seed=default'} alt="头像" className="w-8 h-8 rounded-full border mr-2" />
             <div className="flex-1">
               <div className="font-medium">{post.username || '匿名用户'}</div>
               <div className="text-xs text-muted-foreground">
@@ -371,7 +371,7 @@ export default function PostDetailPage() {
                   isDark ? "bg-card/80" : "bg-white border border-gray-100"
                 )}>
                   <div className="flex items-center space-x-3 mb-1">
-                    <img src={comment.avatar || 'https://api.dicebear.com/7.x/pixel-art/svg?seed=default'} alt="头像" className="w-8 h-8 rounded-full border" />
+                    <img src={comment.avatar || '/api/avatar-proxy?seed=default'} alt="头像" className="w-8 h-8 rounded-full border" />
                     <div>
                       <div className="font-semibold text-sm">{comment.username || '匿名用户'}</div>
                       <div className="text-gray-500 text-xs">{comment.createdAt?.toDate?.().toLocaleString?.() || ''}</div>

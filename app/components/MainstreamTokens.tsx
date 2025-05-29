@@ -10,6 +10,8 @@ interface XaiToken {
   logo_url: string
   link: string
   description?: string
+  source?: string
+  data_source?: string
 }
 
 interface MainstreamTokensProps {
@@ -21,6 +23,13 @@ export function MainstreamTokens({ darkMode }: MainstreamTokensProps) {
   const [token, setToken] = useState<XaiToken | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
+  const [retryCount, setRetryCount] = useState(0)
+  const [mounted, setMounted] = useState(false)
+  
+  // Ensure component is mounted before rendering to prevent hydration mismatches
+  useEffect(() => {
+    setMounted(true)
+  }, [])
   
   // 处理代币点击
   const handleTokenClick = () => {
@@ -30,32 +39,82 @@ export function MainstreamTokens({ darkMode }: MainstreamTokensProps) {
   };
   
   // 获取XAI数据
-  useEffect(() => {
-    setLoading(true)
-    fetch('/api/mainstream-prices')
-      .then(res => res.json())
-      .then(data => {
-        if (data && data.xai) {
-          setToken({
-            symbol: 'XAI',
-            price: data.xai.current_price || 0.00005238,
-            priceChange24h: data.xai.price_change_percentage_24h || 21.38,
-            logo_url: data.xai.image || 'https://assets.coingecko.com/coins/images/33413/large/xai-logo-256px.png',
-            link: '/token/bsc/0x1c864c55f0c5e0014e2740c36a1f2378bfabd487',
-            description: 'XAI 是新一代去中心化 AI 生态系统的原生代币，赋能智能经济。'
-          });
-          setError(false);
-        } else {
-          setError(true);
+  const fetchXaiData = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/mainstream-prices', {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache'
         }
-      })
-      .catch(() => {
-        setError(true);
-      })
-      .finally(() => {
-        setLoading(false);
       });
-  }, []);
+      
+      if (!response.ok) {
+        throw new Error(`API responded with status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('[MainstreamTokens] Received data:', data);
+      
+      if (data && data.xai && data.xai.current_price !== undefined) {
+        setToken({
+          symbol: 'XAI',
+          price: data.xai.current_price || 0.00005238,
+          priceChange24h: data.xai.price_change_percentage_24h || 21.38,
+          logo_url: data.xai.image || 'https://assets.coingecko.com/coins/images/33413/large/xai-logo-256px.png',
+          link: '/token/bsc/0x1c864c55f0c5e0014e2740c36a1f2378bfabd487',
+          description: 'XAI 是新一代去中心化 AI 生态系统的原生代币，赋能智能经济。',
+          source: data.source,
+          data_source: data.data_source
+        });
+        setError(false);
+        setRetryCount(0);
+      } else {
+        throw new Error('Invalid data structure received');
+      }
+    } catch (err) {
+      console.error('[MainstreamTokens] Error fetching XAI data:', err);
+      setError(true);
+      
+      // 如果是首次加载失败，设置默认数据
+      if (!token && retryCount === 0) {
+        setToken({
+          symbol: 'XAI',
+          price: 0.00005238,
+          priceChange24h: 21.38,
+          logo_url: 'https://assets.coingecko.com/coins/images/33413/large/xai-logo-256px.png',
+          link: '/token/bsc/0x1c864c55f0c5e0014e2740c36a1f2378bfabd487',
+          description: 'XAI 是新一代去中心化 AI 生态系统的原生代币，赋能智能经济。',
+          source: 'fallback',
+          data_source: 'static'
+        });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // 重试机制
+  const handleRetry = () => {
+    if (retryCount < 3) {
+      setRetryCount(prev => prev + 1);
+      fetchXaiData();
+    }
+  };
+  
+  // 获取XAI数据
+  useEffect(() => {
+    if (!mounted) return;
+    
+    fetchXaiData();
+    
+    // 定期刷新数据（每5分钟）
+    const interval = setInterval(() => {
+      fetchXaiData();
+    }, 5 * 60 * 1000);
+    
+    return () => clearInterval(interval);
+  }, [mounted]);
   
   // 格式化价格
   function formatPrice(price: number): string {
@@ -71,8 +130,23 @@ export function MainstreamTokens({ darkMode }: MainstreamTokensProps) {
     return (change >= 0 ? "+" : "") + change.toFixed(2) + "%";
   }
 
+  // 格式化数据源显示
+  function getDataSourceDisplay(source?: string, data_source?: string) {
+    if (data_source === 'dexscreener') return '🔄 实时';
+    if (data_source === 'ave_api') return '📊 AVE';
+    if (data_source === 'coingecko') return '🦎 CG';
+    if (source === 'fallback_cache') return '💾 缓存';
+    if (source === 'static_fallback') return '📋 静态';
+    return '🔄 实时';
+  }
+
+  // Don't render anything until component is mounted
+  if (!mounted) {
+    return null;
+  }
+
   // 加载状态UI
-  if (loading) {
+  if (loading && !token) {
     return (
       <div style={{
         display: 'flex',
@@ -100,8 +174,8 @@ export function MainstreamTokens({ darkMode }: MainstreamTokensProps) {
     );
   }
 
-  // 错误状态UI
-  if (error || !token) {
+  // 错误状态UI（仅在没有数据时显示）
+  if (error && !token && retryCount >= 3) {
     return (
       <div style={{
         display: 'flex',
@@ -119,10 +193,30 @@ export function MainstreamTokens({ darkMode }: MainstreamTokensProps) {
           border: '1px solid ' + (darkMode ? '#633' : '#fcc'),
           boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
         }}>
-          无法获取XAI数据，请稍后重试
+          <div>无法获取XAI数据，请稍后重试</div>
+          <button 
+            onClick={handleRetry}
+            style={{
+              marginTop: '8px',
+              padding: '4px 8px',
+              background: 'transparent',
+              border: '1px solid ' + (darkMode ? '#f88' : '#c44'),
+              borderRadius: '4px',
+              color: darkMode ? '#f88' : '#c44',
+              cursor: 'pointer',
+              fontSize: '12px'
+            }}
+          >
+            重试
+          </button>
         </div>
       </div>
     );
+  }
+
+  // 如果没有token数据，不渲染任何内容
+  if (!token) {
+    return null;
   }
 
   // 正常状态UI - 更紧凑的布局
@@ -143,6 +237,11 @@ export function MainstreamTokens({ darkMode }: MainstreamTokensProps) {
           transition: 'transform 0.2s, box-shadow 0.2s',
           cursor: 'pointer',
           marginBottom: '2px',
+          // 如果是静态数据，添加提示样式
+          ...(token.source === 'static_fallback' && {
+            border: '1px solid ' + (darkMode ? '#664400' : '#ffcc00'),
+            background: darkMode ? '#221100' : '#fffdf0'
+          })
         }}
         onClick={handleTokenClick}
         onMouseOver={(e) => {
@@ -198,11 +297,22 @@ export function MainstreamTokens({ darkMode }: MainstreamTokensProps) {
           </div>
         </div>
 
+        {/* 中间：数据源指示器 */}
+        <div style={{
+          marginLeft: 'auto',
+          marginRight: '8px',
+          fontSize: 10,
+          color: darkMode ? '#888' : '#999',
+          display: 'flex',
+          alignItems: 'center'
+        }}>
+          {getDataSourceDisplay(token.source, token.data_source)}
+        </div>
+
         {/* 右侧：简介 */}
         <div style={{
           fontSize: 12, 
           color: darkMode ? '#aaa' : '#666', 
-          marginLeft: 'auto',
           maxWidth: '45%',
           display: 'flex',
           alignItems: 'center'
@@ -211,6 +321,20 @@ export function MainstreamTokens({ darkMode }: MainstreamTokensProps) {
           <span>新一代去中心化 AI 生态系统代币</span>
         </div>
       </div>
+      
+      {/* 刷新指示器 */}
+      {loading && (
+        <div style={{
+          position: 'absolute',
+          top: '2px',
+          right: '2px',
+          width: '4px',
+          height: '4px',
+          borderRadius: '50%',
+          background: darkMode ? '#666' : '#ccc',
+          animation: 'pulse 1s infinite'
+        }} />
+      )}
     </div>
   );
 }

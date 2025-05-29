@@ -33,7 +33,7 @@ function getRandomName() {
   return randomNames[idx] + Math.floor(100 + Math.random() * 900)
 }
 function getRandomAvatar(seed: string) {
-  return `https://api.dicebear.com/7.x/pixel-art/svg?seed=${seed}`
+  return `/api/avatar-proxy?seed=${seed}`
 }
 
 // 使用Cloudinary上传图片
