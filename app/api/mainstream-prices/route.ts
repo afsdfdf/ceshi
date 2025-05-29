@@ -16,32 +16,33 @@ let priceCache: CacheObject | null = null;
 let updateInProgress = false;
 let lastFailedUpdate = 0;
 
-// 从DEX Screener获取XAI代币数据
-async function fetchXaiFromDexScreener() {
+// 从AVE获取XAI代币数据
+async function fetchXaiFromAve() {
   try {
-    const pairUrl = 'https://api.dexscreener.com/latest/dex/pairs/bsc/0x29a459fe1dbea8a156a4c4c53eea7189cf6183b6';
-    const response = await fetch(pairUrl, {
-      headers: { 
-        'Accept': '*/*',
-        'User-Agent': 'Mozilla/5.0'
+    const tokenId = "0x1c864c55f0c5e0014e2740c36a1f2378bfabd487-bsc";
+    const AVE_API_KEY = process.env.AVE_API_KEY;
+    const response = await fetch("https://prod.ave-api.com/v2/tokens/price", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        ...(AVE_API_KEY ? { "Authorization": `Bearer ${AVE_API_KEY}` } : {})
       },
-      signal: AbortSignal.timeout(15000),
-      cache: 'no-store'
+      body: JSON.stringify({ token_ids: [tokenId] })
     });
-    if (!response.ok) throw new Error('DEX Screener请求失败');
-    const data = await response.json();
-    if (!data.pairs || data.pairs.length === 0) throw new Error('无交易对数据');
-    const mainPair = data.pairs[0];
-    if (!mainPair.priceUsd) throw new Error('无价格信息');
+    if (!response.ok) throw new Error("AVE API请求失败");
+    const result = await response.json();
+    if (!result.data || !result.data[tokenId]) throw new Error("AVE返回无XAI数据");
+    const data = result.data[tokenId];
     return {
       symbol: 'XAI',
       name: '𝕏AI',
-      current_price: parseFloat(mainPair.priceUsd),
-      price_change_percentage_24h: mainPair.priceChange?.h24 !== undefined ? parseFloat(mainPair.priceChange.h24) : 0,
+      current_price: parseFloat(data.current_price_usd),
+      price_change_percentage_24h: parseFloat(data.price_change_24h),
       image: 'https://dd.dexscreener.com/ds-data/tokens/bsc/0x1c864c55f0c5e0014e2740c36a1f2378bfabd487.png?key=d597ed',
-      market_cap: mainPair.fdv || 0,
-      volume_24h: mainPair.volume?.h24 || 0,
-      liquidity_usd: mainPair.liquidity?.usd || 0
+      market_cap: 0, // AVE未返回
+      volume_24h: parseFloat(data.tx_volume_u_24h || '0'),
+      liquidity_usd: parseFloat(data.tvl || '0')
     };
   } catch (error) {
     // fallback
@@ -65,7 +66,7 @@ async function updateCache() {
   if (lastFailedUpdate > 0 && now - lastFailedUpdate < RETRY_INTERVAL) return false;
   updateInProgress = true;
   try {
-    const xaiData = await fetchXaiFromDexScreener();
+    const xaiData = await fetchXaiFromAve();
     const newData: any = {
       timestamp: now,
       cached: false,
