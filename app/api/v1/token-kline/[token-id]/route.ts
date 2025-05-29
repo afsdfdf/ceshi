@@ -1,12 +1,13 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 const AVE_API_KEY = "NMUuJmYHJB6d91bIpgLqpuLLKYVws82lj0PeDP3UEb19FoyWFJUVGLsgE95XTEmA"; // 硬编码私钥
 
 export async function GET(
-  request: Request,
-  { params }: { params: { 'token-id': string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ 'token-id': string }> }
 ) {
-  const tokenId = params['token-id'];
+  const resolvedParams = await params;
+  const tokenId = resolvedParams['token-id'];
   const { searchParams } = new URL(request.url);
   const interval = searchParams.get('interval') || '60'; // Default to 60 minutes
   const size = searchParams.get('size') || '200'; // Default to 200 data points
