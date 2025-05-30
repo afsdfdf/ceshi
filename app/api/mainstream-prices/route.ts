@@ -33,13 +33,13 @@ const XAI_TOKEN_INFO = {
 const STATIC_FALLBACK_DATA = {
   symbol: XAI_TOKEN_INFO.symbol,
   name: XAI_TOKEN_INFO.name,
-  current_price: 0.00005238,
-  price_change_percentage_24h: 21.38,
+    current_price: 0.00005238,
+    price_change_percentage_24h: 21.38,
   image: XAI_TOKEN_INFO.image,
-  market_cap: 10000000,
-  volume_24h: 2500000,
-  liquidity_usd: 5000000
-};
+    market_cap: 10000000,
+    volume_24h: 2500000,
+    liquidity_usd: 5000000
+  };
 
 // 数据源1: AVE API
 async function fetchFromAveApi() {
@@ -47,38 +47,38 @@ async function fetchFromAveApi() {
   const AVE_API_KEY = "NMUuJmYHJB6d91bIpgLqpuLLKYVws82lj0PeDP3UEb19FoyWFJUVGLsgE95XTEmA";
 
   console.log('[XAI-Price] Trying AVE API...');
-
-  const response = await fetch("https://prod.ave-api.com/v2/tokens/price", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Accept": "application/json",
+    
+    const response = await fetch("https://prod.ave-api.com/v2/tokens/price", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
       "X-API-KEY": AVE_API_KEY,
       "User-Agent": "XAI-Finance/1.0"
-    },
+      },
     body: JSON.stringify({ token_ids: [tokenId] }),
     signal: AbortSignal.timeout(8000)
-  });
+    });
 
-  if (!response.ok) {
+    if (!response.ok) {
     throw new Error(`AVE API failed: ${response.status}`);
-  }
+    }
 
-  const result = await response.json();
-  
-  if (result.status !== 1 || !result.data || !result.data[tokenId]) {
+    const result = await response.json();
+
+    if (result.status !== 1 || !result.data || !result.data[tokenId]) {
     throw new Error('AVE API returned invalid data');
-  }
+    }
 
-  const data = result.data[tokenId];
+    const data = result.data[tokenId];
   return {
     symbol: XAI_TOKEN_INFO.symbol,
     name: XAI_TOKEN_INFO.name,
     current_price: parseFloat(data.current_price_usd) || 0,
     price_change_percentage_24h: parseFloat(data.price_change_24h) || 0,
     image: XAI_TOKEN_INFO.image,
-    market_cap: parseFloat(data.market_cap || '0'),
-    volume_24h: parseFloat(data.tx_volume_u_24h || '0'),
+      market_cap: parseFloat(data.market_cap || '0'),
+      volume_24h: parseFloat(data.tx_volume_u_24h || '0'),
     liquidity_usd: parseFloat(data.tvl || '0'),
     source: 'ave_api'
   };
@@ -177,7 +177,7 @@ async function fetchXaiPrice() {
         console.log(`[XAI-Price] Successfully fetched from ${data.source}`);
         return data;
       }
-    } catch (error) {
+  } catch (error) {
       console.log(`[XAI-Price] ${fetchFunc.name} failed:`, error instanceof Error ? error.message : 'Unknown error');
       continue;
     }

@@ -58,14 +58,15 @@ export default function CryptoTracker() {
 
   return (
     <div className={cn(
-      "min-h-screen pb-16",
+      "mobile-container mobile-fade-in",
       isDark ? "bg-[#0b101a] text-white" : "bg-white text-foreground"
     )}>
       <EthereumProtection />
       
-      <div className="max-w-md mx-auto pb-16">
-        {/* 搜索部分 - 使用SearchBar组件 */}
-        <div className="p-4 pt-6 pb-2">
+      {/* 主容器 - 全屏显示，完全无边距 */}
+      <div className="w-full">
+        {/* 顶部搜索栏区域 - 完全贴边 */}
+        <div className="mobile-card mobile-p-2 mb-1">
           <SearchBar 
             isDark={isDark} 
             showLogo={true}
@@ -74,44 +75,44 @@ export default function CryptoTracker() {
           />
         </div>
         
-        {/* 横幅轮播组件 */}
-        <div className="px-4 mb-2">
+        {/* 横幅轮播区域 - 完全贴边 */}
+        <div className="mb-1">
           <Banner 
             banners={banners}
             interval={5000}
             showArrows={true}
             showIndicators={true}
             className={cn(
-              "subtle-shadow rounded-xl overflow-hidden",
+              "overflow-hidden mobile-fade-in",
               isDark ? "shadow-md shadow-black/20" : "shadow-md shadow-gray-200"
             )}
           />
         </div>
         
-        {/* 主题开关 */}
-        <div className="absolute top-6 right-4">
+        {/* 主题切换按钮 - 固定位置 */}
+        <div className="fixed top-4 right-4 z-40">
           <Button
             variant="ghost"
             size="icon"
-            className="rounded-full w-8 h-8"
+            className="mobile-btn-small mobile-touch-feedback rounded-full w-10 h-10"
             onClick={toggleTheme}
           >
             {isDark ? (
-              <Sun className="h-4 w-4" />
+              <Sun className="mobile-icon" />
             ) : (
-              <Moon className="h-4 w-4" />
+              <Moon className="mobile-icon" />
             )}
           </Button>
         </div>
         
-        {/* 代币排行榜 */}
-        <div className="px-4">
+        {/* 代币排行榜区域 - 完全贴边 */}
+        <div>
           <TokenRankings darkMode={isDark} mode="homepage" itemsPerPage={50} />
         </div>
-        
-        {/* 底部导航 */}
-        <BottomNav currentTab="home" isDark={isDark} />
       </div>
+      
+      {/* 底部导航 */}
+      <BottomNav currentTab="home" isDark={isDark} />
       
       {/* 开屏页 - 只在首次访问或刷新时显示 */}
       {showSplash && <SplashScreen onFinished={() => setShowSplash(false)} />}

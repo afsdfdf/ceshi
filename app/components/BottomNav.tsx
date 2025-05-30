@@ -57,43 +57,36 @@ export default function BottomNav({ darkMode, currentTab, isDark: propIsDark }: 
   ]
 
   return (
-    <div className={cn(
-      "fixed bottom-0 left-0 right-0 z-50 border-t",
-      isDark 
-        ? "bg-card border-border/30" 
-        : "bg-background border-border/20"
-    )}>
-      <div className="max-w-md mx-auto grid grid-cols-5">
-        {navItems.map((item) => {
-          // 从当前路径或指定的currentTab确定活动标签
-          const isActive = currentTab 
-            ? item.id === currentTab
-            : pathname === item.href || pathname.startsWith(`${item.href}/`);
-            
-          const Icon = item.icon
+    <div className="mobile-bottom-nav">
+      {navItems.map((item) => {
+        // 从当前路径或指定的currentTab确定活动标签
+        const isActive = currentTab 
+          ? item.id === currentTab
+          : pathname === item.href || pathname.startsWith(`${item.href}/`);
           
-          return (
-            <Link 
-              key={item.name}
-              href={item.href}
-              className={cn(
-                "flex flex-col items-center justify-center py-2",
-                isActive 
-                  ? "text-primary" 
-                  : isDark 
-                    ? "text-muted-foreground hover:text-foreground/80" 
-                    : "text-muted-foreground hover:text-foreground/80"
-              )}
-            >
-              <Icon className={cn(
-                "w-5 h-5",
-                isActive ? "text-primary" : "text-inherit"
-              )} />
-              <span className="text-xs mt-1">{item.name}</span>
-            </Link>
-          )
-        })}
-      </div>
+        const Icon = item.icon
+        
+        return (
+          <Link 
+            key={item.name}
+            href={item.href}
+            className={cn(
+              "mobile-nav-item mobile-touch-feedback",
+              isActive 
+                ? "text-primary" 
+                : isDark 
+                  ? "text-muted-foreground hover:text-foreground/80" 
+                  : "text-muted-foreground hover:text-foreground/80"
+            )}
+          >
+            <Icon className={cn(
+              "mobile-nav-icon",
+              isActive ? "text-primary" : "text-inherit"
+            )} />
+            <span className="mobile-nav-text mobile-text-xs">{item.name}</span>
+          </Link>
+        )
+      })}
     </div>
   )
 }

@@ -41,7 +41,7 @@ export function MainstreamTokens({ darkMode }: MainstreamTokensProps) {
   // 获取XAI数据
   const fetchXaiData = async () => {
     try {
-      setLoading(true)
+    setLoading(true)
       const response = await fetch('/api/mainstream-prices', {
         cache: 'no-store',
         headers: {
@@ -57,24 +57,24 @@ export function MainstreamTokens({ darkMode }: MainstreamTokensProps) {
       console.log('[MainstreamTokens] Received data:', data);
       
       if (data && data.xai && data.xai.current_price !== undefined) {
-        setToken({
-          symbol: 'XAI',
-          price: data.xai.current_price || 0.00005238,
-          priceChange24h: data.xai.price_change_percentage_24h || 21.38,
-          logo_url: data.xai.image || 'https://assets.coingecko.com/coins/images/33413/large/xai-logo-256px.png',
-          link: '/token/bsc/0x1c864c55f0c5e0014e2740c36a1f2378bfabd487',
+          setToken({
+            symbol: 'XAI',
+            price: data.xai.current_price || 0.00005238,
+            priceChange24h: data.xai.price_change_percentage_24h || 21.38,
+            logo_url: data.xai.image || 'https://assets.coingecko.com/coins/images/33413/large/xai-logo-256px.png',
+            link: '/token/bsc/0x1c864c55f0c5e0014e2740c36a1f2378bfabd487',
           description: 'XAI 是新一代去中心化 AI 生态系统的原生代币，赋能智能经济。',
           source: data.source,
           data_source: data.data_source
-        });
-        setError(false);
+          });
+          setError(false);
         setRetryCount(0);
-      } else {
+        } else {
         throw new Error('Invalid data structure received');
       }
     } catch (err) {
       console.error('[MainstreamTokens] Error fetching XAI data:', err);
-      setError(true);
+          setError(true);
       
       // 如果是首次加载失败，设置默认数据
       if (!token && retryCount === 0) {
@@ -90,7 +90,7 @@ export function MainstreamTokens({ darkMode }: MainstreamTokensProps) {
         });
       }
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
   };
   

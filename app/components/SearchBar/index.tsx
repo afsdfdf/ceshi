@@ -172,32 +172,33 @@ export default function SearchBar({
   }
 
   return (
-    <div className="relative">
-      <div className="flex items-center gap-3">
+    <div className="relative mobile-w-full">
+      <div className="mobile-flex mobile-flex-between">
         {/* XAI Logo */}
         {showLogo && (
-          <Link href="/" className="flex-shrink-0">
+          <Link href="/" className="flex-shrink-0 mobile-touch-feedback">
             <div className={cn(
-              "relative overflow-hidden rounded-full",
+              "relative overflow-hidden rounded-full mobile-fade-in",
               "hover:shadow-md transition-shadow duration-200",
               "hover:scale-105 transition-transform"
             )}
               style={{ width: logoSize, height: logoSize }}
             >
-              <LogoBase64 width={logoSize} height={logoSize} className="w-full h-full" />
+              <LogoBase64 width={logoSize} height={logoSize} className="mobile-w-full mobile-h-full" />
             </div>
           </Link>
         )}
         
         {/* 搜索输入框 */}
-        <div className="relative flex-grow">
+        <div className="relative flex-grow ml-3">
           <Input
             type="text"
             placeholder={placeholder}
             className={cn(
-              "w-full h-10 pl-10 rounded-full shadow-sm",
+              "mobile-input mobile-w-full rounded-full shadow-sm",
               "transition-all duration-200 border-opacity-60",
               "focus:ring-2 focus:ring-primary/30 focus:border-primary/60",
+              "pl-10 pr-4 mobile-text-md",
               isDark 
                 ? "bg-muted/40 border-muted/60 text-foreground" 
                 : "bg-secondary/80 border-border/50 text-foreground"
@@ -207,7 +208,7 @@ export default function SearchBar({
             onKeyDown={handleKeyDown}
             onFocus={() => setShowResults(true)}
           />
-          <Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 mobile-icon text-muted-foreground" />
         </div>
       </div>
       
