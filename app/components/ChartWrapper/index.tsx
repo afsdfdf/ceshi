@@ -5,6 +5,7 @@ import { init, dispose, Chart, KLineData } from 'klinecharts'
 import { DARK_THEME, LIGHT_THEME } from './themes'
 import { generateMockData } from './mockData'
 import { getPriceDecimalPlaces, updateCandleWidthForInterval } from './chartUtils'
+import { logger } from '@/lib/logger'
 
 interface ChartWrapperProps {
   darkMode: boolean
@@ -35,7 +36,7 @@ export default function ChartWrapper({
   const fetchKlineData = async () => {
     // Validate input parameters
     if (!tokenAddress || !tokenChain || tokenAddress === "0xtoken") {
-      console.log("使用模拟数据 - 缺少地址或链信息");
+      logger.info('使用模拟数据', { reason: '缺少地址或链信息' }, { component: 'ChartWrapper', action: 'fetchKlineData' });
       // 使用模拟数据
       const mockData = generateMockData(100);
       setKlineData(mockData);
@@ -70,7 +71,7 @@ export default function ChartWrapper({
       
       try {
         // 使用API获取数据
-        console.log(`请求K线数据: ${tokenAddress} ${tokenChain} ${interval}`);
+        logger.info('请求K线数据', { tokenAddress, tokenChain, interval, points }, { component: 'ChartWrapper', action: 'fetchKlineData' });
         const response = await fetch(`/api/token-kline?address=${encodeURIComponent(tokenAddress)}&chain=${encodeURIComponent(tokenChain)}&interval=${interval}&limit=${points}`, {
           // 增加超时时间
           signal: AbortSignal.timeout(10000) // 10秒超时
@@ -83,7 +84,7 @@ export default function ChartWrapper({
         const data = await response.json();
         
         if (data && data.success && data.klines && data.klines.length > 0) {
-          console.log(`成功获取K线数据: ${data.klines.length}条`);
+          logger.info('成功获取K线数据', { count: data.klines.length }, { component: 'ChartWrapper', action: 'fetchKlineData' });
           
           // 转换数据为KLineChart需要的格式
           const formattedData: KLineData[] = data.klines.map((item: any) => {
@@ -136,16 +137,19 @@ export default function ChartWrapper({
       } catch (error: any) {
         if (error.name === 'AbortError') {
           setError("请求超时，请稍后再试");
+          logger.warn('K线数据请求超时', { component: 'ChartWrapper', action: 'fetchKlineData' });
         } else {
-          console.error("获取K线数据失败:", error);
+          logger.error('获取K线数据失败', error, { component: 'ChartWrapper', action: 'fetchKlineData' });
           setError("无法获取K线数据");
           
           // 重试或使用模拟数据
           if (retryCount < 2) {
             setRetryCount(prev => prev + 1);
+            logger.info('准备重试获取K线数据', { retryCount: retryCount + 1 }, { component: 'ChartWrapper', action: 'fetchKlineData' });
             setTimeout(() => fetchKlineData(), 1000);
           } else {
             // 最终重试失败，使用模拟数据
+            logger.warn('重试失败，使用模拟数据', { retryCount }, { component: 'ChartWrapper', action: 'fetchKlineData' });
             const mockData = generateMockData(100);
             setKlineData(mockData);
             if (chartInstance.current) {
@@ -160,7 +164,7 @@ export default function ChartWrapper({
         }
       }
     } catch (error) {
-      console.error("处理K线数据时出错:", error);
+      logger.error('处理K线数据时出错', error, { component: 'ChartWrapper', action: 'fetchKlineData' });
     } finally {
       setIsLoading(false);
     }
@@ -204,6 +208,9 @@ export default function ChartWrapper({
         }
       };
     }
+    
+    // 如果没有chartRef.current，返回undefined
+    return undefined;
   }, []);
   
   // 当暗色模式改变时更新主题

@@ -111,6 +111,9 @@ export default function TokenDetailPage() {
       
       return () => clearTimeout(timer)
     }
+    
+    // 如果条件不满足，返回undefined
+    return undefined;
   }, [klineDataLoaded, blockchain, address])
   
   // 加载代币详情

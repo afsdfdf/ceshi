@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { AVE_API_KEY } from '../../api/lib/constants';
 import { executeWithRateLimit } from '../../api/lib/rate-limiter';
+import { logger } from '@/lib/logger';
 
 /**
  * GET handler
@@ -11,7 +12,7 @@ export async function GET(request: Request) {
   const address = searchParams.get('address');
   const chain = searchParams.get('chain');
   
-  console.log(`[token-details] 开始获取代币详情 ${chain}:${address}`);
+  logger.info(`开始获取代币详情 ${chain}:${address}`, { address, chain }, { component: 'TokenDetailsAPI', action: 'GET' });
   
   // Validate parameters
   if (!address || !chain) {

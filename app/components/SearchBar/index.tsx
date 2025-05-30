@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils"
 import Link from "next/link"
 import SearchResults from "./SearchResults"
 import LogoBase64 from "../LogoBase64"
+import { logger } from '@/lib/logger'
 
 interface SearchBarProps {
   isDark: boolean;
@@ -88,13 +89,15 @@ export default function SearchBar({
     const isSolanaAddress = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(term.trim());
     
     try {
-      // 无论是否是合约地址，都先尝试通过API搜索
+      logger.debug('开始搜索代币', { term, length: term.length }, { component: 'SearchBar', action: 'performSearch' });
+
       const results = await searchTokens(term);
       setSearchResults(results);
       
       // 如果API搜索有结果，则显示结果列表
       if (results.length > 0) {
         setShowResults(true);
+        logger.info('搜索完成', { resultsCount: results.length }, { component: 'SearchBar', action: 'performSearch' });
       } 
       // 如果API搜索没有结果，但输入是合约地址格式，则尝试直接跳转
       else if ((isEthereumAddress || isSolanaAddress) && term.trim()) {
@@ -122,7 +125,7 @@ export default function SearchBar({
         });
       }
     } catch (error) {
-      console.error("搜索错误:", error);
+      logger.error('搜索请求失败', error, { component: 'SearchBar', action: 'performSearch' });
       setSearchResults([]);
       
       // 如果API搜索失败但是输入是合约地址格式，仍然尝试直接跳转

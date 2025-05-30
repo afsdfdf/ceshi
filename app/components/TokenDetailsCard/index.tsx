@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect, useCallback } from 'react';
 import { TokenDetails } from "@/app/lib/ave-api-service"
 import { Activity } from "lucide-react"
+import { logger } from '@/lib/logger';
 
 import BasicInfo from "@/app/components/TokenDetailsCard/BasicInfo"
 import PriceStats from "@/app/components/TokenDetailsCard/PriceStats"
@@ -29,6 +30,7 @@ export default function TokenDetailsCard({
   const [expanded, setExpanded] = useState(false)
   const [enhancedData, setEnhancedData] = useState<any>(null)
   const [isLoadingEnhanced, setIsLoadingEnhanced] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   
   // 加载状态
   const [loadingStates, setLoadingStates] = useState({
@@ -52,14 +54,20 @@ export default function TokenDetailsCard({
   // 用于实现延迟的工具函数
   const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-  // 按优先级获取所有相关数据的函数
-  const fetchAllTokenData = async () => {
-    if (!address || !chain || apiRequestAttempted) return;
-    
+  // 获取所有代币数据
+  const fetchAllTokenData = useCallback(async () => {
+    if (!address || !chain || apiRequestAttempted) {
+      logger.warn('缺少地址或链参数', { address: !!address, chain: !!chain }, { component: 'TokenDetailsCard', action: 'fetchAllTokenData' });
+      return;
+    }
+
     setApiRequestAttempted(true);
     setIsLoadingEnhanced(true);
-    
+    setError(null);
+
     try {
+      logger.info('开始获取代币数据', { address, chain }, { component: 'TokenDetailsCard', action: 'fetchAllTokenData' });
+
       // 并行请求所有数据，而不是串行请求
       setLoadingStates(prev => ({ 
         ...prev, 
@@ -83,9 +91,11 @@ export default function TokenDetailsCard({
         if (detailsData.success) {
           setEnhancedData(detailsData);
           setDataLoadingSuccesses(prev => ({ ...prev, tokenDetails: true }));
+          logger.debug('代币详情获取成功', { name: detailsData.name }, { component: 'TokenDetailsCard', action: 'fetchAllTokenData' });
         }
       } catch (error) {
-        console.error("Error processing token details:", error);
+        logger.error("Error processing token details:", error);
+        setError("获取代币数据失败，请稍后重试");
       } finally {
         setLoadingStates(prev => ({ ...prev, tokenDetails: false }));
       }
@@ -99,9 +109,11 @@ export default function TokenDetailsCard({
             transactions: txData.transactions || []
           }));
           setDataLoadingSuccesses(prev => ({ ...prev, transactions: true }));
+          logger.debug('交易记录获取成功', { count: txData.transactions?.length }, { component: 'TokenDetailsCard', action: 'fetchAllTokenData' });
         }
       } catch (error) {
-        console.error("Error processing transactions:", error);
+        logger.error("Error processing transactions:", error);
+        setError("获取代币数据失败，请稍后重试");
       } finally {
         setLoadingStates(prev => ({ ...prev, transactions: false }));
       }
@@ -115,19 +127,22 @@ export default function TokenDetailsCard({
             holders: holdersData.holders || []
           }));
           setDataLoadingSuccesses(prev => ({ ...prev, holders: true }));
+          logger.debug('持有者数据获取成功', { count: holdersData.holders?.length }, { component: 'TokenDetailsCard', action: 'fetchAllTokenData' });
         }
       } catch (error) {
-        console.error("Error processing holders:", error);
+        logger.error("Error processing holders:", error);
+        setError("获取代币数据失败，请稍后重试");
       } finally {
         setLoadingStates(prev => ({ ...prev, holders: false }));
       }
       
     } catch (error) {
-      console.error("Error in parallel data fetching:", error);
+      logger.error("Error in parallel data fetching:", error);
+      setError("获取代币数据失败，请稍后重试");
     } finally {
       setIsLoadingEnhanced(false);
     }
-  };
+  }, [address, chain, apiRequestAttempted]);
 
   // 重置所有状态，允许重新获取数据
   const resetAndRetry = () => {
@@ -147,7 +162,7 @@ export default function TokenDetailsCard({
     if (expanded && !enhancedData && !apiRequestAttempted) {
       fetchAllTokenData();
     }
-  }, [expanded, address, chain, enhancedData, apiRequestAttempted]);
+  }, [expanded, address, chain, enhancedData, apiRequestAttempted, fetchAllTokenData]);
 
   // 渲染加载状态 - 使用平滑的过渡动画
   const renderLoadingStatus = () => {

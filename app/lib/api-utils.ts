@@ -2,6 +2,8 @@
  * API工具函数 - 提供通用请求处理、错误处理和超时机制
  */
 
+import { logger } from '@/lib/logger';
+
 interface ApiRequestOptions extends RequestInit {
   timeout?: number;
   retries?: number;
@@ -42,170 +44,108 @@ export async function apiRequest<T = any>(
     timeout = 30000, 
     retries = 2, 
     retryDelay = 1000,
-    retryCondition,
+    retryCondition = (error: ApiError) => error.status >= 500,
     shouldRetryOnServerError = true,
     ...fetchOptions 
   } = options;
 
-  let currentAttempt = 0;
-  const maxAttempts = retries + 1;
+  // 构建完整的URL
+  const url = endpoint.startsWith('http') ? endpoint : `${process.env.NEXT_PUBLIC_API_URL || ''}${endpoint}`;
+  
+  logger.debug('API请求URL:', url, { component: 'ApiUtils', action: 'apiRequest' });
 
-  while (currentAttempt < maxAttempts) {
-    // 创建AbortController用于超时控制
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
-
+  // 重试逻辑
+  for (let currentAttempt = 0; currentAttempt <= retries; currentAttempt++) {
     try {
-      // 构建完整URL
-      let url: string;
-      if (endpoint.startsWith('http')) {
-        url = endpoint;
-      } else {
-        // 检查是否在服务器端
-        const isServer = typeof window === 'undefined';
-        
-        if (isServer) {
-          // 服务器端，使用绝对URL
-          if (endpoint.startsWith('/')) {
-            const baseAppUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-            url = new URL(endpoint, baseAppUrl).toString();
-          } else {
-            url = endpoint;
-          }
-        } else {
-          // 客户端，使用window.location.origin
-          url = new URL(endpoint, window.location.origin).toString();
-        }
-      }
-      
-      console.log('API请求URL:', url);
-      
-      // 请求开始时间戳
-      const startTime = Date.now();
-      
+      // 创建控制器用于超时
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeout);
+
       // 发起请求
       const response = await fetch(url, {
         ...fetchOptions,
         signal: controller.signal,
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          ...fetchOptions.headers,
-        }
       });
 
       // 清除超时
       clearTimeout(timeoutId);
-      
-      // 请求结束时间戳
-      const endTime = Date.now();
-      const requestDuration = endTime - startTime;
-      
-      // 记录慢请求 (>2秒)
-      if (requestDuration > 2000) {
-        console.warn(`慢请求: ${url} 耗时 ${requestDuration}ms`);
+
+      // 记录响应时间（可选）
+      const requestDuration = Date.now() - Date.now();
+      if (requestDuration > 5000) {
+        logger.warn(`慢请求: ${url} 耗时 ${requestDuration}ms`, { component: 'ApiUtils', action: 'apiRequest' });
       }
 
-      // 获取响应数据
+      // 解析响应
       let data: any;
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
-        try {
-          data = await response.json();
-        } catch (e) {
-          console.error('JSON解析错误:', e);
-          // 如果不是有效的JSON，创建一个通用错误对象
-          data = { error: 'Invalid JSON response', original_error: e };
-        }
-      } else {
-        // 非JSON响应
-        try {
-          const textContent = await response.text();
-          data = { 
-            text: textContent.substring(0, 200), // 只保留前200个字符避免日志过大
-            content_type: contentType 
-          };
-        } catch (e) {
-          data = { error: 'Unable to read response body', original_error: e };
-        }
+      try {
+        data = await response.json();
+      } catch (e) {
+        logger.error('JSON解析错误:', e, { component: 'ApiUtils', action: 'apiRequest' });
+        throw new ApiError(
+          'Invalid JSON response',
+          response.status,
+          response.statusText
+        );
       }
 
-      // 记录状态码
-      console.log(`API响应状态: ${response.status} ${response.statusText}`);
-
-      // 检查响应状态
+      // 检查HTTP状态
       if (!response.ok) {
-        console.error(`API错误响应数据:`, data);
-        const errorMessage = data?.error || data?.message || `请求失败，状态码: ${response.status}`;
-        throw new ApiError(
+        logger.debug(`API响应状态: ${response.status} ${response.statusText}`, { component: 'ApiUtils', action: 'apiRequest' });
+        
+        // 尝试从响应中获取错误信息
+        const errorMessage = data?.error || data?.message || `HTTP ${response.status} ${response.statusText}`;
+        logger.error(`API错误响应数据:`, data, { component: 'ApiUtils', action: 'apiRequest' });
+        
+        const apiError = new ApiError(
           errorMessage,
           response.status,
           response.statusText,
           data
         );
+
+        // 是否重试
+        if (shouldRetryOnServerError && retryCondition(apiError) && currentAttempt < retries) {
+          logger.debug(`API请求重试条件满足`, { component: 'ApiUtils', action: 'apiRequest' });
+          continue;
+        }
+
+        throw apiError;
       }
 
-      // 记录成功响应的数据摘要
-      if (typeof data === 'object' && data !== null) {
-        const keysStr = Object.keys(data).join(', ');
-        console.log(`API响应数据包含字段: ${keysStr}`);
+      return data;
+
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        logger.error(`API请求超时: ${endpoint}`, { component: 'ApiUtils', action: 'apiRequest' });
+        throw new ApiError('Request timeout', 408, 'Request Timeout');
       }
 
-      return data as T;
-    } catch (error: any) {
-      // 清除超时
-      clearTimeout(timeoutId);
+      logger.error(`API请求失败 (尝试 ${currentAttempt + 1}/${retries + 1}):`, error, { component: 'ApiUtils', action: 'apiRequest' });
 
-      // 处理中止错误
-      if (error.name === 'AbortError') {
-        console.error(`API请求超时: ${endpoint}`);
-        throw new ApiError('请求超时', 408, 'Request Timeout');
-      }
-
-      console.error(`API请求失败 (尝试 ${currentAttempt + 1}/${maxAttempts}):`, error);
-
-      // 超过重试次数，直接抛出错误
-      currentAttempt++;
-      if (currentAttempt >= maxAttempts) {
+      // 如果是最后一次尝试，抛出错误
+      if (currentAttempt === retries) {
         if (error instanceof ApiError) {
           throw error;
         }
-        
-        // 处理其他错误
         throw new ApiError(
-          error.message || '未知错误',
-          500,
-          'Internal Error'
+          error instanceof Error ? error.message : 'Unknown error',
+          0,
+          'Network Error'
         );
       }
-      
-      // 检查是否应该重试
-      const shouldRetry = retryCondition 
-        ? retryCondition(error instanceof ApiError ? error : new ApiError(error.message, 500, 'Error'))
-        : (
-          shouldRetryOnServerError && 
-          error instanceof ApiError && 
-          error.status >= 500
-        );
-      
-      if (!shouldRetry) {
-        throw error;
+
+      // 等待后重试
+      if (currentAttempt < retries) {
+        const delay = retryDelay * Math.pow(2, currentAttempt); // 指数退避
+        logger.debug(`请求失败，${delay}ms后重试 (${currentAttempt + 1}/${retries + 1})...`, { component: 'ApiUtils', action: 'apiRequest' });
+        await new Promise(resolve => setTimeout(resolve, delay));
       }
-      
-      // 使用指数退避策略
-      const delay = Math.min(
-        retryDelay * Math.pow(1.5, currentAttempt - 1), 
-        10000
-      );
-      
-      console.log(`请求失败，${delay}ms后重试 (${currentAttempt}/${maxAttempts})...`);
-      await new Promise(resolve => setTimeout(resolve, delay));
-      // 继续循环尝试下一次请求
     }
   }
 
-  // 这行代码正常不会执行，因为循环内部会返回结果或抛出错误
-  throw new ApiError('请求失败，达到最大重试次数', 500, 'Maximum Retries Exceeded');
+  // 理论上不会到达这里
+  throw new ApiError('Max retries exceeded', 0, 'Network Error');
 }
 
 /**

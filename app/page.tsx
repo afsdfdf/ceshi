@@ -41,6 +41,9 @@ export default function CryptoTracker() {
         return () => clearTimeout(timer)
       }
     }
+    
+    // 如果条件不满足，返回undefined
+    return undefined;
   }, [showSplash])
   
   // 监听路由变化，用于判断是否是通过路由导航到首页

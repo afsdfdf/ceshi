@@ -1,5 +1,6 @@
 import { API_ENDPOINTS, AVE_API_KEY, FETCH_RETRY_CONFIG } from './constants';
 import { ApiError } from './errors';
+import { logger } from '@/lib/logger';
 
 // 带重试的 fetch 函数
 export async function fetchWithRetry(url: string, options: RequestInit = {}, retryConfig = FETCH_RETRY_CONFIG) {
@@ -32,7 +33,7 @@ export async function fetchWithRetry(url: string, options: RequestInit = {}, ret
     } catch (error) {
       if (retries === 0) throw error;
       
-      console.warn(`请求失败，正在重试 (剩余${retries}次):`, error);
+      logger.warn('请求失败，准备重试', { retriesLeft: retries, error }, { component: 'APIFetchers', action: 'fetchWithRetry' });
       
       // 等待重试
       await new Promise(resolve => setTimeout(resolve, backoff));
@@ -49,25 +50,25 @@ export async function fetchWithRetry(url: string, options: RequestInit = {}, ret
 
 // 获取代币提升数据
 export async function fetchTokenBoosts() {
-  console.log('从DexScreener获取代币提升数据');
+  logger.debug('从DexScreener获取代币提升数据', { component: 'APIFetchers', action: 'fetchTokenBoosts' });
   return fetchWithRetry(API_ENDPOINTS.DEXSCREENER_TOKEN_BOOSTS);
 }
 
 // 获取排名主题
 export async function fetchRankTopics() {
-  console.log('从Ave.ai获取排名主题');
+  logger.debug('从Ave.ai获取排名主题', { component: 'APIFetchers', action: 'fetchRankTopics' });
   return fetchWithRetry(API_ENDPOINTS.AVE_RANK_TOPICS);
 }
 
 // 按主题获取代币排名
 export async function fetchTokensByTopic(topic: string) {
-  console.log(`从Ave.ai获取主题 ${topic} 的代币列表`);
+  logger.debug('从Ave.ai获取主题代币列表', { topic }, { component: 'APIFetchers', action: 'fetchTokensByTopic' });
   return fetchWithRetry(`${API_ENDPOINTS.AVE_RANK_BY_TOPIC}?topic=${encodeURIComponent(topic)}`);
 }
 
 // 搜索代币
 export async function searchTokens(keyword: string, chain?: string) {
-  console.log(`使用关键词 "${keyword}" 搜索代币`);
+  logger.debug('搜索代币', { keyword, chain }, { component: 'APIFetchers', action: 'searchTokens' });
   let url = `${API_ENDPOINTS.AVE_TOKENS_SEARCH}?keyword=${encodeURIComponent(keyword)}`;
   if (chain) url += `&chain=${chain}`;
   return fetchWithRetry(url);
@@ -75,13 +76,13 @@ export async function searchTokens(keyword: string, chain?: string) {
 
 // 获取代币详情
 export async function fetchTokenDetails(tokenId: string) {
-  console.log(`获取代币 ${tokenId} 的详情`);
+  logger.debug('获取代币详情', { tokenId }, { component: 'APIFetchers', action: 'fetchTokenDetails' });
   return fetchWithRetry(`${API_ENDPOINTS.AVE_TOKEN_DETAILS}/${encodeURIComponent(tokenId)}`);
 }
 
 // 获取代币价格
 export async function fetchTokenPrices(tokenIds: string[]) {
-  console.log(`获取 ${tokenIds.length} 个代币的价格`);
+  logger.info('获取代币价格', { count: tokenIds.length }, { component: 'APIFetchers', action: 'fetchTokenPrices' });
   return fetchWithRetry(API_ENDPOINTS.AVE_TOKEN_PRICE, {
     method: 'POST',
     headers: {

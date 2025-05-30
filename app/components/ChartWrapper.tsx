@@ -661,6 +661,9 @@ export default function ChartWrapper({
       
       return () => clearTimeout(timer);
     }
+    
+    // 如果条件不满足，返回undefined
+    return undefined;
   }, [tokenAddress, tokenChain, interval]);
 
   // 当时间间隔改变时更新蜡烛图样式

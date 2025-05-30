@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { API_PROXY_CONFIG, getProxyRequestConfig } from '@/lib/api-proxy-config'
+import { logger } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'edge'
@@ -69,7 +70,7 @@ export async function GET(request: NextRequest) {
           }
         }
       } catch (error) {
-        console.log('PancakeSwap API failed, trying fallback...')
+        logger.debug('PancakeSwap API 失败，尝试备选方案', { component: 'TokenInfoAPI', action: 'GET' });
       }
       
       // 如果主要API失败，使用备选API - 1inch
@@ -95,7 +96,7 @@ export async function GET(request: NextRequest) {
             }
           }
         } catch (fallbackError) {
-          console.error('Both APIs failed:', fallbackError)
+          logger.error('所有API都失败', fallbackError, { component: 'TokenInfoAPI', action: 'GET' });
         }
       }
     } else {
@@ -129,7 +130,7 @@ export async function GET(request: NextRequest) {
     })
     
   } catch (error) {
-    console.error('Token info API error:', error)
+    logger.error('Token info API error', error, { component: 'TokenInfoAPI', action: 'GET' });
     
     return NextResponse.json({
       success: false,

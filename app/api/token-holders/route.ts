@@ -1,20 +1,22 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { AVE_API_KEY } from '../../api/lib/constants';
 import { executeWithRateLimit } from '../../api/lib/rate-limiter';
+import { logger } from '@/lib/logger';
 
 /**
  * GET 处理程序
  * 获取代币持有者前100
  */
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const address = searchParams.get('address');
   const chain = searchParams.get('chain');
   
-  console.log(`[token-holders] 开始获取持币排名 ${chain}:${address}`);
+  logger.info('代币持有者查询请求', { address, chain }, { component: 'TokenHoldersAPI', action: 'GET' });
   
   // 参数验证
   if (!address || !chain) {
+    logger.warn('缺少必需参数', { address: !!address, chain: !!chain }, { component: 'TokenHoldersAPI', action: 'GET' });
     return NextResponse.json({
       success: false,
       error: "Missing required parameters: address and chain"
@@ -49,7 +51,7 @@ export async function GET(request: Request) {
         // 依次尝试每种API格式
         for (const format of apiFormats) {
           try {
-            console.log(`[token-holders] 尝试${format.description}: ${format.url}`);
+            logger.debug(`[token-holders] 尝试${format.description}: ${format.url}`);
             
             const response = await fetch(format.url, {
               headers: {
@@ -62,46 +64,46 @@ export async function GET(request: Request) {
             });
             
             if (!response.ok) {
-              console.log(`[token-holders] ${format.description}请求失败，状态码: ${response.status}`);
+              logger.warn(`[token-holders] ${format.description}请求失败，状态码: ${response.status}`);
               continue; // 尝试下一个格式
             }
             
             const data = await response.json();
-            console.log(`[token-holders] ${format.description}响应: `, JSON.stringify(data).substring(0, 200) + '...');
+            logger.debug(`[token-holders] ${format.description}响应: `, JSON.stringify(data).substring(0, 200) + '...');
             
             // 尝试从不同格式的响应中获取持有者数据
             if (data.status === 1 && data.data) {
               // 标准格式
               holdersData = data.data;
-              console.log(`[token-holders] 从标准格式提取了${holdersData.length}个持有者`);
+              logger.info(`[token-holders] 从标准格式提取了${holdersData.length}个持有者`);
               break;
             } else if (data.holders) {
               // 另一种可能的格式
               holdersData = data.holders;
-              console.log(`[token-holders] 从holders字段提取了${holdersData.length}个持有者`);
+              logger.info(`[token-holders] 从holders字段提取了${holdersData.length}个持有者`);
               break;
             } else if (Array.isArray(data)) {
               // 直接返回数组的格式
               holdersData = data;
-              console.log(`[token-holders] 从数组提取了${holdersData.length}个持有者`);
+              logger.info(`[token-holders] 从数组提取了${holdersData.length}个持有者`);
               break;
             } else if (data.data && Array.isArray(data.data)) {
               // data字段包含数组
               holdersData = data.data;
-              console.log(`[token-holders] 从data数组提取了${holdersData.length}个持有者`);
+              logger.info(`[token-holders] 从data数组提取了${holdersData.length}个持有者`);
               break;
             } else {
-              console.log(`[token-holders] ${format.description}响应格式无法识别`);
+              logger.warn(`[token-holders] ${format.description}响应格式无法识别`);
             }
           } catch (error) {
-            console.error(`[token-holders] ${format.description}请求出错:`, error);
+            logger.error(`[token-holders] ${format.description}请求出错:`, error);
             lastError = error;
           }
         }
         
         // 如果没有找到有效数据，返回空数组
         if (!holdersData) {
-          console.log('[token-holders] 所有API格式均未返回有效数据，返回空数组');
+          logger.info('[token-holders] 所有API格式均未返回有效数据，返回空数组');
           return NextResponse.json({
             success: true,
             holders: []
@@ -110,7 +112,7 @@ export async function GET(request: Request) {
         
         // 确保返回的是数组
         if (!Array.isArray(holdersData)) {
-          console.error('[token-holders] API返回的持币数据不是数组格式:', holdersData);
+          logger.error('[token-holders] API返回的持币数据不是数组格式:', holdersData);
           return NextResponse.json({
             success: true,
             holders: []
@@ -120,7 +122,7 @@ export async function GET(request: Request) {
         // 处理持有者数据，确保包含必要字段
         const processedHolders = processHolders(holdersData);
         
-        console.log(`[token-holders] 返回${processedHolders.length}个持有者数据`);
+        logger.info(`[token-holders] 返回${processedHolders.length}个持有者数据`);
         
         return NextResponse.json({
           success: true,
@@ -129,7 +131,7 @@ export async function GET(request: Request) {
       }
     );
   } catch (error) {
-    console.error('[token-holders] 获取持币排名失败:', error);
+    logger.error('[token-holders] 获取持币排名失败:', error);
     
     // 返回空数组而不是错误响应
     return NextResponse.json({
@@ -148,7 +150,7 @@ function processHolders(holders: any[]): any[] {
     return [];
   }
   
-  console.log(`[token-holders] 处理${holders.length}个持有者数据`);
+  logger.info(`[token-holders] 处理${holders.length}个持有者数据`);
   
   // 计算总持有量 - 确保正确解析数字格式
   const totalQuantity = holders.reduce((sum, holder) => {
@@ -161,11 +163,11 @@ function processHolders(holders: any[]): any[] {
     return sum + (isNaN(quantity) ? 0 : quantity);
   }, 0);
   
-  console.log(`[token-holders] 总持有量计算结果: ${totalQuantity}`);
+  logger.info(`[token-holders] 总持有量计算结果: ${totalQuantity}`);
   
   // 如果总量为0，无法计算百分比
   if (totalQuantity === 0) {
-    console.warn('[token-holders] 总持有量为0，将返回零百分比');
+    logger.warn('[token-holders] 总持有量为0，将返回零百分比');
     return holders.map(holder => ({
       ...holder,
       quantity: holder.quantity || holder.balance || holder.amount_cur || holder.amount || '0',

@@ -1,12 +1,13 @@
 // Ave.ai API服务
 import { apiRequest, buildUrl } from './api-utils';
-import { TokenPrice } from '@/app/types/token';
+import { TokenPrice, TokenInfo } from '@/app/types/token';
+import { logger } from '@/lib/logger';
 
 // API密钥配置 - 生产环境从环境变量获取
 const AVE_API_KEY = process.env.AVE_API_KEY || "";
 
 export interface TokenDetails {
-  tokenInfo: TokenPrice;
+  tokenInfo: TokenInfo;
   price: number;
   priceChange: number;
   volume24h: number;
@@ -110,7 +111,7 @@ export async function searchTokens(keyword: string, chain?: string): Promise<Tok
   };
   
   const url = buildUrl('/api/search-tokens', params);
-  console.log('Searching tokens with URL:', url);
+  logger.debug('Searching tokens with URL:', url, { component: 'AVEApiService', action: 'searchTokens' });
   
   try {
     const response = await apiRequest<SearchTokensResponse>(url, {
@@ -124,7 +125,7 @@ export async function searchTokens(keyword: string, chain?: string): Promise<Tok
     
     return response.tokens || [];
   } catch (error) {
-    console.error('搜索代币错误:', error);
+    logger.error('搜索代币错误:', error, { component: 'AVEApiService', action: 'searchTokens' });
     // 重新抛出错误，让调用者处理
     throw error;
   }
@@ -150,7 +151,7 @@ export async function getTokenDetails(address: string, chain: string): Promise<T
       next: { revalidate: 60 } // 缓存一分钟
     });
     
-    console.log(`[getTokenDetails] 原始API响应:`, response);
+    logger.debug(`[getTokenDetails] 原始API响应:`, response);
     
     if (!response.success) {
       throw new Error(response.error || '获取代币详情失败');
@@ -158,31 +159,29 @@ export async function getTokenDetails(address: string, chain: string): Promise<T
     
     // 确保我们正确处理logo字段
     const logoUrl = response.logo || '';
-    console.log(`[getTokenDetails] API返回的Logo URL: ${logoUrl}`);
+    logger.debug(`[getTokenDetails] API返回的Logo URL: ${logoUrl}`);
 
     // 打印重要字段信息
-    console.log(`[getTokenDetails] 代币名称: ${response.name || 'N/A'}`);
-    console.log(`[getTokenDetails] 代币符号: ${response.symbol || 'N/A'}`);
-    console.log(`[getTokenDetails] 持有人数量: ${response.holders || 0}`);
-    console.log(`[getTokenDetails] 总供应量: ${response.totalSupply || 0}`);
+    logger.debug(`[getTokenDetails] 代币名称: ${response.name || 'N/A'}`);
+    logger.debug(`[getTokenDetails] 代币符号: ${response.symbol || 'N/A'}`);
+    logger.debug(`[getTokenDetails] 持有人数量: ${response.holders || 0}`);
+    logger.debug(`[getTokenDetails] 总供应量: ${response.totalSupply || 0}`);
     
     // 创建TokenDetails对象
     const tokenDetails: TokenDetails = {
       tokenInfo: {
         symbol: response.symbol || '',
         name: response.name || '',
-        token: response.address || address, // 使用token而不是address
+        address: response.address || address, // 使用 address 而不是 token
+        decimals: 18, // 默认值，如果API返回了decimals则使用API的值
         logo_url: logoUrl,
         current_price_usd: response.price || 0,
         price_change_24h: response.priceChange24h || 0,
-        tx_volume_u_24h: response.volume24h || 0,
-        holders: response.holders || 0,
         chain: response.chain || chain,
-        // 兼容字段
-        price: response.price || 0,
-        priceChange24h: response.priceChange24h || 0,
-        volume24h: response.volume24h || 0,
-        marketCap: response.marketCap || 0,
+        holders: response.holders || 0,
+        market_cap: response.marketCap || 0,
+        total_supply: response.totalSupply || 0,
+        circulating_supply: response.circulating_supply || 0,
       },
       // 基本指标
       price: response.price || 0,
@@ -212,11 +211,11 @@ export async function getTokenDetails(address: string, chain: string): Promise<T
       verified: response.verified || false
     };
     
-    console.log('[getTokenDetails] 处理后的代币详情:', tokenDetails);
+    logger.debug('[getTokenDetails] 处理后的代币详情:', tokenDetails);
     return tokenDetails;
     
   } catch (error) {
-    console.error('[getTokenDetails] 获取代币详情错误:', error);
+    logger.error('[getTokenDetails] 获取代币详情错误:', error);
     throw error;
   }
 }
@@ -262,7 +261,7 @@ export async function getTokenKlineData(
       volume: parseFloat(item.volume),
     }));
   } catch (error) {
-    console.error('获取K线数据错误:', error);
+    logger.error('获取K线数据错误:', error);
     return [];
   }
 }
@@ -277,7 +276,7 @@ export async function getTokenTopHolders(
   chain: string
 ): Promise<any[]> {
   try {
-    console.log(`[getTokenTopHolders] 开始请求 address=${address}, chain=${chain}`);
+    logger.debug(`[getTokenTopHolders] 开始请求 address=${address}, chain=${chain}`);
     
     const params = {
       address: encodeURIComponent(address),
@@ -285,45 +284,45 @@ export async function getTokenTopHolders(
     };
     
     const url = buildUrl('/api/token-holders', params);
-    console.log(`[getTokenTopHolders] 请求URL: ${url}`);
+    logger.debug(`[getTokenTopHolders] 请求URL: ${url}`);
     
     const response = await apiRequest<any>(url, {
       timeout: 15000,
       next: { revalidate: 60 } // 缓存一分钟
     });
     
-    console.log(`[getTokenTopHolders] API响应: `, JSON.stringify(response).substring(0, 200) + '...');
+    logger.debug(`[getTokenTopHolders] API响应: `, JSON.stringify(response).substring(0, 200) + '...');
     
     if (!response.success) {
-      console.error(`[getTokenTopHolders] API返回错误: ${response.error || '未知错误'}`);
+      logger.error(`[getTokenTopHolders] API返回错误: ${response.error || '未知错误'}`);
       return [];
     }
     
     // 处理不同格式的API响应
     let holders = [];
     if (Array.isArray(response.holders)) {
-      console.log(`[getTokenTopHolders] 使用holders数组字段, 长度=${response.holders.length}`);
+      logger.debug(`[getTokenTopHolders] 使用holders数组字段, 长度=${response.holders.length}`);
       holders = response.holders;
     } else if (Array.isArray(response.data)) {
-      console.log(`[getTokenTopHolders] 使用data数组字段, 长度=${response.data.length}`);
+      logger.debug(`[getTokenTopHolders] 使用data数组字段, 长度=${response.data.length}`);
       holders = response.data;
     } else if (Array.isArray(response)) {
-      console.log(`[getTokenTopHolders] 响应本身是数组, 长度=${response.length}`);
+      logger.debug(`[getTokenTopHolders] 响应本身是数组, 长度=${response.length}`);
       holders = response;
     } else {
-      console.error(`[getTokenTopHolders] 未找到期望的持币人数据字段`);
-      console.log(`[getTokenTopHolders] 响应结构:`, Object.keys(response));
+      logger.error(`[getTokenTopHolders] 未找到期望的持币人数据字段`);
+      logger.debug(`[getTokenTopHolders] 响应结构:`, Object.keys(response));
       return [];
     }
     
     // 验证和输出数据结构
     if (holders.length > 0) {
-      console.log(`[getTokenTopHolders] 第一个持币人样本:`, JSON.stringify(holders[0]));
+      logger.debug(`[getTokenTopHolders] 第一个持币人样本:`, JSON.stringify(holders[0]));
     }
     
     return holders;
   } catch (error) {
-    console.error(`[getTokenTopHolders] 发生错误:`, error);
+    logger.error(`[getTokenTopHolders] 发生错误:`, error);
     return [];
   }
 }
@@ -338,7 +337,7 @@ export async function getTokenRiskReport(
   chain: string
 ): Promise<any> {
   try {
-    console.log(`[getTokenRiskReport] 开始请求风险报告: address=${address}, chain=${chain}`);
+    logger.debug(`[getTokenRiskReport] 开始请求风险报告: address=${address}, chain=${chain}`);
     
     const params = {
       address: encodeURIComponent(address),
@@ -346,45 +345,45 @@ export async function getTokenRiskReport(
     };
     
     const url = buildUrl('/api/token-risk', params);
-    console.log(`[getTokenRiskReport] 请求URL: ${url}`);
+    logger.debug(`[getTokenRiskReport] 请求URL: ${url}`);
     
     const response = await apiRequest<any>(url, {
       timeout: 15000,
       next: { revalidate: 3600 } // 缓存1小时
     });
     
-    console.log(`[getTokenRiskReport] 原始API响应:`, JSON.stringify(response).substring(0, 200) + '...');
+    logger.debug(`[getTokenRiskReport] 原始API响应:`, JSON.stringify(response).substring(0, 200) + '...');
     
     // 处理不同格式的API响应
     let riskData;
     
     // 标准API格式: {status: 1, data: {...}}
     if (response.status === 1 && response.data) {
-      console.log(`[getTokenRiskReport] 检测到标准格式API响应, 使用 data 字段`);
+      logger.debug(`[getTokenRiskReport] 检测到标准格式API响应, 使用 data 字段`);
       riskData = response.data;
     } 
     // 旧格式: {success: true, risk: {...}}
     else if (response.success && response.risk) {
-      console.log(`[getTokenRiskReport] 检测到旧格式API响应, 使用 risk 字段`);
+      logger.debug(`[getTokenRiskReport] 检测到旧格式API响应, 使用 risk 字段`);
       riskData = response.risk;
     }
     // 可能的直接风险数据对象
     else if (typeof response === 'object' && response !== null && !response.error && !response.msg) {
-      console.log(`[getTokenRiskReport] 使用整个响应对象作为风险数据`);
+      logger.debug(`[getTokenRiskReport] 使用整个响应对象作为风险数据`);
       riskData = response;
     }
     else {
-      console.error(`[getTokenRiskReport] API返回错误:`, 
+      logger.error(`[getTokenRiskReport] API返回错误:`, 
         response.error || response.msg || '未能识别API返回格式');
       return null;
     }
     
     if (!riskData) {
-      console.error(`[getTokenRiskReport] 无法从响应中提取风险数据`, response);
+      logger.error(`[getTokenRiskReport] 无法从响应中提取风险数据`, response);
       return null;
     }
     
-    console.log(`[getTokenRiskReport] 风险报告字段:`, Object.keys(riskData).slice(0, 10).join(', ') + '...');
+    logger.debug(`[getTokenRiskReport] 风险报告字段:`, Object.keys(riskData).slice(0, 10).join(', ') + '...');
     
     // 提取风险原因为数组格式
     if (!riskData.risk_reasons) {
@@ -416,7 +415,7 @@ export async function getTokenRiskReport(
     
     return riskData;
   } catch (error) {
-    console.error('[getTokenRiskReport] 获取合约风险报告错误:', error);
+    logger.error('[getTokenRiskReport] 获取合约风险报告错误:', error);
     return null;
   }
 } 

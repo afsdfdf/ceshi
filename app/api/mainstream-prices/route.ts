@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 
 // 缓存配置
 const CACHE_TTL = 300 * 1000; // 5分钟缓存时间（降低频率）
@@ -46,7 +47,7 @@ async function fetchFromAveApi() {
   const tokenId = `${XAI_TOKEN_INFO.address}-${XAI_TOKEN_INFO.chain}`;
   const AVE_API_KEY = "NMUuJmYHJB6d91bIpgLqpuLLKYVws82lj0PeDP3UEb19FoyWFJUVGLsgE95XTEmA";
 
-  console.log('[XAI-Price] Trying AVE API...');
+  logger.debug('尝试AVE API获取价格', { tokenId }, { component: 'MainstreamPricesAPI', action: 'fetchFromAveApi' });
     
     const response = await fetch("https://prod.ave-api.com/v2/tokens/price", {
       method: "POST",
@@ -86,7 +87,7 @@ async function fetchFromAveApi() {
 
 // 数据源2: DexScreener API
 async function fetchFromDexScreener() {
-  console.log('[XAI-Price] Trying DexScreener API...');
+  logger.debug('尝试DexScreener API获取价格', { component: 'MainstreamPricesAPI', action: 'fetchFromDexScreener' });
   
   const response = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${XAI_TOKEN_INFO.address}`, {
     headers: {
@@ -128,7 +129,7 @@ async function fetchFromDexScreener() {
 
 // 数据源3: CoinGecko API (免费版，有限制)
 async function fetchFromCoinGecko() {
-  console.log('[XAI-Price] Trying CoinGecko API...');
+  logger.debug('尝试CoinGecko API获取价格', { component: 'MainstreamPricesAPI', action: 'fetchFromCoinGecko' });
   
   // CoinGecko的XAI代币ID (需要先查找)
   const response = await fetch(`https://api.coingecko.com/api/v3/coins/ethereum/contract/${XAI_TOKEN_INFO.address}`, {
@@ -174,11 +175,14 @@ async function fetchXaiPrice() {
     try {
       const data = await fetchFunc();
       if (data.current_price > 0) {  // 验证价格有效
-        console.log(`[XAI-Price] Successfully fetched from ${data.source}`);
+        logger.info('成功获取价格数据', { source: data.source, price: data.current_price }, { component: 'MainstreamPricesAPI', action: 'fetchXaiPrice' });
         return data;
       }
   } catch (error) {
-      console.log(`[XAI-Price] ${fetchFunc.name} failed:`, error instanceof Error ? error.message : 'Unknown error');
+      logger.warn('价格数据源失败', { 
+        source: fetchFunc.name, 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      }, { component: 'MainstreamPricesAPI', action: 'fetchXaiPrice' });
       continue;
     }
   }
@@ -222,10 +226,10 @@ async function updateCache() {
     
     lastFailedUpdate = 0;
     lastSuccessfulUpdate = now;
-    console.log(`[XAI-Price] Cache updated successfully from ${xaiData.source}`);
+    logger.info('缓存更新成功', { source: xaiData.source }, { component: 'MainstreamPricesAPI', action: 'updateCache' });
     return true;
   } catch (error) {
-    console.error('[XAI-Price] Update cache failed:', error);
+    logger.error('缓存更新失败', error, { component: 'MainstreamPricesAPI', action: 'updateCache' });
     lastFailedUpdate = now;
     return false;
   } finally {
@@ -287,14 +291,14 @@ initCacheWarming();
 
 export async function GET() {
   const now = Date.now();
-  console.log('[XAI-Price] GET request received.');
+  logger.debug('价格请求接收', { component: 'MainstreamPricesAPI', action: 'GET' });
   
   // 先检查是否有可用数据
   const availableData = getAvailableData();
   
   // 如果有新鲜的主缓存，直接返回
   if (availableData.source === 'primary_cache') {
-    console.log('[XAI-Price] Serving from primary cache.');
+    logger.debug('使用主缓存响应', { component: 'MainstreamPricesAPI', action: 'GET' });
     return NextResponse.json({
       xai: availableData.data,
       cached: true,
@@ -305,12 +309,12 @@ export async function GET() {
   
   // 如果主缓存过期且没有正在更新，尝试异步更新
   if (!updateInProgress && now - lastSuccessfulUpdate > CACHE_TTL) {
-    console.log('[XAI-Price] Starting background cache update...');
+    logger.debug('启动后台缓存更新', { component: 'MainstreamPricesAPI', action: 'GET' });
     updateCache(); // 异步更新，不等待结果
   }
   
   // 返回最佳可用数据
-  console.log(`[XAI-Price] Serving from ${availableData.source}.`);
+  logger.debug('使用缓存响应', { source: availableData.source }, { component: 'MainstreamPricesAPI', action: 'GET' });
   return NextResponse.json({
     xai: availableData.data,
     cached: true,

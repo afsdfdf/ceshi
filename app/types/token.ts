@@ -11,56 +11,137 @@ export interface RankTopic {
 }
 
 /**
- * 代币数据
+ * 代币相关类型定义
  */
-export interface TokenRanking {
-  /** 代币合约地址 */
-  token: string;
-  /** 区块链网络 */
+
+// 基础代币信息
+export interface TokenInfo {
+  address: string;
   chain: string;
-  /** 代币符号 */
   symbol: string;
-  /** 代币名称 */
   name: string;
-  /** logo URL */
-  logo_url: string;
-  /** 当前美元价格 */
-  current_price_usd: number;
-  /** 24小时价格变化百分比 */
-  price_change_24h: number;
-  /** 24小时交易量（美元） */
-  tx_volume_u_24h: number;
-  /** 持有者数量 */
-  holders: number;
-  /** 市值 */
-  market_cap?: string;
-  /** 完全稀释估值 */
-  fdv?: string;
-  /** 风险评分 */
-  risk_score?: string;
+  decimals: number;
+  logo_url?: string;
+  current_price_usd?: number;
+  price_change_24h?: number;
+  market_cap?: number;
+  holders?: number;
+  total_supply?: number;
+  circulating_supply?: number;
 }
 
-/**
- * 搜索结果中的代币数据（扩展TokenRanking）
- * 同时兼容不同API返回的不同字段名
- */
-export interface TokenPrice extends TokenRanking {
-  /** 价格 - 兼容字段 */
+// 代币详情 (扩展版本)
+export interface TokenDetails extends TokenInfo {
+  description?: string;
+  website?: string;
+  twitter?: string;
+  telegram?: string;
+  discord?: string;
+  github?: string;
+  tags?: string[];
+  risk_level?: 'low' | 'medium' | 'high' | 'critical';
+  verified?: boolean;
+  contract_verified?: boolean;
+  liquidity_usd?: number;
+  volume_24h?: number;
+  price_change_7d?: number;
+  price_change_30d?: number;
+  market_cap_rank?: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// 代币排名
+export interface TokenRanking {
+  token: string;
+  chain: string;
+  symbol: string;
+  name: string;
+  logo_url?: string;
+  current_price_usd: number;
+  price_change_24h: number;
+  tx_volume_u_24h: number;
+  holders: number;
+  market_cap?: number;
+  rank?: number;
+}
+
+// 代币持有者
+export interface TokenHolder {
+  address: string;
+  quantity: string;
+  percent: string;
+  is_contract: boolean;
+  mark?: string | null;
+  tag?: string;
+  balance?: string;
+  amount?: string;
+  amount_cur?: string;
+}
+
+// 代币价格数据
+export interface TokenPrice {
+  token: string;
+  chain: string;
+  price_usd: number;
+  price_change_24h: number;
+  volume_24h?: number;
+  market_cap?: number;
+  last_updated: string;
+  
+  // 兼容字段 (为了向后兼容现有代码)
+  symbol?: string;
+  name?: string;
+  logo_url?: string;
+  current_price_usd?: number;
+  tx_volume_u_24h?: number;
+  holders?: number;
+  
+  // 扩展字段
   price?: number;
-  /** 价格变化 - 兼容字段 */
   priceChange24h?: number;
-  /** 交易量 - 兼容字段 */
-  volume24h?: number;
-  /** 市值 - 兼容字段 */
   marketCap?: number;
-  /** 流通量 - 额外字段 */
-  circulating_supply?: number;
-  /** 总供应量 - 额外字段 */
-  total_supply?: number;
-  /** 最高价 - 额外字段 */
-  high_24h?: number;
-  /** 最低价 - 额外字段 */
-  low_24h?: number;
+}
+
+// K线数据
+export interface KLineData {
+  timestamp: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
+// 代币风险报告
+export interface TokenRiskReport {
+  address: string;
+  chain: string;
+  risk_level: 'low' | 'medium' | 'high' | 'critical';
+  risk_score: number;
+  checks: {
+    honeypot_risk: boolean;
+    liquidity_risk: boolean;
+    contract_risk: boolean;
+    ownership_risk: boolean;
+    trading_risk: boolean;
+  };
+  warnings: string[];
+  recommendations: string[];
+}
+
+// 代币交易记录
+export interface TokenTransaction {
+  hash: string;
+  from: string;
+  to: string;
+  value: string;
+  timestamp: number;
+  block_number: number;
+  gas_used: number;
+  gas_price: string;
+  type: 'buy' | 'sell' | 'transfer';
+  value_usd?: number;
 }
 
 /**

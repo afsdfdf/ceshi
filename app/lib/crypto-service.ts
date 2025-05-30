@@ -1,5 +1,7 @@
 // This service handles fetching cryptocurrency data
 
+import { logger } from '@/lib/logger';
+
 export interface Cryptocurrency {
   id: string
   name: string
@@ -42,7 +44,7 @@ export async function fetchCryptoData(): Promise<{
       otherTokens: data.data.otherTokens,
     }
   } catch (error) {
-    console.error("Error in fetchCryptoData:", error)
+    logger.error('获取加密货币数据失败', error, { component: 'CryptoService', action: 'fetchCryptoData' });
     // Return empty arrays as fallback
     return {
       popularTokens: [],

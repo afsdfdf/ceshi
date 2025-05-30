@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { AVE_API_KEY } from '../lib/constants';
+import { logger } from '@/lib/logger';
 
 // 缓存数据结构
 interface CacheItem {
@@ -20,22 +21,22 @@ function isCacheValid(cacheKey: string): boolean {
   return now - cache[cacheKey].timestamp < CACHE_TTL;
 }
 
-export async function GET(request: Request) {
-  console.log("Search tokens API route called:", request.url);
-  
-  // 获取查询参数
+export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const keyword = searchParams.get('keyword');
   const chain = searchParams.get('chain');
   
+  logger.info('代币搜索请求', { keyword, chain }, { component: 'SearchTokensAPI', action: 'GET' });
+  
   if (!keyword) {
-    return NextResponse.json({ 
-      success: false, 
-      error: "Missing required parameter: keyword" 
+    logger.warn('搜索关键词缺失', { component: 'SearchTokensAPI', action: 'GET' });
+    return NextResponse.json({
+      success: false,
+      error: '搜索关键词不能为空'
     }, { status: 400 });
   }
   
-  console.log(`Searching tokens with keyword: ${keyword}, chain: ${chain || 'all'}`);
+  logger.info(`Searching tokens with keyword: ${keyword}, chain: ${chain || 'all'}`);
   
   try {
     // 构建缓存键 - 包含关键词和可选的链参数
@@ -43,15 +44,15 @@ export async function GET(request: Request) {
     
     // 检查缓存是否有效
     if (isCacheValid(cacheKey)) {
-      console.log("Returning cached search results");
+      logger.info("Returning cached search results");
       return NextResponse.json(cache[cacheKey].data, { status: 200 });
     }
     
-    console.log("Fetching fresh search results from Ave.ai API");
+    logger.info("Fetching fresh search results from Ave.ai API");
     
     // 验证API密钥是否存在
     if (!AVE_API_KEY) {
-      console.error("API key not configured");
+      logger.error("API key not configured");
       return NextResponse.json({ 
         success: false, 
         error: "API key not configured", 
@@ -74,27 +75,27 @@ export async function GET(request: Request) {
       cache: 'no-store',
     });
     
-    console.log(`Response status: ${response.status}`);
+    logger.info(`Response status: ${response.status}`);
     
     if (!response.ok) {
       // 处理不同的错误情况
       if (response.status === 403) {
+        logger.error("API authentication failed");
         return NextResponse.json({ 
           success: false, 
-          error: "API authentication failed", 
-          message: "API鉴权失败，请检查API密钥" 
+          error: "API鉴权失败，请检查API密钥" 
         }, { status: 403 });
       } else if (response.status === 429) {
+        logger.error("API rate limit exceeded");
         return NextResponse.json({ 
           success: false, 
-          error: "API rate limit exceeded", 
-          message: "API请求频率超限，请稍后再试" 
+          error: "API请求频率超限，请稍后再试" 
         }, { status: 429 });
       } else if (response.status === 400) {
+        logger.error("Invalid request parameters");
         return NextResponse.json({ 
           success: false, 
-          error: "Invalid request parameters", 
-          message: "请求参数无效，请检查搜索关键词" 
+          error: "请求参数无效，请检查搜索关键词" 
         }, { status: 400 });
       }
       
@@ -104,7 +105,7 @@ export async function GET(request: Request) {
     const data = await response.json();
     
     if (data.status !== 1 || !data.data) {
-      console.log("No search results found or invalid API response");
+      logger.info("No search results found or invalid API response");
       const result = {
         success: true,
         tokens: [],
@@ -131,7 +132,7 @@ export async function GET(request: Request) {
         try {
           appendixData = JSON.parse(token.appendix);
         } catch (e) {
-          console.error('Error parsing appendix data:', e);
+          logger.error('Error parsing appendix data:', e);
         }
       }
       
@@ -168,7 +169,7 @@ export async function GET(request: Request) {
     return NextResponse.json(result, { status: 200 });
     
   } catch (error) {
-    console.error("Error in search API route handler:", error);
+    logger.error("Error in search API route handler:", error);
     
     // 提供更详细的错误信息
     const errorMessage = error instanceof Error ? error.message : "Unknown error";

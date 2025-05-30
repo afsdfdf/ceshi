@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 
 // 定义接口
 interface DexScreenerPair {
@@ -35,22 +36,23 @@ export async function GET(request: Request) {
   
   // 如果没有指定symbol，返回错误
   if (!symbol) {
+    logger.warn('缺少symbol参数', { component: 'PricesAPI', action: 'GET' });
     return NextResponse.json({
       success: false,
       error: "Missing required parameter: symbol"
     }, { status: 400 });
   }
   
-  console.log(`[prices] 获取代币价格: ${symbol}`);
+  logger.info('价格查询请求', { symbol }, { component: 'PricesAPI', action: 'GET' });
   
   // 处理XAI代币
   if (symbol === 'XAI') {
     try {
-      console.log('[prices] 尝试从DEX Screener获取XAI价格数据');
+      logger.debug('开始从DEX Screener获取XAI价格数据', { component: 'PricesAPI', action: 'GET' });
       
       // 直接使用交易对地址获取𝕏AI数据 - 这是最可靠的方法
       const pairUrl = 'https://api.dexscreener.com/latest/dex/pairs/bsc/0x29a459fe1dbea8a156a4c4c53eea7189cf6183b6';
-      console.log(`[prices] 请求URL: ${pairUrl}`);
+      logger.debug('请求DEX Screener', { url: pairUrl }, { component: 'PricesAPI', action: 'GET' });
       
       const response = await fetch(pairUrl, {
         headers: {
@@ -61,11 +63,11 @@ export async function GET(request: Request) {
       });
       
       // 记录响应状态
-      console.log(`[prices] DEX Screener响应状态: ${response.status}`);
+      logger.debug('DEX Screener响应', { status: response.status }, { component: 'PricesAPI', action: 'GET' });
       
       if (!response.ok) {
         const errorBody = await response.text();
-        console.error(`[prices] DEX Screener错误响应: ${errorBody}`);
+        logger.error('DEX Screener错误响应', { status: response.status, errorBody }, { component: 'PricesAPI', action: 'GET' });
         
         // 直接返回备用数据
         const fallbackData = {
@@ -83,25 +85,28 @@ export async function GET(request: Request) {
           note: '由于API请求失败，返回备用数据'
         };
         
-        console.log('[prices] 返回XAI备用价格数据');
+        logger.info('返回XAI备用价格数据', { component: 'PricesAPI', action: 'GET' });
         return NextResponse.json(fallbackData);
       }
       
       const data = await response.json();
-      console.log('[prices] DEX Screener响应成功，数据结构:', Object.keys(data).join(', '));
+      logger.debug('DEX Screener响应成功', { keys: Object.keys(data).join(', ') }, { component: 'PricesAPI', action: 'GET' });
       
       // 确保有pair数据
       if (!data.pair) {
-        console.error('[prices] DEX Screener没有返回pair数据:', data);
+        logger.error('DEX Screener没有返回pair数据', { data }, { component: 'PricesAPI', action: 'GET' });
         throw new Error('DEX Screener没有返回pair数据');
       }
       
       const pair = data.pair;
-      console.log(`[prices] 找到𝕏AI交易对: ${pair.baseToken.symbol}/${pair.quoteToken.symbol} (${pair.dexId})`);
+      logger.debug('找到𝕏AI交易对', { 
+        symbol: `${pair.baseToken.symbol}/${pair.quoteToken.symbol}`, 
+        dex: pair.dexId 
+      }, { component: 'PricesAPI', action: 'GET' });
       
       // 检查必要字段是否存在
       if (!pair.priceUsd) {
-        console.error('[prices] DEX Screener响应中缺少价格数据:', pair);
+        logger.error('DEX Screener响应中缺少价格数据', { pair }, { component: 'PricesAPI', action: 'GET' });
         throw new Error('DEX Screener响应中缺少价格数据');
       }
       
@@ -125,11 +130,11 @@ export async function GET(request: Request) {
         social: pair.info?.socials || []
       };
       
-      console.log(`[prices] 𝕏AI价格: $${priceData.current_price_usd}`);
+      logger.info('XAI价格获取成功', { price: priceData.current_price_usd }, { component: 'PricesAPI', action: 'GET' });
       return NextResponse.json(priceData);
       
     } catch (error) {
-      console.error('[prices] 获取XAI价格失败:', error);
+      logger.error('获取XAI价格失败', error, { component: 'PricesAPI', action: 'GET' });
       
       // 返回备用数据
       const fallbackData = {
@@ -147,12 +152,13 @@ export async function GET(request: Request) {
         note: '由于API请求失败，返回备用数据'
       };
       
-      console.log('[prices] 返回XAI备用价格数据');
+      logger.info('返回XAI备用价格数据', { component: 'PricesAPI', action: 'GET' });
       return NextResponse.json(fallbackData);
     }
   }
   
   // 对于其他代币，目前返回未实现错误
+  logger.warn('不支持的代币', { symbol }, { component: 'PricesAPI', action: 'GET' });
   return NextResponse.json({
     success: false,
     error: `价格API暂不支持${symbol}代币`

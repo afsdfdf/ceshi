@@ -1,4 +1,5 @@
 import { Chart, KLineData } from 'klinecharts'
+import { logger } from '@/lib/logger'
 
 /**
  * 优化图表显示，设置合适的可见范围和蜡烛宽度
@@ -105,7 +106,7 @@ export function setupIndicators(chart: Chart, mainIndicator?: string, subIndicat
       chart.removeIndicator('sub-indicator', subIndicator);
     } catch (error) {
       // 忽略错误，继续添加新指标
-      console.log('移除现有指标失败，可能不存在', error);
+      logger.debug('移除现有指标失败，可能不存在', { subIndicator }, { component: 'ChartUtils', action: 'setupIndicators' });
     }
     
     // 增加新的副图指标

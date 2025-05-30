@@ -6,13 +6,14 @@ import {
   DEFAULT_CACHE_TTL 
 } from './constants';
 import { CacheKey, CacheItem, CacheStatus } from './types';
+import { logger } from '@/lib/logger';
 
 // 创建缓存目录（如果不存在）
 async function ensureCacheDir() {
   try {
     await fs.mkdir(CACHE_DIR, { recursive: true });
   } catch (error) {
-    console.error('确保缓存目录存在时出错:', error);
+    logger.error('确保缓存目录存在时出错:', error, { component: 'CacheManager', action: 'ensureCacheDir' });
   }
 }
 
@@ -64,7 +65,7 @@ export async function readFileCache(cacheKey: string): Promise<any | null> {
     
     return null;
   } catch (error) {
-    console.error(`读取文件缓存 ${cacheKey} 时出错:`, error);
+    logger.error(`读取文件缓存 ${cacheKey} 时出错:`, error, { component: 'CacheManager', action: 'readFileCache' });
     return null;
   }
 }
@@ -81,7 +82,7 @@ export async function writeFileCache(cacheKey: string, data: any): Promise<void>
     await ensureCacheDir();
     await fs.writeFile(filePath, JSON.stringify(cache, null, 2), 'utf-8');
   } catch (error) {
-    console.error(`写入文件缓存 ${cacheKey} 时出错:`, error);
+    logger.error(`写入文件缓存 ${cacheKey} 时出错:`, error, { component: 'CacheManager', action: 'writeFileCache' });
   }
 }
 
@@ -148,13 +149,13 @@ export function clearMemoryCache(cacheKey?: string): void {
 // 后台更新缓存的函数
 export async function updateCacheInBackground(cacheKey: CacheKey, updateFunction: () => Promise<any>): Promise<boolean> {
   try {
-    console.log(`正在后台更新 ${cacheKey} 缓存`);
+    logger.info(`正在后台更新 ${cacheKey} 缓存`, { component: 'CacheManager', action: 'updateCacheInBackground' });
     const data = await updateFunction();
     await setCache(cacheKey, data);
-    console.log(`${cacheKey} 缓存更新成功`);
+    logger.info(`${cacheKey} 缓存更新成功`, { component: 'CacheManager', action: 'updateCacheInBackground' });
     return true;
   } catch (error) {
-    console.error(`更新 ${cacheKey} 缓存时出错:`, error);
+    logger.error(`更新 ${cacheKey} 缓存时出错:`, error, { component: 'CacheManager', action: 'updateCacheInBackground' });
     return false;
   }
 } 
