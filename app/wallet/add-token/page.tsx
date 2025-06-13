@@ -297,7 +297,7 @@ export default function AddTokenPage() {
               <li>选择代币所在的区块链网络</li>
               <li>输入正确的代币合约地址</li>
               <li>确认代币符号和小数位数</li>
-              <li>点击"添加到钱包"按钮</li>
+              <li>点击&ldquo;添加到钱包&rdquo;按钮</li>
               <li>在钱包弹窗中确认添加</li>
             </ol>
           </Card>

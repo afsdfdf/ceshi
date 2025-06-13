@@ -10,6 +10,7 @@ interface GlobalWithMongo {
 
 // Extend the global object with our custom type
 declare global {
+  // eslint-disable-next-line no-var
   var _mongoClientPromise: Promise<MongoClient> | undefined;
 }
 
