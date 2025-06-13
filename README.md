@@ -180,6 +180,8 @@ MIT
 
 - 修复了Logo显示问题，优化了用户界面体验
 - 更新了图片加载方式，提高了应用稳定性
+- 添加了XAI挖矿功能，集成外部挖矿平台
+- 移除了profile页面，简化了导航结构
 
 ## XAI Token Price Integration
 
@@ -199,8 +201,5 @@ The system now uses the [DEX Screener API](https://docs.dexscreener.com/api/refe
 - Trading volume
 - Liquidity information
 
-### Usage
-
-XAI token prices are automatically updated throughout the application. The MainstreamTokens component and token listings will display the latest prices.
-
-Build timestamp: `2023-11-06T12:30:00Z`
+---
+*最后更新: 2025-01-13*
