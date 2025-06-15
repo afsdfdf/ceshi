@@ -74,14 +74,7 @@ export default function BottomNav({ darkMode, currentTab, isDark: propIsDark }: 
     <nav 
       className={cn(
         "mobile-bottom-nav",
-        "fixed bottom-0 left-0 right-0 z-50",
-        "h-16 md:h-20",
-        "bg-background/95 backdrop-blur-lg",
-        "border-t border-border/50",
-        "flex items-center justify-around",
-        "px-2 py-2",
-        "transition-all duration-300",
-        isDark ? "shadow-lg shadow-black/20" : "shadow-lg shadow-gray-200/50"
+        "md:hidden" // 在桌面端隐藏底部导航栏
       )}
       role="navigation"
       aria-label="主导航"
@@ -100,38 +93,16 @@ export default function BottomNav({ darkMode, currentTab, isDark: propIsDark }: 
             href={item.href}
             className={cn(
               "mobile-nav-item",
-              "flex flex-col items-center justify-center",
-              "min-w-12 min-h-12",
-              "rounded-lg transition-all duration-200",
-              "hover:bg-accent/50 active:scale-95",
-              "focus:outline-none focus:ring-2 focus:ring-primary/50",
-              "-webkit-tap-highlight-color: transparent",
-              isActive 
-                ? "text-primary bg-primary/10" 
-                : isDark 
-                  ? "text-muted-foreground hover:text-foreground" 
-                  : "text-muted-foreground hover:text-foreground"
+              isActive && "active"
             )}
             aria-label={`导航到${item.name}`}
             aria-current={isActive ? "page" : undefined}
           >
             <Icon 
-              className={cn(
-                "mobile-nav-icon",
-                "w-5 h-5 mb-1",
-                "transition-all duration-200",
-                isActive && "scale-110"
-              )} 
+              className="mobile-nav-icon"
               aria-hidden="true"
             />
-            <span 
-              className={cn(
-                "mobile-nav-text",
-                "text-xs font-medium",
-                "transition-all duration-200",
-                isActive && "font-semibold"
-              )}
-            >
+            <span className="mobile-nav-text">
               {item.name}
             </span>
           </Link>

@@ -966,7 +966,11 @@ export default function DiscoverPage() {
         </div>
       </div>
 
-      <div className="max-w-md mx-auto pb-20 px-4">
+      {/* 主要内容区域 */}
+      <div className="space-y-0">
+        <div className="relative pb-20">
+          <div className="md:px-4">
+            <div className="md:max-w-7xl md:mx-auto px-4 md:px-0">
         {/* 简化的标题栏 */}
         <div className="flex justify-between items-center mb-4 mt-2">
           <h1 className={cn(
@@ -1250,6 +1254,9 @@ export default function DiscoverPage() {
             <ChevronUp className="w-5 h-5" />
           </button>
         )}
+            </div>
+          </div>
+        </div>
       </div>
       
       <BottomNav currentTab="discover" isDark={isDark} />
