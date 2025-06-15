@@ -1,84 +1,89 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { RankTopic, TopicsResponse, ApiResponse } from '@/app/types/token';
-import { toast } from '@/components/ui/use-toast';
-
-// 备用数据，当API请求失败时使用
-const fallbackTopics: RankTopic[] = [
-  {
-    "id": "hot",
-    "name_en": "Hot",
-    "name_zh": "热门"
-  },
-  {
-    "id": "new",
-    "name_en": "New",
-    "name_zh": "新币"
-  },
-  {
-    "id": "meme",
-    "name_en": "Meme",
-    "name_zh": "Meme"
-  }
-];
 
 /**
- * 主题获取Hook
- * @returns 主题数据、加载状态和错误信息
+ * 优化版主题获取Hook
+ * 去除fallback数据，改进错误处理和重试机制
  */
 export function useTopics() {
-  const [topics, setTopics] = useState<RankTopic[]>(fallbackTopics);
+  const [topics, setTopics] = useState<RankTopic[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+
+  const fetchTopics = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超时
+      
+      const response = await fetch('/api/tokens?topic=topics', {
+        signal: controller.signal,
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const result = await response.json() as ApiResponse<TopicsResponse>;
+      
+      if (!result.success) {
+        throw new Error(result.error || 'API返回失败状态');
+      }
+      
+      if (result.data && result.data.topics && Array.isArray(result.data.topics)) {
+        setTopics(result.data.topics);
+        setRetryCount(0); // 重置重试计数
+        console.log(`成功获取${result.data.topics.length}个主题`);
+      } else {
+        throw new Error('数据格式无效');
+      }
+    } catch (error) {
+      console.error("获取主题失败:", error);
+      
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      setError(errorMessage);
+      
+      // 自动重试逻辑
+      if (retryCount < 2 && !errorMessage.includes('503')) {
+        const retryDelay = Math.min(1000 * Math.pow(2, retryCount), 5000); // 指数退避，最大5秒
+        console.log(`将在 ${retryDelay}ms 后重试获取主题 (${retryCount + 1}/2)`);
+        
+        setTimeout(() => {
+          setRetryCount(prev => prev + 1);
+          fetchTopics();
+        }, retryDelay);
+      } else {
+        console.error(`已达到最大重试次数或服务不可用，停止重试`);
+        setTopics([]); // 清空数据，不使用fallback
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }, [retryCount]);
 
   useEffect(() => {
-    const fetchTopics = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        
-        // 调用API获取主题
-        const response = await fetch('/api/tokens?topic=topics', {
-          next: { revalidate: 3600 } // 1小时缓存
-        });
-        
-        if (!response.ok) {
-          throw new Error(`API request failed with status ${response.status}`);
-        }
-        
-        const result = await response.json() as ApiResponse<TopicsResponse>;
-        
-        if (result && result.success && result.data && result.data.topics) {
-          setTopics(result.data.topics);
-        } else {
-          // 如果响应格式不正确，记录错误但使用备用数据
-          console.error("Invalid API response format", result);
-          setTopics(fallbackTopics);
-        }
-      } catch (error) {
-        console.error("Error fetching topics:", error);
-        setError(error instanceof Error ? error.message : "Failed to fetch topics");
-        // 失败时使用备用数据
-        setTopics(fallbackTopics);
-        
-        // 显示错误通知，但不妨碍用户体验
-        toast({
-          title: "获取主题失败",
-          description: "使用默认主题作为备用。",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
+    setRetryCount(0); // 重置重试计数
     fetchTopics();
-  }, []);
+  }, []); // 移除fetchTopics依赖，避免无限循环
 
   return {
     topics,
     isLoading,
-    error
+    error,
+    refresh: useCallback(() => {
+      setRetryCount(0);
+      fetchTopics();
+    }, [fetchTopics])
   };
 } 

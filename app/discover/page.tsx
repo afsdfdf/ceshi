@@ -1,14 +1,18 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { Search, TrendingUp, Zap, Download, ExternalLink, ChevronUp } from "lucide-react"
+import { Search, TrendingUp, Zap, Download, ExternalLink, ChevronUp, Moon, Sun } from "lucide-react"
 import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 import Image from "next/image"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import BottomNav from "../components/BottomNav"
 import EthereumProtection from "../components/EthereumProtection"
+import SearchBar from "../components/SearchBar"
+import LogoBase64 from "../components/LogoBase64"
 import { cn } from "@/lib/utils"
 import { useTheme } from "next-themes"
+import { useRouter } from "next/navigation"
 
 // Web3 应用SVG LOGO数据
 const appLogos: Record<string, string> = {
@@ -556,24 +560,11 @@ interface ChainBadgeProps {
   chain: string
 }
 
-// 链标识组件
+// 简化的链标识组件
 function ChainBadge({ chain }: ChainBadgeProps) {
-  const chainColors: Record<string, string> = {
-    ethereum: "#627EEA",
-    polygon: "#8247E5",
-    arbitrum: "#28A0F0",
-    optimism: "#FF0420",
-    bsc: "#F0B90B",
-    solana: "#14F195",
-    ronin: "#1A1E25",
-    avalanche: "#E84142",
-    hive: "#E31337",
-    wax: "#F89022"
-  }
-
   const chainName: Record<string, string> = {
     ethereum: "ETH",
-    polygon: "MATIC",
+    polygon: "MATIC", 
     arbitrum: "ARB",
     optimism: "OP",
     bsc: "BSC",
@@ -585,21 +576,15 @@ function ChainBadge({ chain }: ChainBadgeProps) {
   }
 
   return (
-    <span 
-      className="inline-flex items-center px-2 py-0.5 text-xs rounded-full"
-      style={{ 
-        backgroundColor: `${chainColors[chain]}20`, 
-        color: chainColors[chain],
-        border: `1px solid ${chainColors[chain]}30`
-      }}
-    >
-      {chainName[chain]}
+    <span className="inline-flex items-center px-1.5 py-0.5 text-xs rounded bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+      {chainName[chain] || chain.toUpperCase()}
     </span>
   )
 }
 
 export default function DiscoverPage() {
-  const { resolvedTheme } = useTheme()
+  const router = useRouter()
+  const { resolvedTheme, setTheme } = useTheme()
   const isDark = resolvedTheme === "dark"
   
   const [category, setCategory] = useState("hot")
@@ -756,6 +741,19 @@ export default function DiscoverPage() {
     window.open(url, "_blank")
   }
 
+  // 处理选择代币
+  const handleTokenSelect = (token: any) => {
+    // 导航到代币详情页面
+    if (token && token.chain && token.token) {
+      router.push(`/token/${token.chain}/${token.token}`);
+    }
+  };
+
+  // 切换主题
+  const toggleTheme = () => {
+    setTheme(isDark ? "light" : "dark")
+  }
+
   // 筛选应用
   const getFilteredApps = () => {
     if (category === "hot") {
@@ -886,425 +884,374 @@ export default function DiscoverPage() {
   };
 
   const filteredApps = getFilteredApps();
-  const currentCategoryStyle = categoryStyles[category as keyof typeof categoryStyles];
+
+  // 获取当前分类的样式
+  const currentCategoryStyle = {
+    textColor: category === "hot" ? "text-rose-600" : 
+               category === "dex" ? "text-blue-600" : 
+               category === "lending" ? "text-purple-600" : 
+               category === "nft" ? "text-amber-600" : 
+               category === "gaming" ? "text-green-600" : "text-cyan-600",
+    bgColor: category === "hot" ? "bg-rose-50" : 
+             category === "dex" ? "bg-blue-50" : 
+             category === "lending" ? "bg-purple-50" : 
+             category === "nft" ? "bg-amber-50" : 
+             category === "gaming" ? "bg-green-50" : "bg-cyan-50",
+    borderColor: category === "hot" ? "border-rose-200" : 
+                 category === "dex" ? "border-blue-200" : 
+                 category === "lending" ? "border-purple-200" : 
+                 category === "nft" ? "border-amber-200" : 
+                 category === "gaming" ? "border-green-200" : "border-cyan-200"
+  };
 
   return (
     <div className={cn(
-      "min-h-screen pb-16",
-      isDark ? "bg-[#0b101a] text-white" : "bg-gray-50 text-gray-900"
+      "min-h-screen transition-colors duration-300",
+      isDark ? "bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900" : "bg-gradient-to-br from-gray-50 via-white to-gray-50"
     )}>
       <EthereumProtection />
       
-      {/* 搜索框 - 固定在顶部 */}
-      <div className={cn(
-        "sticky top-0 z-10 py-4 px-3 transition-all duration-300",
-        scrolled 
-          ? (isDark ? "bg-[#0b101a]/95 backdrop-blur-md shadow-md shadow-black/10" : "bg-white/95 backdrop-blur-md shadow-md") 
-          : "bg-transparent"
-      )}>
-        <div className="max-w-md mx-auto">
-          <div className="relative group">
-            <Search className={cn(
-              "absolute left-3.5 top-1/2 transform -translate-y-1/2 w-5 h-5 transition-colors",
-              searchQuery ? "text-primary" : "text-gray-400"
-            )} />
+      {/* 顶部区域 */}
+      <div className="xai-compact-header">
+        <div className="px-4 py-2 md:max-w-7xl md:mx-auto">
+          {/* 页头：左边LOGO，右边搜索框 */}
+          <div className="flex items-center justify-between gap-3">
+            {/* 左侧：XAI LOGO */}
+            <div className="flex items-center space-x-2 flex-shrink-0">
+              <div className="xai-header-logo">
+                <div className="w-8 h-8 rounded-lg overflow-hidden shadow-lg">
+                  <LogoBase64 width={32} height={32} className="w-full h-full" />
+                </div>
+              </div>
+              <div className="hidden sm:block">
+                <h1 className="text-lg font-bold gradient-text">XAI Finance</h1>
+              </div>
+            </div>
+            
+            {/* 右侧：搜索框和主题切换 */}
+            <div className="flex items-center gap-2 flex-1 max-w-md">
+              {/* 搜索框 */}
+              <div className="xai-search-container">
+                <div className={cn(
+                  "relative backdrop-blur-sm border rounded-lg transition-all duration-300 h-9",
+                  "hover:border-xai-purple/50 focus-within:border-xai-purple/50 focus-within:shadow-lg focus-within:shadow-xai-purple/25",
+                  isDark ? "bg-card/60 border-border/40" : "bg-white/60 border-border/30"
+                )}>
+                  <SearchBar 
+                    isDark={isDark} 
+                    showLogo={false}
+                    logoSize={40}
+                    simplified={true}
+                    onResultSelect={handleTokenSelect}
+                    placeholder="搜索应用..."
+                  />
+                </div>
+              </div>
+              
+              {/* 主题切换按钮 */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="xai-theme-toggle w-9 h-9 btn-glow flex-shrink-0"
+                onClick={toggleTheme}
+              >
+                {isDark ? (
+                  <Sun className="w-4 h-4 text-xai-orange" />
+                ) : (
+                  <Moon className="w-4 h-4 text-xai-purple" />
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-md mx-auto pb-20 px-4">
+        {/* 简化的标题栏 */}
+        <div className="flex justify-between items-center mb-4 mt-2">
+          <h1 className={cn(
+            "text-lg font-semibold",
+            isDark ? "text-white" : "text-gray-900"
+          )}>
+            发现应用
+          </h1>
+          <div className={cn(
+            "text-xs px-2 py-1 rounded-md",
+            isDark ? "bg-gray-800 text-gray-400" : "bg-gray-100 text-gray-600"
+          )}>
+            {filteredApps.length} 个
+          </div>
+        </div>
+
+        {/* 应用搜索框 */}
+        <div className="mb-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Input
               type="text"
-              placeholder="搜索Web3应用..."
+              placeholder="搜索应用..."
               className={cn(
-                "pl-12 pr-4 py-7 h-12 rounded-xl shadow-sm text-base border-2",
-                "transition-all duration-300 ease-in-out border-opacity-80",
-                "focus-within:ring-2 focus-within:ring-primary/30 focus-within:border-primary focus-within:shadow-md",
+                "pl-10 pr-4 py-2 h-10 rounded-lg border text-sm",
+                "transition-all duration-200",
+                "focus:ring-1 focus:ring-primary/50 focus:border-primary",
                 isDark 
-                  ? "bg-gray-800/90 border-gray-700/80 text-white focus-within:bg-gray-800" 
-                  : "bg-white border-gray-200 text-gray-900 focus-within:bg-white/100"
+                  ? "bg-gray-800/80 border-gray-700 text-white placeholder:text-gray-500" 
+                  : "bg-white border-gray-300 text-gray-900 placeholder:text-gray-400"
               )}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
             {searchQuery && (
               <button 
-                className={cn(
-                  "absolute right-3.5 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 hover:text-gray-600 transition-colors",
-                  isDark ? "hover:text-gray-300" : "hover:text-gray-700"
-                )}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 hover:text-gray-600"
                 onClick={() => setSearchQuery("")}
-                aria-label="清除搜索"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
+                ×
               </button>
             )}
           </div>
         </div>
-      </div>
-
-      <div className="max-w-md mx-auto pb-20 px-3 pt-4">
-        {/* 标题栏 */}
-        <div className="flex justify-between items-center mb-4">
-          <h1 className={cn(
-            "text-lg font-bold flex items-center",
-            isDark ? "text-white" : "text-gray-800"
-          )}>
-            <span className="mr-2">发现Web3应用</span>
-            {category !== "hot" && (
-              <span 
-                className={cn(
-                  "text-xs py-1 px-2 rounded-full font-normal uppercase", 
-                  currentCategoryStyle.textColor,
-                  currentCategoryStyle.bgColor
-                )}
-              >
-                {category}
-              </span>
-            )}
-          </h1>
-          <div className={cn(
-            "text-xs rounded-lg px-2 py-1.5",
-            isDark ? "bg-gray-800 text-gray-300" : "bg-white/80 text-gray-600 border border-gray-200"
-          )}>
-            已收录 <span className="font-bold">{filteredApps.length}</span> 个应用
-          </div>
-        </div>
         
-        {/* 分类选项卡 - 水平滚动，优化UI */}
-        <div className="mt-4 mb-5">
-          <div className="flex space-x-2 overflow-x-auto pb-2 scrollbar-hide">
+        {/* 简化的分类选项卡 */}
+        <div className="mb-4">
+          <div className="flex space-x-1 overflow-x-auto pb-1 scrollbar-hide">
             <button
               onClick={() => setCategory("hot")}
               className={cn(
-                "flex items-center space-x-1 py-2 px-5 rounded-xl whitespace-nowrap text-sm font-medium transition-all duration-200",
+                "flex items-center space-x-1 py-1.5 px-3 rounded-md whitespace-nowrap text-sm font-medium transition-all",
                 category === "hot" 
-                  ? "bg-gradient-to-r from-rose-500 to-rose-600 text-white shadow-md shadow-rose-500/20" 
+                  ? "bg-primary text-white" 
                   : isDark 
-                    ? "bg-gray-800/80 text-gray-300 hover:bg-gray-700/80 hover:text-gray-200 hover:shadow-sm" 
-                    : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 hover:shadow-sm hover:border-gray-300"
+                    ? "text-gray-400 hover:text-gray-300 hover:bg-gray-800" 
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
               )}
             >
-              <TrendingUp className="w-4 h-4 mr-1.5" />
+              <TrendingUp className="w-3 h-3" />
               <span>热门</span>
             </button>
             
             <button
               onClick={() => setCategory("dex")}
               className={cn(
-                "flex items-center py-2 px-5 rounded-xl whitespace-nowrap text-sm font-medium transition-all duration-200",
+                "py-1.5 px-3 rounded-md whitespace-nowrap text-sm font-medium transition-all",
                 category === "dex" 
-                  ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md shadow-blue-500/20" 
+                  ? "bg-primary text-white" 
                   : isDark 
-                    ? "bg-gray-800/80 text-gray-300 hover:bg-gray-700/80 hover:text-gray-200 hover:shadow-sm" 
-                    : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 hover:shadow-sm hover:border-gray-300"
+                    ? "text-gray-400 hover:text-gray-300 hover:bg-gray-800" 
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
               )}
             >
-              <svg className="w-4 h-4 mr-1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3 6H21M3 12H21M3 18H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-              交易所
+              交易
             </button>
             
             <button
               onClick={() => setCategory("lending")}
               className={cn(
-                "flex items-center py-2 px-5 rounded-xl whitespace-nowrap text-sm font-medium transition-all duration-200",
+                "py-1.5 px-3 rounded-md whitespace-nowrap text-sm font-medium transition-all",
                 category === "lending" 
-                  ? "bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-md shadow-purple-500/20" 
+                  ? "bg-primary text-white" 
                   : isDark 
-                    ? "bg-gray-800/80 text-gray-300 hover:bg-gray-700/80 hover:text-gray-200 hover:shadow-sm" 
-                    : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 hover:shadow-sm hover:border-gray-300"
+                    ? "text-gray-400 hover:text-gray-300 hover:bg-gray-800" 
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
               )}
             >
-              <svg className="w-4 h-4 mr-1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 4V20M5 12H19M19 8C19 4.13401 15.866 1 12 1C8.13401 1 5 4.13401 5 8" stroke="currentColor" strokeWidth="2"/>
-              </svg>
               借贷
             </button>
             
             <button
               onClick={() => setCategory("nft")}
               className={cn(
-                "flex items-center py-2 px-5 rounded-xl whitespace-nowrap text-sm font-medium transition-all duration-200",
+                "py-1.5 px-3 rounded-md whitespace-nowrap text-sm font-medium transition-all",
                 category === "nft" 
-                  ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md shadow-amber-500/20" 
+                  ? "bg-primary text-white" 
                   : isDark 
-                    ? "bg-gray-800/80 text-gray-300 hover:bg-gray-700/80 hover:text-gray-200 hover:shadow-sm" 
-                    : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 hover:shadow-sm hover:border-gray-300"
+                    ? "text-gray-400 hover:text-gray-300 hover:bg-gray-800" 
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
               )}
             >
-              <svg className="w-4 h-4 mr-1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3 8.5L12 2L21 8.5V19.5L12 22L3 19.5V8.5Z" stroke="currentColor" strokeWidth="2"/>
-              </svg>
               NFT
             </button>
             
             <button
               onClick={() => setCategory("gaming")}
               className={cn(
-                "flex items-center py-2 px-5 rounded-xl whitespace-nowrap text-sm font-medium transition-all duration-200",
+                "py-1.5 px-3 rounded-md whitespace-nowrap text-sm font-medium transition-all",
                 category === "gaming" 
-                  ? "bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md shadow-green-500/20" 
+                  ? "bg-primary text-white" 
                   : isDark 
-                    ? "bg-gray-800/80 text-gray-300 hover:bg-gray-700/80 hover:text-gray-200 hover:shadow-sm" 
-                    : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 hover:shadow-sm hover:border-gray-300"
+                    ? "text-gray-400 hover:text-gray-300 hover:bg-gray-800" 
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
               )}
             >
-              <svg className="w-4 h-4 mr-1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M10 12H14M12 10V14M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" strokeWidth="2"/>
-              </svg>
               游戏
             </button>
             
             <button
               onClick={() => setCategory("infra")}
               className={cn(
-                "flex items-center py-2 px-5 rounded-xl whitespace-nowrap text-sm font-medium transition-all duration-200",
+                "py-1.5 px-3 rounded-md whitespace-nowrap text-sm font-medium transition-all",
                 category === "infra" 
-                  ? "bg-gradient-to-r from-cyan-500 to-cyan-600 text-white shadow-md shadow-cyan-500/20" 
+                  ? "bg-primary text-white" 
                   : isDark 
-                    ? "bg-gray-800/80 text-gray-300 hover:bg-gray-700/80 hover:text-gray-200 hover:shadow-sm" 
-                    : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 hover:shadow-sm hover:border-gray-300"
+                    ? "text-gray-400 hover:text-gray-300 hover:bg-gray-800" 
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
               )}
             >
-              <svg className="w-4 h-4 mr-1.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 15L12 3M12 15L8 11M12 15L16 11M5 21H19" stroke="currentColor" strokeWidth="2"/>
-              </svg>
-              基础设施
+              基础
             </button>
           </div>
         </div>
-        
-        {/* 增强的统计栏 */}
-        <div className={cn(
-          "mb-5 p-3 rounded-xl",
-          isDark ? "bg-gray-800/60 border border-gray-700/40" : "bg-white/90 border border-gray-200/60"
-        )}>
-          <div className="grid grid-cols-3 gap-2">
-            <div className="flex flex-col items-center p-2">
-              <span className={cn("text-2xl font-bold", isDark ? "text-sky-400" : "text-sky-500")}>
-                {filteredApps.length}
-              </span>
-              <span className="text-xs text-gray-400 mt-1">已收录</span>
-            </div>
-            <div className="flex flex-col items-center p-2">
-              <span className={cn("text-2xl font-bold", isDark ? "text-emerald-400" : "text-emerald-500")}>
-                {category === "hot" ? 98 : 
-                 category === "dex" ? 92 : 
-                 category === "lending" ? 90 : 
-                 category === "nft" ? 94 : 85}
-              </span>
-              <span className="text-xs text-gray-400 mt-1">热度</span>
-            </div>
-            <div className="flex flex-col items-center p-2">
-              <span className={cn("text-2xl font-bold", isDark ? "text-amber-400" : "text-amber-500")}>
-                {30 + filteredApps.length}
-              </span>
-              <span className="text-xs text-gray-400 mt-1">链接</span>
-            </div>
-          </div>
-          
-          {/* 增加分类描述 */}
-          <div className={cn(
-            "mt-2 pt-2 text-xs text-center",
-            isDark ? "border-t border-gray-700/40 text-gray-400" : "border-t border-gray-200/60 text-gray-500"
-          )}>
-            {category === "hot" && "热门的Web3应用，按热度排名展示"}
-            {category === "dex" && "去中心化交易所，提供加密货币兑换服务"}
-            {category === "lending" && "去中心化借贷平台，提供加密资产借贷服务"}
-            {category === "nft" && "NFT交易市场，用于数字收藏品交易"}
-            {category === "gaming" && "区块链游戏平台，游戏内资产归玩家所有"}
-            {category === "infra" && "Web3基础设施，提供钱包和底层服务"}
-          </div>
-        </div>
 
-        {/* 优化的应用列表 - 增加入场动画 */}
-        <div className="space-y-3.5">
+        {/* 简化的应用列表 */}
+        <div className="space-y-2">
           {filteredApps.map((app, index) => (
             <div 
               key={app.id}
               className={cn(
-                "flex items-center p-4 rounded-xl cursor-pointer transition-all",
-                "hover:shadow-md hover:transform hover:scale-[1.01] hover:-translate-y-0.5",
+                "flex items-center p-3 rounded-lg cursor-pointer transition-all duration-200",
+                "hover:transform hover:scale-[1.01]",
                 isDark 
-                  ? "bg-gray-800/80 shadow-gray-900/20 border border-gray-700/40 hover:bg-gray-800/95 hover:border-gray-700/70" 
-                  : "bg-white shadow-sm shadow-gray-100 border border-gray-200/80 hover:border-gray-300/90",
-                showAnimation ? "animate-fade-in" : "",
-                showAnimation ? `animation-delay-${Math.min(index, 10) * 100}` : ""  
+                  ? "bg-gray-800/50 hover:bg-gray-800/70 border border-gray-700/50" 
+                  : "bg-white hover:bg-gray-50 border border-gray-200",
+                "backdrop-filter backdrop-blur-sm"
               )}
               onClick={() => handleAppClick(app.url)}
-              style={{
-                animationDelay: showAnimation ? `${Math.min(index, 10) * 50}ms` : '0ms',
-                background: isDark 
-                  ? `linear-gradient(145deg, rgba(31, 41, 55, 0.8) 0%, rgba(17, 24, 39, 0.85) 100%)` 
-                  : `linear-gradient(145deg, rgba(255, 255, 255, 1) 0%, rgba(249, 250, 251, 0.95) 100%)`
-              }}
             >
-              {/* 优化的应用图标区域 */}
-              <div className="relative flex-shrink-0 w-14 h-14 rounded-xl overflow-hidden shadow-md mr-4" 
-                style={{ 
-                  backgroundColor: `${app.color}20`,
-                  boxShadow: `0 0 15px ${app.color}15` 
-                }}
-              >
+              {/* 简化的应用图标 */}
+              <div className="relative flex-shrink-0 w-10 h-10 rounded-lg overflow-hidden mr-3">
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-10 h-10 relative">
-                    {/* 加载状态指示器 */}
-                    {!loadedImages[app.id] && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin"
-                          style={{ borderColor: `${app.color}40`, borderTopColor: 'transparent' }}
-                        ></div>
-                      </div>
+                  {!loadedImages[app.id] && (
+                    <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin border-gray-400"></div>
+                  )}
+                  <img 
+                    src={cachedUrls[app.id] || appLogoUrls[app.id] || `https://ui-avatars.com/api/?name=${app.name}&background=${app.color.replace('#', '')}&color=fff&size=64&bold=true`}
+                    alt={`${app.name} logo`}
+                    className={cn(
+                      "w-full h-full object-contain transition-opacity duration-300",
+                      loadedImages[app.id] ? "opacity-100" : "opacity-0"
                     )}
-                    <img 
-                      src={cachedUrls[app.id] || appLogoUrls[app.id] || `https://ui-avatars.com/api/?name=${app.name}&background=${app.color.replace('#', '')}&color=fff&size=128&bold=true`}
-                      alt={`${app.name} logo`}
-                      className={cn(
-                        "w-full h-full object-contain transition-opacity duration-300",
-                        loadedImages[app.id] ? "opacity-100" : "opacity-0"
-                      )}
-                      loading="lazy"
-                      onLoad={(e) => {
-                        // 图片加载成功时，更新加载状态
-                        if (!loadedImages[app.id]) {
-                          setLoadedImages(prev => ({...prev, [app.id]: true}));
-                          
-                          // 如果是首次成功加载官方URL，缓存它
-                          const currentSrc = e.currentTarget.src;
-                          if (currentSrc === appLogoUrls[app.id] && !cachedUrls[app.id]) {
-                            updateImageCache(app.id, currentSrc);
-                          }
+                    loading="lazy"
+                    onLoad={(e) => {
+                      if (!loadedImages[app.id]) {
+                        setLoadedImages(prev => ({...prev, [app.id]: true}));
+                        const currentSrc = e.currentTarget.src;
+                        if (currentSrc === appLogoUrls[app.id] && !cachedUrls[app.id]) {
+                          updateImageCache(app.id, currentSrc);
                         }
-                      }}
-                      onError={(e) => handleLogoError(e, {...app, category: category !== 'hot' ? category : Object.keys(web3Apps).find(cat => 
-                        (web3Apps as any)[cat].some((a: any) => a.id === app.id)
-                      )})}
-                    />
-                  </div>
+                      }
+                    }}
+                    onError={(e) => handleLogoError(e, {...app, category: category !== 'hot' ? category : Object.keys(web3Apps).find(cat => 
+                      (web3Apps as any)[cat].some((a: any) => a.id === app.id)
+                    )})}
+                  />
                 </div>
                 
-                {/* Logo图片来源指示器 - 仅在开发环境显示 */}
-                {process.env.NODE_ENV === 'development' && loadedImages[app.id] && (
-                  <div className="absolute bottom-0 left-0 right-0 text-center text-[6px] bg-black/40 text-white p-0.5 overflow-hidden">
-                    {cachedUrls[app.id] ? 'cached' : 'source'}
-                  </div>
-                )}
-                
-                {/* 热度标签 - 视觉优化 */}
-                {app.heat >= 85 && (
-                  <div className={cn(
-                    "absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white",
-                    "shadow-sm shadow-black/10 border border-white/20",
-                    "bg-gradient-to-br from-rose-500 to-orange-500"
-                  )}>
-                    {app.heat}
+                {/* 简化的热度标签 */}
+                {app.heat >= 90 && (
+                  <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 flex items-center justify-center">
+                    <div className="w-2 h-2 rounded-full bg-white"></div>
                   </div>
                 )}
               </div>
               
-              {/* 优化的应用信息区域 */}
+              {/* 简化的应用信息 */}
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between items-start">
-                  <h3 className="font-bold text-base tracking-tight flex items-center">
-                    {app.name}
-                    <span 
-                      className="inline-block w-2 h-2 rounded-full ml-1.5" 
-                      style={{ backgroundColor: app.color }}
-                    ></span>
-                  </h3>
-                  <div className={cn(
-                    "text-xs px-2 py-0.5 rounded-md flex items-center ml-1",
-                    currentCategoryStyle.bgColor,
-                    currentCategoryStyle.textColor,
-                    currentCategoryStyle.borderColor
+                  <h3 className={cn(
+                    "font-medium text-sm truncate",
+                    isDark ? "text-white" : "text-gray-900"
                   )}>
-                    <Zap className="w-3 h-3 mr-0.5" />
-                    <span>{app.heat}</span>
+                    {app.name}
+                  </h3>
+                  <div className="flex items-center ml-2">
+                    <span className={cn(
+                      "text-xs px-1.5 py-0.5 rounded",
+                      isDark ? "bg-gray-700 text-gray-300" : "bg-gray-100 text-gray-600"
+                    )}>
+                      {app.heat}
+                    </span>
                   </div>
                 </div>
                 
-                <p className={cn("text-xs truncate mt-0.5", isDark ? "text-gray-400" : "text-gray-500")}>
+                <p className={cn(
+                  "text-xs truncate mt-0.5",
+                  isDark ? "text-gray-400" : "text-gray-500"
+                )}>
                   {app.description}
                 </p>
                 
-                <div className="flex items-center justify-between mt-2">
-                  <div className="flex flex-wrap gap-1">
-                    {app.chain.slice(0, 3).map((c) => (
+                {/* 简化的链信息 */}
+                <div className="flex items-center justify-between mt-1.5">
+                  <div className="flex gap-1">
+                    {app.chain.slice(0, 2).map((c) => (
                       <ChainBadge key={c} chain={c} />
                     ))}
-                    {app.chain.length > 3 && (
-                      <span className="inline-flex items-center px-1.5 text-xs text-gray-400">
-                        +{app.chain.length - 3}
-                      </span>
+                    {app.chain.length > 2 && (
+                      <span className="text-xs text-gray-400">+{app.chain.length - 2}</span>
                     )}
                   </div>
                   
-                  <div className={cn("text-xs flex items-center", isDark ? "text-gray-400" : "text-gray-500")}>
+                  <div className={cn(
+                    "text-xs flex items-center",
+                    isDark ? "text-gray-400" : "text-gray-500"
+                  )}>
                     <Download className="w-3 h-3 mr-1" />
                     {app.downloads}
                   </div>
                 </div>
               </div>
               
-              {/* 优化的链接图标 */}
-              <div className={cn(
-                "ml-3 w-7 h-7 flex-shrink-0 rounded-full flex items-center justify-center transition-all",
-                "group-hover:bg-primary/10 group-hover:text-primary",
-                isDark ? "bg-gray-700/80" : "bg-gray-100/80"
-              )}>
-                <ExternalLink className={cn("w-3 h-3", isDark ? "text-gray-400" : "text-gray-500")} />
+              {/* 简化的链接图标 */}
+              <div className="ml-2 flex-shrink-0">
+                <ExternalLink className={cn(
+                  "w-4 h-4",
+                  isDark ? "text-gray-500" : "text-gray-400"
+                )} />
               </div>
             </div>
           ))}
         </div>
 
-        {/* 优化的无搜索结果展示 */}
+        {/* 简化的无结果展示 */}
         {filteredApps.length === 0 && (
           <div className={cn(
-            "p-10 text-center rounded-xl mt-4",
-            isDark ? "bg-gray-800/60 border border-gray-700/20" : "bg-white border border-gray-200/60"
+            "p-8 text-center rounded-lg mt-4",
+            isDark ? "bg-gray-800/50 border border-gray-700/50" : "bg-white border border-gray-200"
           )}>
-            <div className="flex justify-center mb-3">
-              <Search className={cn("w-10 h-10", isDark ? "text-gray-600" : "text-gray-300")} />
-            </div>
-            <p className={cn("text-md font-medium", isDark ? "text-gray-300" : "text-gray-700")}>
+            <Search className={cn("w-8 h-8 mx-auto mb-2", isDark ? "text-gray-600" : "text-gray-400")} />
+            <p className={cn("text-sm", isDark ? "text-gray-300" : "text-gray-600")}>
               没有找到相关应用
-            </p>
-            <p className="text-sm text-gray-400 mt-1">
-              尝试其他关键词搜索或更改分类
             </p>
             <button 
               onClick={() => setSearchQuery("")}
               className={cn(
-                "mt-4 px-4 py-2 rounded-lg text-sm font-medium transition-colors",
+                "mt-3 px-3 py-1.5 rounded-md text-xs font-medium transition-colors",
                 isDark ? "bg-gray-700 text-gray-300 hover:bg-gray-600" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               )}
             >
-              清除搜索条件
+              清除搜索
             </button>
           </div>
         )}
         
-        {/* 优化的回到顶部按钮 */}
+        {/* 简化的回到顶部按钮 */}
         {scrolled && (
           <button
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             className={cn(
-              "fixed bottom-20 right-4 w-10 h-10 rounded-full shadow-md flex items-center justify-center transition-all",
-              "animate-fade-in hover:transform hover:scale-110",
+              "fixed bottom-20 right-4 w-10 h-10 rounded-full flex items-center justify-center transition-all",
+              "hover:scale-110",
               isDark 
                 ? "bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700" 
-                : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
+                : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200",
+              "shadow-lg"
             )}
-            aria-label="回到顶部"
-            title="回到顶部"
           >
             <ChevronUp className="w-5 h-5" />
           </button>
         )}
       </div>
       
-      {/* 底部导航栏 */}
       <BottomNav currentTab="discover" isDark={isDark} />
     </div>
   )

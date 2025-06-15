@@ -51,14 +51,14 @@ const config: Config = {
   				DEFAULT: "hsl(var(--card))",
   				foreground: "hsl(var(--card-foreground))",
   			},
-  			// XAI主题色彩系统
+  			// XAI主题色彩系统 - 优化版本
   			"xai-purple": {
-  				DEFAULT: "#8b5cf6",
-  				50: "#f3f0ff",
-  				100: "#e9e2ff", 
-  				200: "#d6ccff",
-  				300: "#b8a5ff",
-  				400: "#9575ff",
+  				DEFAULT: "hsl(var(--xai-primary))",
+  				50: "#faf7ff",
+  				100: "#f3f0ff", 
+  				200: "#e9e2ff",
+  				300: "#d6ccff",
+  				400: "#b8a5ff",
   				500: "#8b5cf6",
   				600: "#7c3aed",
   				700: "#6d28d9",
@@ -66,7 +66,7 @@ const config: Config = {
   				900: "#4c1d95",
   			},
   			"xai-cyan": {
-  				DEFAULT: "#06b6d4",
+  				DEFAULT: "hsl(var(--xai-secondary))",
   				50: "#ecfeff",
   				100: "#cffafe",
   				200: "#a5f3fc",
@@ -79,7 +79,7 @@ const config: Config = {
   				900: "#164e63",
   			},
   			"xai-pink": {
-  				DEFAULT: "#ec4899",
+  				DEFAULT: "hsl(var(--xai-pink))",
   				50: "#fdf2f8",
   				100: "#fce7f3",
   				200: "#fbcfe8",
@@ -92,7 +92,7 @@ const config: Config = {
   				900: "#831843",
   			},
   			"xai-green": {
-  				DEFAULT: "#10b981",
+  				DEFAULT: "hsl(var(--xai-accent))",
   				50: "#ecfdf5",
   				100: "#d1fae5",
   				200: "#a7f3d0",
@@ -105,7 +105,7 @@ const config: Config = {
   				900: "#064e3b",
   			},
   			"xai-orange": {
-  				DEFAULT: "#f59e0b",
+  				DEFAULT: "hsl(var(--xai-warning))",
   				50: "#fffbeb",
   				100: "#fef3c7",
   				200: "#fde68a",
@@ -117,30 +117,35 @@ const config: Config = {
   				800: "#92400e",
   				900: "#78350f",
   			},
-  			// 深色主题专用背景色
-  			"dark-bg": {
-  				primary: "#0f0f23",    // 深蓝紫色
-  				secondary: "#1a1a2e",  // 稍浅的深蓝紫色
-  				tertiary: "#16213e",   // 带紫色调的深色
+  			// 背景色彩层次系统
+  			"bg-layer": {
+  				primary: "hsl(var(--bg-primary))",
+  				secondary: "hsl(var(--bg-secondary))",
+  				tertiary: "hsl(var(--bg-tertiary))",
+  				quaternary: "hsl(var(--bg-quaternary))",
+  				quinary: "hsl(var(--bg-quinary))",
   			},
-  			// 浅色主题专用背景色
-  			"light-bg": {
-  				primary: "#ffffff",
-  				secondary: "#f8fafc",
-  				tertiary: "#f1f5f9",
-  			},
-  			// 增强的文字颜色
+  			// 增强的文字颜色系统
   			"text-enhanced": {
-  				primary: "#f8fafc",    // 高对比度白色
-  				secondary: "#cbd5e1",  // 中等对比度灰色
-  				muted: "#94a3b8",      // 低对比度灰色
+  				primary: "hsl(var(--foreground))",
+  				secondary: "hsl(var(--muted-foreground))",
+  				muted: "hsl(217 11% 65%)",
+  				accent: "hsl(var(--xai-primary))",
   			},
+  			// 状态色彩
+  			"status": {
+  				success: "hsl(var(--xai-accent))",
+  				warning: "hsl(var(--xai-warning))",
+  				error: "hsl(var(--destructive))",
+  				info: "hsl(var(--xai-secondary))",
+  			},
+  			// 图表色彩
   			chart: {
-  				'1': 'hsl(var(--chart-1))',
-  				'2': 'hsl(var(--chart-2))',
-  				'3': 'hsl(var(--chart-3))',
-  				'4': 'hsl(var(--chart-4))',
-  				'5': 'hsl(var(--chart-5))'
+  				'1': 'hsl(var(--xai-primary))',
+  				'2': 'hsl(var(--xai-secondary))',
+  				'3': 'hsl(var(--xai-accent))',
+  				'4': 'hsl(var(--xai-warning))',
+  				'5': 'hsl(var(--xai-pink))'
   			},
   			sidebar: {
   				DEFAULT: 'hsl(var(--sidebar-background))',
@@ -158,6 +163,7 @@ const config: Config = {
   			md: "calc(var(--radius) - 2px)",
   			sm: "calc(var(--radius) - 4px)",
   		},
+  		// 优化的动画系统
   		keyframes: {
   			"accordion-down": {
   				from: { height: "0" },
@@ -169,10 +175,13 @@ const config: Config = {
   			},
   			float: {
   				"0%, 100%": {
-  					transform: "translateY(0px)",
+  					transform: "translateY(0px) rotate(0deg)",
   				},
-  				"50%": {
-  					transform: "translateY(-20px)",
+  				"33%": {
+  					transform: "translateY(-20px) rotate(2deg)",
+  				},
+  				"66%": {
+  					transform: "translateY(-10px) rotate(-1deg)",
   				},
   			},
   			"gradient-shift": {
@@ -181,6 +190,53 @@ const config: Config = {
   				},
   				"50%": {
   					backgroundPosition: "100% 50%",
+  				},
+  			},
+  			"gradient-flow": {
+  				"0%": {
+  					backgroundPosition: "0% 50%",
+  				},
+  				"20%": {
+  					backgroundPosition: "100% 50%",
+  				},
+  				"40%": {
+  					backgroundPosition: "100% 100%",
+  				},
+  				"60%": {
+  					backgroundPosition: "50% 100%",
+  				},
+  				"80%": {
+  					backgroundPosition: "0% 100%",
+  				},
+  				"100%": {
+  					backgroundPosition: "0% 50%",
+  				},
+  			},
+  			"pulse-glow": {
+  				"0%, 100%": {
+  					opacity: "0.3",
+  					transform: "scale(1)",
+  				},
+  				"50%": {
+  					opacity: "0.7",
+  					transform: "scale(1.05)",
+  				},
+  			},
+  			drift: {
+  				"0%": {
+  					transform: "translateX(0px) translateY(0px)",
+  				},
+  				"25%": {
+  					transform: "translateX(15px) translateY(-10px)",
+  				},
+  				"50%": {
+  					transform: "translateX(-8px) translateY(-20px)",
+  				},
+  				"75%": {
+  					transform: "translateX(-15px) translateY(-8px)",
+  				},
+  				"100%": {
+  					transform: "translateX(0px) translateY(0px)",
   				},
   			},
   			"rotate-gradient": {
@@ -199,14 +255,6 @@ const config: Config = {
   					backgroundPosition: "200% 0",
   				},
   			},
-  			"pulse-glow": {
-  				"0%, 100%": {
-  					boxShadow: "0 0 20px rgba(139, 92, 246, 0.5)",
-  				},
-  				"50%": {
-  					boxShadow: "0 0 40px rgba(139, 92, 246, 0.8), 0 0 60px rgba(6, 182, 212, 0.6)",
-  				},
-  			},
   			"fade-in": {
   				"0%": {
   					opacity: "0",
@@ -217,34 +265,79 @@ const config: Config = {
   					transform: "translateY(0)",
   				},
   			},
+  			"slide-up": {
+  				"0%": {
+  					opacity: "0",
+  					transform: "translateY(20px)",
+  				},
+  				"100%": {
+  					opacity: "1",
+  					transform: "translateY(0)",
+  				},
+  			},
+  			"scale-in": {
+  				"0%": {
+  					opacity: "0",
+  					transform: "scale(0.9)",
+  				},
+  				"100%": {
+  					opacity: "1",
+  					transform: "scale(1)",
+  				},
+  			},
+  			"bounce-gentle": {
+  				"0%, 100%": {
+  					transform: "translateY(0)",
+  				},
+  				"50%": {
+  					transform: "translateY(-5px)",
+  				},
+  			},
   		},
   		animation: {
   			"accordion-down": "accordion-down 0.2s ease-out",
   			"accordion-up": "accordion-up 0.2s ease-out",
   			float: "float 6s ease-in-out infinite",
   			"gradient-shift": "gradient-shift 4s ease-in-out infinite",
+  			"gradient-flow": "gradient-flow 20s ease infinite",
+  			"pulse-glow": "pulse-glow 2s ease-in-out infinite",
+  			drift: "drift 8s ease-in-out infinite",
   			"rotate-gradient": "rotate-gradient 8s linear infinite",
-  			shimmer: "shimmer 2s infinite",
-  			"pulse-glow": "pulse-glow 3s ease-in-out infinite",
+  			shimmer: "shimmer 2s linear infinite",
   			"fade-in": "fade-in 0.5s ease-out",
+  			"slide-up": "slide-up 0.5s ease-out",
+  			"scale-in": "scale-in 0.3s ease-out",
+  			"bounce-gentle": "bounce-gentle 2s ease-in-out infinite",
   		},
-  		backgroundImage: {
-  			"gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
-  			"gradient-conic": "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
-  			"xai-gradient": "linear-gradient(135deg, #8b5cf6, #06b6d4, #10b981, #f59e0b)",
-  			"dark-gradient": "linear-gradient(135deg, #0f0f23 0%, #1a1a2e 25%, #16213e 50%, #1a1a2e 75%, #0f0f23 100%)",
-  			"light-gradient": "linear-gradient(135deg, #ffffff 0%, #f8fafc 25%, #f1f5f9 50%, #f8fafc 75%, #ffffff 100%)",
-  		},
+  		// 优化的阴影系统
   		boxShadow: {
-  			"xai-glow": "0 0 20px rgba(139, 92, 246, 0.5), 0 0 40px rgba(139, 92, 246, 0.3)",
-  			"xai-glow-cyan": "0 0 20px rgba(6, 182, 212, 0.5), 0 0 40px rgba(6, 182, 212, 0.3)",
-  			"xai-glow-green": "0 0 20px rgba(16, 185, 129, 0.5), 0 0 40px rgba(16, 185, 129, 0.3)",
-  			"card-enhanced": "0 10px 30px rgba(0, 0, 0, 0.1), 0 1px 8px rgba(0, 0, 0, 0.2)",
-  			"card-enhanced-dark": "0 10px 30px rgba(0, 0, 0, 0.3), 0 1px 8px rgba(0, 0, 0, 0.5)",
+  			'glow-sm': '0 0 10px hsla(var(--xai-primary), 0.3)',
+  			'glow': '0 0 20px hsla(var(--xai-primary), 0.4)',
+  			'glow-lg': '0 0 30px hsla(var(--xai-primary), 0.5)',
+  			'card': '0 4px 16px hsla(var(--xai-primary), 0.08)',
+  			'card-hover': '0 12px 32px hsla(var(--xai-primary), 0.15)',
+  			'button': '0 4px 12px hsla(var(--xai-primary), 0.3)',
+  			'button-hover': '0 8px 20px hsla(var(--xai-primary), 0.4)',
   		},
-  	}
+  		// 优化的渐变系统
+  		backgroundImage: {
+  			'gradient-primary': 'linear-gradient(135deg, hsl(var(--xai-primary)), hsl(var(--xai-secondary)))',
+  			'gradient-secondary': 'linear-gradient(135deg, hsl(var(--xai-secondary)), hsl(var(--xai-accent)))',
+  			'gradient-accent': 'linear-gradient(135deg, hsl(var(--xai-accent)), hsl(var(--xai-warning)))',
+  			'gradient-rainbow': 'linear-gradient(45deg, hsl(var(--xai-primary)), hsl(var(--xai-secondary)), hsl(var(--xai-accent)), hsl(var(--xai-warning)), hsl(var(--xai-pink)))',
+  			'gradient-radial': 'radial-gradient(ellipse at center, var(--tw-gradient-stops))',
+  		},
+  		// 优化的透明度系统
+  		opacity: {
+  			'15': '0.15',
+  			'35': '0.35',
+  			'65': '0.65',
+  			'85': '0.85',
+  		},
+  	},
   },
   plugins: [require("tailwindcss-animate")],
-};
+} satisfies Config;
+
 export default config;
 

@@ -1,16 +1,5 @@
-import { NextResponse } from 'next/server';
-import { NextRequest } from 'next/server';
-
-export const dynamic = 'force-dynamic'
-export const runtime = 'edge'
-
-// 从环境变量获取API密钥
-const AVE_API_KEY = "NMUuJmYHJB6d91bIpgLqpuLLKYVws82lj0PeDP3UEb19FoyWFJUVGLsgE95XTEmA";
-
-// 如果API密钥未设置，记录警告
-if (!AVE_API_KEY) {
-  console.warn('警告: AVE_API_KEY未设置，API请求可能会失败');
-}
+import { NextRequest, NextResponse } from 'next/server';
+import { AVE_API_KEY, API_ENDPOINTS } from '../lib/constants';
 
 // 接口定义
 interface RankTopic {
@@ -34,47 +23,16 @@ interface TokenData {
   risk_score?: string;
 }
 
-// 临时测试数据，在API调用失败时使用
-const dummyTopics: RankTopic[] = [
-  {
-    "id": "hot",
-    "name_en": "Hot",
-    "name_zh": "热门"
-  },
-  {
-    "id": "new",
-    "name_en": "New",
-    "name_zh": "新币"
-  },
-  {
-    "id": "meme",
-    "name_en": "Meme",
-    "name_zh": "Meme"
-  }
-];
-
-const dummyTokens: TokenData[] = Array(50).fill(0).map((_, index) => ({
-  "token": `0xtoken${index}`,
-  "chain": index % 2 === 0 ? "bsc" : "eth",
-  "symbol": `TKN${index}`,
-  "name": `Token ${index}`,
-  "logo_url": `https://example.com/token${index}.png`,
-  "current_price_usd": Math.random() * 1000,
-  "price_change_24h": (Math.random() * 20) - 10,
-  "tx_volume_u_24h": Math.random() * 10000000,
-  "holders": Math.floor(Math.random() * 100000)
-}));
-
 // 内存缓存对象，用于存储不同主题的数据
 const memoryCache: Record<string, { data: any; timestamp: number }> = {};
 
-// 缓存有效期（1小时，单位为毫秒）
-const CACHE_TTL = 3600000;
+// 缓存有效期（10分钟，单位为毫秒）- 提升加载速度
+const CACHE_TTL = 600000;
+// 过期缓存保留时间（1小时）- 用于服务不可用时的备用数据
+const STALE_CACHE_TTL = 3600000;
 
 /**
  * 检查缓存是否有效
- * @param cacheKey 缓存键
- * @returns 缓存是否有效
  */
 function isMemoryCacheValid(cacheKey: string): boolean {
   if (!memoryCache[cacheKey]) return false;
@@ -83,45 +41,46 @@ function isMemoryCacheValid(cacheKey: string): boolean {
 }
 
 /**
+ * 检查是否有过期但可用的缓存
+ */
+function hasStaleCache(cacheKey: string): boolean {
+  if (!memoryCache[cacheKey]) return false;
+  const now = Date.now();
+  return now - memoryCache[cacheKey].timestamp < STALE_CACHE_TTL;
+}
+
+/**
  * 获取真实API数据
- * @param endpoint API端点
- * @returns API响应数据
  */
 async function fetchAveApiData(endpoint: string) {
   console.log(`Fetching data from: ${endpoint}`);
   try {
-    // 构建请求头
     const headers: HeadersInit = {
       "Accept": "*/*",
-      "X-API-KEY": AVE_API_KEY
+      "X-API-KEY": AVE_API_KEY,
+      "User-Agent": "XAI-Finance/1.0"
     };
-    
-    // 调试日志
-    console.log("请求头:", headers);
     
     const response = await fetch(endpoint, {
       headers,
       cache: 'no-store',
+      signal: AbortSignal.timeout(12000) // 增加到12秒超时
     });
     
-    console.log(`Response status: ${response.status}`);
-    
     if (!response.ok) {
-      throw new Error(`API request failed with status ${response.status}`);
+      if (response.status === 429) {
+        throw new Error(`API rate limit exceeded (${response.status})`);
+      } else if (response.status >= 500) {
+        throw new Error(`API server error (${response.status})`);
+      } else {
+        throw new Error(`API request failed with status ${response.status}`);
+      }
     }
     
     const data = await response.json();
     
-    // 调试日志 - 显示简化的API响应
-    console.log("API response status:", data?.status);
-    console.log("API response has data:", !!data?.data);
-    console.log("API response data type:", data?.data ? Array.isArray(data.data) ? "Array" : typeof data.data : "undefined");
-    
-    if (data?.data && Array.isArray(data.data)) {
-      console.log("API response data length:", data.data.length);
-      if (data.data.length > 0) {
-        console.log("First item sample:", JSON.stringify(data.data[0]).substring(0, 100) + "...");
-      }
+    if (data?.status !== 1 || !data?.data) {
+      throw new Error('Invalid API response format');
     }
     
     return data;
@@ -133,12 +92,9 @@ async function fetchAveApiData(endpoint: string) {
 
 /**
  * 将API返回的代币数据转换为我们需要的格式
- * @param apiData API返回的数据
- * @returns 转换后的数据
  */
 function transformTokenData(apiData: any[]): TokenData[] {
   return apiData.map(token => {
-    // 尝试从appendix解析额外信息
     let tokenName = token.symbol || "";
     try {
       if (token.appendix) {
@@ -148,7 +104,7 @@ function transformTokenData(apiData: any[]): TokenData[] {
         }
       }
     } catch (e) {
-      console.error('Error parsing appendix data:', e);
+      // 忽略解析错误
     }
 
     return {
@@ -171,10 +127,9 @@ function transformTokenData(apiData: any[]): TokenData[] {
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-  const topic = searchParams.get('topic') || 'hot';
-  console.log("Topic requested:", topic);
-  
-  try {
+    const topic = searchParams.get('topic') || 'hot';
+    console.log("Topic requested:", topic);
+    
     // 如果请求的是话题列表
     if (topic === 'topics') {
       const cacheKey = 'topics';
@@ -185,20 +140,15 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ 
           success: true, 
           data: { topics: memoryCache[cacheKey].data }, 
-          timestamp: Date.now() 
+          timestamp: Date.now(),
+          cached: true
         }, { status: 200 });
       }
       
       console.log("Fetching fresh topics data from Ave.ai API");
       
-      // 尝试获取真实数据
       try {
-        const data = await fetchAveApiData("https://prod.ave-api.com/v2/ranks/topics");
-        
-        if (data.status !== 1 || !data.data) {
-          console.error("Invalid API response format:", data);
-          throw new Error('Invalid response format or unsuccessful request');
-        }
+        const data = await fetchAveApiData(API_ENDPOINTS.AVE_RANK_TOPICS);
         
         // 更新内存缓存
         memoryCache[cacheKey] = {
@@ -210,25 +160,43 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ 
           success: true, 
           data: { topics: data.data }, 
-          timestamp: Date.now() 
+          timestamp: Date.now(),
+          cached: false
         }, { status: 200 });
       } catch (apiError) {
-        console.error("Error fetching from Ave.ai, using dummy data:", apiError);
+        console.error("Error fetching topics from Ave.ai:", apiError);
         
-        // 如果API调用失败，使用测试数据
-        memoryCache[cacheKey] = {
-          data: dummyTopics,
-          timestamp: Date.now()
-        };
+        // 尝试使用过期缓存
+        if (hasStaleCache(cacheKey)) {
+          console.log("Using stale cache for topics due to API error");
+          return NextResponse.json({ 
+            success: true, 
+            data: { topics: memoryCache[cacheKey].data }, 
+            timestamp: Date.now(),
+            cached: true,
+            stale: true,
+            warning: '数据可能不是最新的'
+          }, { status: 200 });
+        }
+        
+        // 返回友好的错误信息
+        const errorMessage = apiError instanceof Error ? apiError.message : 'Unknown error';
+        let userFriendlyMessage = '暂时无法获取话题数据，请稍后重试';
+        
+        if (errorMessage.includes('rate limit')) {
+          userFriendlyMessage = '请求过于频繁，请稍后重试';
+        } else if (errorMessage.includes('server error')) {
+          userFriendlyMessage = '数据服务暂时不可用，请稍后重试';
+        }
         
         return NextResponse.json({ 
-          success: true, 
-          data: { topics: dummyTopics }, 
+          success: false, 
+          error: userFriendlyMessage,
           timestamp: Date.now() 
-        }, { status: 200 });
+        }, { status: 503 });
       }
     } 
-    // 否则返回特定主题的代币列表
+    // 返回特定主题的代币列表
     else {
       const cacheKey = `tokens_${topic}`;
       
@@ -242,21 +210,15 @@ export async function GET(request: NextRequest) {
             tokens: memoryCache[cacheKey].data,
             count: memoryCache[cacheKey].data.length
           },
-          timestamp: Date.now()
+          timestamp: Date.now(),
+          cached: true
         }, { status: 200 });
       }
       
       console.log(`Fetching fresh tokens data for topic: ${topic} from Ave.ai API`);
       
-      // 尝试获取真实数据
       try {
-        // 使用正确的API端点
-        const data = await fetchAveApiData(`https://prod.ave-api.com/v2/ranks?topic=${topic}`);
-        
-        if (data.status !== 1 || !data.data) {
-          console.error("Invalid API response format:", data);
-          throw new Error('Invalid response format or unsuccessful request');
-        }
+        const data = await fetchAveApiData(`${API_ENDPOINTS.AVE_RANK_BY_TOPIC}?topic=${topic}`);
         
         // 转换数据格式
         const transformedData = transformTokenData(data.data);
@@ -275,80 +237,52 @@ export async function GET(request: NextRequest) {
             tokens: transformedData,
             count: transformedData.length
           },
-          timestamp: Date.now()
+          timestamp: Date.now(),
+          cached: false
         }, { status: 200 });
       } catch (apiError) {
-        console.error(`Error fetching from Ave.ai for topic ${topic}, using dummy data:`, apiError);
+        console.error(`Error fetching tokens for topic ${topic} from Ave.ai:`, apiError);
         
-        // 如果API调用失败，使用测试数据
-        memoryCache[cacheKey] = {
-          data: dummyTokens,
-          timestamp: Date.now()
-        };
+        // 尝试使用过期缓存
+        if (hasStaleCache(cacheKey)) {
+          console.log(`Using stale cache for topic ${topic} due to API error`);
+          return NextResponse.json({ 
+            success: true,
+            data: {
+              topic: topic,
+              tokens: memoryCache[cacheKey].data,
+              count: memoryCache[cacheKey].data.length
+            },
+            timestamp: Date.now(),
+            cached: true,
+            stale: true,
+            warning: '数据可能不是最新的'
+          }, { status: 200 });
+        }
+        
+        // 返回友好的错误信息
+        const errorMessage = apiError instanceof Error ? apiError.message : 'Unknown error';
+        let userFriendlyMessage = '暂时无法获取代币数据，请稍后重试';
+        
+        if (errorMessage.includes('rate limit')) {
+          userFriendlyMessage = '请求过于频繁，请稍后重试';
+        } else if (errorMessage.includes('server error')) {
+          userFriendlyMessage = '数据服务暂时不可用，请稍后重试';
+        }
         
         return NextResponse.json({ 
-          success: true,
-          data: {
-            topic: topic,
-            tokens: dummyTokens,
-            count: dummyTokens.length
-          },
-          timestamp: Date.now()
-        }, { status: 200 });
-      }
-    }
-  } catch (error) {
-    console.error("Error in API route handler:", error);
-    
-    // 如果有缓存但已过期，仍然可以在API失败时返回过期的缓存数据
-    const cacheKey = topic === 'topics' ? 'topics' : `tokens_${topic}`;
-    if (memoryCache[cacheKey]) {
-      console.log(`API request failed, returning stale cache for ${cacheKey}`);
-      if (topic === 'topics') {
-        return NextResponse.json({ 
-          success: true, 
-          data: { topics: memoryCache[cacheKey].data }, 
+          success: false, 
+          error: userFriendlyMessage,
           timestamp: Date.now() 
-        }, { status: 200 });
-      } else {
-        return NextResponse.json({ 
-          success: true,
-          data: {
-            topic: topic,
-            tokens: memoryCache[cacheKey].data,
-            count: memoryCache[cacheKey].data.length
-          },
-          timestamp: Date.now()
-        }, { status: 200 });
+        }, { status: 503 });
       }
     }
-    
-    // 如果连缓存都没有，返回测试数据
-    console.log("No cache available, returning dummy data");
-    if (topic === 'topics') {
-      return NextResponse.json({ 
-        success: true, 
-        data: { topics: dummyTopics }, 
-        timestamp: Date.now() 
-      }, { status: 200 });
-    } else {
-      return NextResponse.json({ 
-        success: true,
-        data: {
-          topic: topic,
-          tokens: dummyTokens,
-          count: dummyTokens.length
-        },
-        timestamp: Date.now()
-      }, { status: 200 });
-    }
-    }
   } catch (error) {
-    console.error("Unexpected error:", error);
-    return NextResponse.json({
-      success: false,
-      error: "Internal server error",
-      message: error instanceof Error ? error.message : "Unknown error"
+    console.error('Unexpected error in tokens API:', error);
+    return NextResponse.json({ 
+      success: false, 
+      error: '服务器内部错误，请稍后重试',
+      timestamp: Date.now() 
     }, { status: 500 });
   }
 } 

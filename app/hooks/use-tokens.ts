@@ -3,119 +3,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { TokenRanking } from '@/app/types/token';
 
-// 备用数据，当API请求失败时使用
-// 使用固定值而非随机值以确保服务器和客户端一致
-const fallbackTokens: TokenRanking[] = [
-  {
-    "token": "0xa5957e0e2565dc93880da7be32abcbdf55788888",
-    "chain": "bsc",
-    "symbol": "ATM",
-    "name": "ATM Token",
-    "logo_url": "https://www.logofacade.com/token_icon_request/65ffb2a20a9e59af22dae8a5_1711256226.png",
-    "current_price_usd": 0.000010993584854389429,
-    "price_change_24h": -76.53,
-    "tx_volume_u_24h": 13385053.845136339,
-    "holders": 14304
-  },
-  {
-    "token": "0xc5102fe9359fd9a28f877a67e36b0f050d81a3cc",
-    "chain": "eth",
-    "symbol": "BTC",
-    "name": "Bitcoin",
-    "logo_url": "https://assets.coingecko.com/coins/images/1/large/bitcoin.png",
-    "current_price_usd": 66000.5,
-    "price_change_24h": 2.3,
-    "tx_volume_u_24h": 25000000,
-    "holders": 1000000
-  }
-];
-
-// 添加固定的测试数据以确保服务器和客户端渲染一致
-const additionalTokens = [
-  {
-    "token": "0xdac17f958d2ee523a2206206994597c13d831ec7",
-    "chain": "eth",
-    "symbol": "USDT",
-    "name": "Tether",
-    "logo_url": "",
-    "current_price_usd": 1.0,
-    "price_change_24h": 0.1,
-    "tx_volume_u_24h": 42000000,
-    "holders": 5000000
-  },
-  {
-    "token": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-    "chain": "eth",
-    "symbol": "USDC",
-    "name": "USD Coin",
-    "logo_url": "",
-    "current_price_usd": 0.999,
-    "price_change_24h": -0.05,
-    "tx_volume_u_24h": 31000000,
-    "holders": 4500000
-  },
-  {
-    "token": "0x2b591e99afe9f32eaa6214f7b7629768c40eeb39",
-    "chain": "eth",
-    "symbol": "HEX",
-    "name": "HEX",
-    "logo_url": "",
-    "current_price_usd": 0.0065,
-    "price_change_24h": 3.2,
-    "tx_volume_u_24h": 7000000,
-    "holders": 300000
-  },
-  {
-    "token": "0x4fabb145d64652a948d72533023f6e7a623c7c53",
-    "chain": "eth",
-    "symbol": "BUSD",
-    "name": "Binance USD",
-    "logo_url": "",
-    "current_price_usd": 0.998,
-    "price_change_24h": -0.08,
-    "tx_volume_u_24h": 12000000,
-    "holders": 3000000
-  },
-  {
-    "token": "0x0000000000085d4780b73119b644ae5ecd22b376",
-    "chain": "eth",
-    "symbol": "TUSD",
-    "name": "TrueUSD",
-    "logo_url": "",
-    "current_price_usd": 0.997,
-    "price_change_24h": -0.1,
-    "tx_volume_u_24h": 8500000,
-    "holders": 800000
-  },
-  {
-    "token": "0x00000000000045166c45af0fc6e4cf31d9e14b9a",
-    "chain": "bsc",
-    "symbol": "BNB",
-    "name": "BNB",
-    "logo_url": "",
-    "current_price_usd": 574.5,
-    "price_change_24h": 1.8,
-    "tx_volume_u_24h": 18000000,
-    "holders": 2500000
-  },
-  {
-    "token": "0x0d8775f648430679a709e98d2b0cb6250d2887ef",
-    "chain": "eth",
-    "symbol": "BAT",
-    "name": "Basic Attention Token",
-    "logo_url": "",
-    "current_price_usd": 0.25,
-    "price_change_24h": -2.5,
-    "tx_volume_u_24h": 3500000,
-    "holders": 450000
-  }
-];
-
-// 将固定测试数据添加到备用数据中
-fallbackTokens.push(...additionalTokens);
-
 /**
- * 简化版按主题获取代币数据的Hook
+ * 优化版按主题获取代币数据的Hook
+ * 去除模拟数据，改进错误处理和重试机制
  */
 export function useTokensByTopic(topicId: string) {
   const [tokens, setTokens] = useState<TokenRanking[]>([]);
@@ -123,52 +13,119 @@ export function useTokensByTopic(topicId: string) {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [usingFallback, setUsingFallback] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   
-  // 简化的获取函数
-  const fetchTokens = useCallback(() => {
+  // 获取代币数据的函数
+  const fetchTokens = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     
-    // 简单的fetch实现
-    fetch(`/api/tokens?topic=${topicId}`)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error("API请求失败");
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 增加到15秒超时
+      
+      const response = await fetch(`/api/tokens?topic=${topicId}`, {
+        signal: controller.signal,
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache'
         }
-        return response.json();
-      })
-      .then(data => {
-        if (data && data.success && data.data && Array.isArray(data.data.tokens)) {
-          setTokens(data.data.tokens);
-          setLastUpdated(new Date());
-          setUsingFallback(false);
-        } else {
-          throw new Error("数据格式无效");
-        }
-      })
-      .catch(err => {
-        console.error("获取代币数据失败:", err);
-        setError(err.message || "未知错误");
-        setTokens(fallbackTokens);
-        setUsingFallback(true);
-      })
-      .finally(() => {
-        setIsLoading(false);
       });
-  }, [topicId]);
+      
+      clearTimeout(timeoutId);
+      
+      // 处理不同的HTTP状态码
+      if (!response.ok) {
+        if (response.status === 503) {
+          throw new Error('服务暂时不可用，请稍后重试');
+        } else if (response.status === 429) {
+          throw new Error('请求过于频繁，请稍后重试');
+        } else if (response.status >= 500) {
+          throw new Error('服务器错误，请稍后重试');
+        } else if (response.status === 404) {
+          throw new Error('请求的资源不存在');
+        } else {
+          throw new Error(`请求失败 (${response.status})`);
+        }
+      }
+      
+      const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(data.error || 'API返回失败状态');
+      }
+      
+      if (data.data && Array.isArray(data.data.tokens)) {
+        setTokens(data.data.tokens);
+        setLastUpdated(new Date());
+        setUsingFallback(false);
+        setRetryCount(0); // 重置重试计数
+        console.log(`成功获取${data.data.tokens.length}个代币数据`);
+      } else {
+        throw new Error('数据格式无效');
+      }
+    } catch (err) {
+      console.error(`获取代币数据失败 (topic: ${topicId}):`, err);
+      
+      const errorMessage = err instanceof Error ? err.message : '未知错误';
+      
+      // 根据错误类型决定是否重试
+      const shouldRetry = !errorMessage.includes('服务暂时不可用') && 
+                         !errorMessage.includes('请求过于频繁') && 
+                         !errorMessage.includes('服务器错误') &&
+                         retryCount < 2;
+      
+      if (shouldRetry) {
+        const retryDelay = Math.min(1000 * Math.pow(2, retryCount), 8000); // 指数退避，最大8秒
+        console.log(`将在 ${retryDelay}ms 后重试 (${retryCount + 1}/2)`);
+        
+        setTimeout(() => {
+          setRetryCount(prev => prev + 1);
+          fetchTokens();
+        }, retryDelay);
+        
+        // 在重试期间显示友好的错误信息
+        setError(`正在重试... (${retryCount + 1}/2)`);
+      } else {
+        // 设置最终错误信息
+        if (errorMessage.includes('服务暂时不可用')) {
+          setError('数据服务暂时不可用，请稍后刷新页面重试');
+        } else if (errorMessage.includes('请求过于频繁')) {
+          setError('请求过于频繁，请等待一分钟后重试');
+        } else if (errorMessage.includes('服务器错误')) {
+          setError('服务器暂时出现问题，请稍后重试');
+        } else {
+          setError(errorMessage);
+        }
+        
+        console.error(`已达到最大重试次数或遇到不可重试的错误，停止重试`);
+        setTokens([]); // 清空数据
+        setUsingFallback(false);
+      }
+    } finally {
+      // 只有在不需要重试时才设置loading为false
+      if (retryCount >= 2 || error?.includes('服务暂时不可用') || error?.includes('请求过于频繁')) {
+        setIsLoading(false);
+      }
+    }
+  }, [topicId, retryCount]);
   
   // 初始化和主题变更时加载数据
   useEffect(() => {
+    setRetryCount(0); // 重置重试计数
+    setError(null); // 清除之前的错误
     fetchTokens();
-  }, [topicId, fetchTokens]);
+  }, [topicId]); // 移除fetchTokens依赖，避免无限循环
   
-  // 刷新函数
-  const refresh = () => {
+  // 手动刷新函数
+  const refresh = useCallback(() => {
+    setRetryCount(0);
+    setError(null);
     fetchTokens();
-  };
+  }, [fetchTokens]);
   
   return {
-    tokens: tokens.length > 0 ? tokens : fallbackTokens,
+    tokens,
     isLoading,
     error,
     refresh,

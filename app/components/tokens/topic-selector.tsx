@@ -96,10 +96,11 @@ function TopicSelector({
     gap: "4px",
     padding: "4px 8px", // 统一设置内边距
     borderRadius: "16px",
-    background: darkMode ? "#222" : "#f5f5f5",
-    border: `1px solid ${darkMode ? "#333" : "#ddd"}`,
+    background: darkMode ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)",
+    border: `1px solid ${darkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`,
     minWidth: "max-content", // 确保容器宽度至少等于内容宽度
-    boxSizing: "border-box" // 确保padding不会增加整体宽度
+    boxSizing: "border-box", // 确保padding不会增加整体宽度
+    backdropFilter: "blur(10px)"
   };
   
   // 渲染主题按钮
@@ -115,12 +116,14 @@ function TopicSelector({
       cursor: "pointer",
       border: "none",
       background: isActive 
-        ? (darkMode ? "#3f51b5" : "#2563eb") 
+        ? (darkMode ? "rgba(63, 81, 181, 0.8)" : "rgba(37, 99, 235, 0.8)") 
         : "transparent",
       color: isActive 
         ? "#fff" 
         : (darkMode ? "#aaa" : "#666"),
-      minWidth: "auto" // 确保按钮不会被压缩
+      minWidth: "auto", // 确保按钮不会被压缩
+      backdropFilter: isActive ? "blur(10px)" : "none",
+      transition: "all 0.2s ease"
     };
     
     const hotBadgeStyle: CSSProperties = {

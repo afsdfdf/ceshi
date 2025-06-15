@@ -144,48 +144,7 @@ async function fetchAveKlineData(address: string, chain: string, interval: strin
   });
 }
 
-// 生成模拟K线数据的函数 - 仅作为备用
-function generateMockKlineData(interval: string, limit: number): KLineData[] {
-  const now = Math.floor(Date.now() / 1000);
-  const basePrice = 0.007354;
-  const volatility = 0.005;
-  
-  // 根据不同时间间隔设置不同的时间增量
-  let timeIncrement: number;
-  switch(interval) {
-    case '1m': timeIncrement = 60; break;
-    case '5m': timeIncrement = 300; break;
-    case '15m': timeIncrement = 900; break;
-    case '1h': timeIncrement = 3600; break;
-    case '4h': timeIncrement = 14400; break;
-    case '1d': timeIncrement = 86400; break;
-    case '1w': timeIncrement = 604800; break;
-    default: timeIncrement = 3600;
-  }
-  
-  return Array(limit).fill(0).map((_, index) => {
-    const timeOffset = (limit - index) * timeIncrement;
-    const timestamp = (now - timeOffset) * 1000; // 毫秒时间戳
-    
-    const randomFactor = 0.5 - Math.random();
-    const priceChange = basePrice * volatility * randomFactor;
-    
-    const open = basePrice + priceChange * (index - 1) / limit;
-    const close = basePrice + priceChange * index / limit;
-    const high = Math.max(open, close) * (1 + Math.random() * 0.02);
-    const low = Math.min(open, close) * (1 - Math.random() * 0.02);
-    const volume = 100 + Math.random() * 2000;
-    
-    return {
-      timestamp,
-      open,
-      high,
-      low,
-      close,
-      volume
-    };
-  });
-}
+
 
 /**
  * GET 处理程序
@@ -200,48 +159,53 @@ export async function GET(request: Request) {
 
   if (!address || !chain) {
     return NextResponse.json(
-      { error: 'Missing required parameters: address and chain' },
+      { 
+        success: false,
+        error: 'Missing required parameters: address and chain' 
+      },
       { status: 400 }
     );
   }
 
   try {
-    // 直接从Ave.ai API获取数据
-    let klineData: KLineData[] = [];
+    console.log(`获取K线数据请求: ${address}-${chain}, ${interval}, ${limit}条`);
     
-    try {
-      klineData = await fetchAveKlineData(address, chain, interval, limit);
-      console.log(`成功从Ave.ai获取到${klineData.length}条K线数据`);
-    } catch (apiError) {
-      // 如果是速率限制错误，尝试使用缓存
-      console.error('获取K线数据失败，使用备用数据:', apiError);
-      
-      // 尝试使用旧缓存数据（即使已过期）
-      const cacheKey = `${address}-${chain}-${interval}-${limit}`;
-      if (klineCache[cacheKey]) {
-        console.log('使用过期的缓存数据');
-        klineData = klineCache[cacheKey].data;
-      } else {
-        console.log('没有可用的缓存数据，使用模拟数据');
-        klineData = generateMockKlineData(interval, limit);
-      }
+    // 直接从Ave.ai API获取数据
+    const klineData = await fetchAveKlineData(address, chain, interval, limit);
+    
+    if (klineData && klineData.length > 0) {
+      console.log(`成功获取${klineData.length}条K线数据`);
+      return NextResponse.json({
+        success: true,
+        klines: klineData
+      });
+    } else {
+      console.log('API返回空数据');
+      return NextResponse.json({
+        success: false,
+        error: '暂无K线数据'
+      }, { status: 404 });
+    }
+  } catch (apiError) {
+    console.error('获取K线数据失败:', apiError);
+    
+    // 尝试使用过期缓存数据
+    const cacheKey = `${address}-${chain}-${interval}-${limit}`;
+    if (klineCache[cacheKey]) {
+      console.log('API失败，使用过期的缓存数据');
+      return NextResponse.json({
+        success: true,
+        klines: klineCache[cacheKey].data,
+        stale: true,
+        message: '使用缓存数据'
+      });
     }
     
+    // 没有缓存数据时返回错误
     return NextResponse.json({
-      success: true,
-      klines: klineData
-    });
-  } catch (error) {
-    console.error('处理K线数据错误:', error);
-    
-    // 确保即使发生错误也返回模拟数据
-    const mockData = generateMockKlineData(interval, limit);
-    
-    return NextResponse.json({
-      success: true,
-      klines: mockData,
-      error_info: error instanceof Error ? error.message : 'Failed to fetch kline data',
-      is_mock_data: true
-    });
+      success: false,
+      error: '暂时无法获取K线数据，请稍后重试',
+      message: apiError instanceof Error ? apiError.message : 'Unknown error'
+    }, { status: 503 });
   }
 } 

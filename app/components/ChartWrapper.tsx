@@ -12,34 +12,7 @@ interface ChartWrapperProps {
   onDataLoaded?: () => void
 }
 
-// 生成模拟K线数据的函数 - 作为客户端备用
-function generateClientMockData(count: number = 100): KLineData[] {
-  const now = Math.floor(Date.now() / 1000);
-  const basePrice = 0.007354;
-  const volatility = 0.005;
-  
-  return Array(count).fill(0).map((_, index) => {
-    const timeOffset = (count - index) * 3600;
-    const timestamp = (now - timeOffset) * 1000; // 毫秒时间戳
 
-    const randomFactor = 0.5 - Math.random();
-    const priceChange = basePrice * volatility * randomFactor;
-    const open = basePrice + priceChange * (index - 1) / count;
-    const close = basePrice + priceChange * index / count;
-    const high = Math.max(open, close) * (1 + Math.random() * 0.02);
-    const low = Math.min(open, close) * (1 - Math.random() * 0.02);
-    const volume = 100 + Math.random() * 2000;
-
-    return {
-      timestamp,
-      open,
-      high,
-      low,
-      close,
-      volume
-    };
-  });
-}
 
 export default function ChartWrapper({ 
   darkMode, 
@@ -145,18 +118,7 @@ export default function ChartWrapper({
     // Validate input parameters
     if (!tokenAddress || !tokenChain || tokenAddress === "0xtoken") {
       console.log("Skipping API request - missing address or chain");
-      // 使用模拟数据
-      const mockData = generateClientMockData(100);
-      setKlineData(mockData);
-      if (chartInstance.current) {
-        chartInstance.current.applyNewData(mockData);
-      }
-      
-      // 通知数据已加载
-      if (onDataLoaded) {
-        onDataLoaded();
-      }
-      
+      setError("缺少代币地址或链信息");
       return;
     }
     
@@ -182,7 +144,7 @@ export default function ChartWrapper({
         console.log(`请求K线数据: ${tokenAddress} ${tokenChain} ${interval}`);
         const response = await fetch(`/api/token-kline?address=${encodeURIComponent(tokenAddress)}&chain=${encodeURIComponent(tokenChain)}&interval=${interval}&limit=${points}`, {
           // 增加超时时间
-          signal: AbortSignal.timeout(10000) // 10秒超时
+          signal: AbortSignal.timeout(15000) // 15秒超时
         });
         
         if (!response.ok) {
@@ -198,97 +160,64 @@ export default function ChartWrapper({
           const formattedData: KLineData[] = data.klines.map((item: any) => {
             // 确保timestamp是毫秒格式
             let timestamp = item.timestamp;
-            if (timestamp < 10000000000) { // 如果是秒级时间戳，转换为毫秒
+            if (timestamp < 1000000000000) {
               timestamp = timestamp * 1000;
             }
             
             return {
-              timestamp,
-              open: parseFloat(item.open),
-              high: parseFloat(item.high),
-              low: parseFloat(item.low),
-              close: parseFloat(item.close),
-              volume: parseFloat(item.volume || '0')
+              timestamp: timestamp,
+              open: parseFloat(item.open) || 0,
+              high: parseFloat(item.high) || 0,
+              low: parseFloat(item.low) || 0,
+              close: parseFloat(item.close) || 0,
+              volume: parseFloat(item.volume) || 0
             };
           });
           
           // 按时间戳排序
           formattedData.sort((a, b) => a.timestamp - b.timestamp);
           
-          // 计算价格范围用于优化Y轴显示
-          if (formattedData.length > 0) {
-            const prices = formattedData.flatMap(k => [k.high, k.low]);
-            const minPrice = Math.min(...prices);
-            const maxPrice = Math.max(...prices);
-            setPriceRange({ min: minPrice, max: maxPrice });
-          }
-          
           setKlineData(formattedData);
+          setRetryCount(0); // 重置重试计数
           
-          // 如果图表实例已存在，更新数据
           if (chartInstance.current) {
             chartInstance.current.applyNewData(formattedData);
-            
-            // 优化显示比例，特别是对1m时间周期
             optimizeChartDisplay(chartInstance.current, interval, formattedData);
           }
-          
-          // 重置重试计数
-          setRetryCount(0);
           
           // 通知数据已加载
           if (onDataLoaded) {
             onDataLoaded();
           }
+        } else {
+          throw new Error('API返回无效数据或空数据');
+        }
+      } catch (apiError) {
+        console.error('K线数据API请求失败:', apiError);
+        throw apiError;
+      }
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        setError("请求超时，请稍后再试");
+        console.warn('K线数据请求超时');
       } else {
-          // 即使API返回成功但没有数据，也使用模拟数据
-          console.log("API返回成功但无K线数据，使用模拟数据");
-          throw new Error("未获得K线数据");
+        console.error('获取K线数据失败', error);
+        setError("无法获取K线数据");
+        
+        // 自动重试逻辑
+        if (retryCount < 2) {
+          const retryDelay = Math.min(1000 * Math.pow(2, retryCount), 5000);
+          console.log(`将在 ${retryDelay}ms 后重试获取K线数据 (${retryCount + 1}/2)`);
+          
+          setTimeout(() => {
+            setRetryCount(prev => prev + 1);
+            fetchKlineData();
+          }, retryDelay);
+        } else {
+          console.error('已达到最大重试次数，停止重试');
+          setKlineData([]);
         }
-      } catch (err) {
-        console.error("获取K线数据失败:", err);
-        
-        // 如果API请求失败，使用客户端生成的模拟数据
-        console.log("使用客户端生成的模拟数据");
-        const mockData = generateClientMockData(points);
-        setKlineData(mockData);
-        
-        // 如果图表实例已存在，更新数据
-        if (chartInstance.current) {
-          chartInstance.current.applyNewData(mockData);
-          // 优化显示比例
-          optimizeChartDisplay(chartInstance.current, interval, mockData);
-        }
-        
-        // 即使使用模拟数据，也通知数据已加载
-        if (onDataLoaded) {
-          onDataLoaded();
-        }
-        
-        // 不显示错误给用户，因为我们使用了备用数据
-        setError(null);
       }
-    } catch (err) {
-      console.error("K线图处理错误:", err);
-      
-      // 如果出错，使用客户端生成的模拟数据
-      const mockData = generateClientMockData(100);
-      setKlineData(mockData);
-      
-      // 如果图表实例已存在，更新数据
-      if (chartInstance.current) {
-        chartInstance.current.applyNewData(mockData);
-        // 优化显示比例
-        optimizeChartDisplay(chartInstance.current, interval, mockData);
-      }
-      
-      // 即使使用模拟数据，也通知数据已加载
-      if (onDataLoaded) {
-        onDataLoaded();
-      }
-      
-      // 不显示错误给用户，因为我们使用了备用数据
-      setError(null);
     } finally {
       setIsLoading(false);
     }
@@ -618,16 +547,10 @@ export default function ChartWrapper({
       // 只有当有有效的地址和链时才获取K线数据
       if (tokenAddress && tokenChain && tokenAddress !== "0xtoken") {
         fetchKlineData();
-        } else {
-        // 如果没有有效的地址和链，使用模拟数据初始化图表
-        const mockData = generateClientMockData(100);
-        setKlineData(mockData);
-        
-        if (chartInstance.current) {
-          chartInstance.current.applyNewData(mockData);
-          // 确保数据加载后蜡烛图靠右
-          chartInstance.current.setOffsetRightDistance(0);
-        }
+      } else {
+        // 如果没有有效的地址和链，显示空图表
+        setKlineData([]);
+        setError("请选择有效的代币进行查看");
       }
     }
     

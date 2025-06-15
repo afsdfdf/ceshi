@@ -43,60 +43,55 @@ export default function MarketPage() {
       {/* 主容器 */}
       <div className="relative z-10 w-full">
         {/* 顶部区域 */}
-        <div className="sticky top-0 z-30 backdrop-blur-xl bg-background/80 border-b border-border/50">
-          <div className="px-4 py-1.5 md:max-w-7xl md:mx-auto">
-            {/* Logo和标题区域 */}
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center space-x-2">
-                {/* XAI LOGO */}
-                <div className="relative">
-                  <div className="w-7 h-7 rounded-lg overflow-hidden shadow-lg">
-                    <LogoBase64 width={28} height={28} className="w-full h-full" />
+        <div className="xai-compact-header">
+          <div className="px-4 py-2 md:max-w-7xl md:mx-auto">
+            {/* 页头：左边LOGO，右边搜索框 */}
+            <div className="flex items-center justify-between gap-3">
+              {/* 左侧：XAI LOGO */}
+              <div className="flex items-center space-x-2 flex-shrink-0">
+                <div className="xai-header-logo">
+                  <div className="w-8 h-8 rounded-lg overflow-hidden shadow-lg">
+                    <LogoBase64 width={32} height={32} className="w-full h-full" />
                   </div>
-                  <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-xai-green rounded-full animate-pulse"></div>
                 </div>
-                <div>
-                  <h1 className="text-base font-bold gradient-text">XAI Finance</h1>
-                  <p className="text-xs text-muted-foreground leading-none">智能加密货币追踪</p>
+                <div className="hidden sm:block">
+                  <h1 className="text-lg font-bold gradient-text">XAI Finance</h1>
                 </div>
               </div>
               
-              {/* 主题切换按钮 */}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="rounded-full w-7 h-7 btn-glow"
-                onClick={toggleTheme}
-              >
-                {isDark ? (
-                  <Sun className="w-3.5 h-3.5 text-xai-orange" />
-                ) : (
-                  <Moon className="w-3.5 h-3.5 text-xai-purple" />
-                )}
-              </Button>
-            </div>
-            
-            {/* 搜索栏区域 */}
-            <div className="relative">
-              <div className="relative">
-                {/* 搜索框背景装饰 */}
-                <div className="absolute inset-0 bg-gradient-to-r from-xai-purple/10 via-xai-cyan/10 to-xai-green/10 rounded-xl blur-sm"></div>
-                
-                {/* 美化的搜索框 */}
-                <div className={cn(
-                  "relative backdrop-blur-sm border rounded-xl transition-all duration-300 h-9",
-                  "hover:border-xai-purple/50 focus-within:border-xai-purple/50 focus-within:shadow-lg focus-within:shadow-xai-purple/25",
-                  isDark ? "bg-card/60 border-border/40" : "bg-white/60 border-border/30"
-                )}>
-                  <SearchBar 
-                    isDark={isDark} 
-                    showLogo={false}
-                    logoSize={40}
-                    simplified={true}
-                    onResultSelect={handleTokenSelect}
-                    placeholder="搜索代币名称或合约地址..."
-                  />
+              {/* 右侧：搜索框和主题切换 */}
+              <div className="flex items-center gap-2 flex-1 max-w-md">
+                {/* 搜索框 */}
+                <div className="xai-search-container">
+                  <div className={cn(
+                    "relative backdrop-blur-sm border rounded-lg transition-all duration-300 h-9",
+                    "hover:border-xai-purple/50 focus-within:border-xai-purple/50 focus-within:shadow-lg focus-within:shadow-xai-purple/25",
+                    isDark ? "bg-card/60 border-border/40" : "bg-white/60 border-border/30"
+                  )}>
+                    <SearchBar 
+                      isDark={isDark} 
+                      showLogo={false}
+                      logoSize={40}
+                      simplified={true}
+                      onResultSelect={handleTokenSelect}
+                      placeholder="搜索代币..."
+                    />
+                  </div>
                 </div>
+                
+                {/* 主题切换按钮 */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="xai-theme-toggle w-9 h-9 btn-glow flex-shrink-0"
+                  onClick={toggleTheme}
+                >
+                  {isDark ? (
+                    <Sun className="w-4 h-4 text-xai-orange" />
+                  ) : (
+                    <Moon className="w-4 h-4 text-xai-purple" />
+                  )}
+                </Button>
               </div>
             </div>
           </div>

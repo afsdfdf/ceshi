@@ -171,35 +171,14 @@ export default function SearchBar({
 
   return (
     <div className="relative">
-      <div className="flex items-center gap-3">
-        {/* XAI Logo */}
-        {showLogo && (
-          <Link href="/" className="flex-shrink-0">
-            <div className={cn(
-              "relative overflow-hidden rounded-full",
-              "hover:shadow-md transition-shadow duration-200",
-              "hover:scale-105 transition-transform"
-            )}
-              style={{ width: logoSize, height: logoSize }}
-            >
-              <Image
-                src="/logo.png"
-                alt="XAI Finance"
-                width={logoSize}
-                height={logoSize}
-                className="object-cover"
-              />
-            </div>
-          </Link>
-        )}
-        
-        {/* 搜索输入框 */}
-        <div className="relative flex-grow">
+      {/* 简化模式：只显示搜索框 */}
+      {simplified ? (
+        <div className="relative w-full">
           <Input
             type="text"
             placeholder={placeholder}
             className={cn(
-              "w-full h-8 pl-8 pr-4 text-sm rounded-xl border-0 bg-transparent",
+              "w-full h-9 pl-9 pr-4 text-sm rounded-lg border-0 bg-transparent",
               "transition-all duration-300 placeholder:text-muted-foreground/60",
               "focus:ring-0 focus:outline-none"
             )}
@@ -209,110 +188,258 @@ export default function SearchBar({
             onFocus={() => setShowResults(true)}
           />
           <Search className={cn(
-            "absolute left-2.5 top-2 w-3.5 h-3.5 transition-colors duration-300",
+            "absolute left-3 top-2.5 w-4 h-4 transition-colors duration-300",
             searchValue ? "text-xai-purple" : "text-muted-foreground"
           )} />
           
           {/* 搜索状态指示器 */}
           {isSearching && (
-            <div className="absolute right-2.5 top-2">
-              <div className="w-3.5 h-3.5 border-2 border-xai-purple border-t-transparent rounded-full animate-spin" />
+            <div className="absolute right-3 top-2.5">
+              <div className="w-4 h-4 border-2 border-xai-purple border-t-transparent rounded-full animate-spin" />
+            </div>
+          )}
+          
+          {/* 搜索结果下拉框 */}
+          {showResults && (
+            <div 
+              ref={searchResultsRef} 
+              className={cn(
+                "absolute left-0 right-0 mt-2 max-h-80 overflow-y-auto rounded-lg shadow-xl z-50 animate-fade-in",
+                "border backdrop-blur-md",
+                isDark 
+                  ? "bg-card/95 border-border/70" 
+                  : "bg-white/95 border-border/40"
+              )}
+            >
+              {isSearching ? (
+                <div className="p-4 text-center text-sm">
+                  <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full inline-block mr-2"></div>
+                  搜索中...
+                </div>
+              ) : searchResults.length > 0 ? (
+                searchResults.map((token, index) => (
+                  <div
+                    key={index}
+                    className={cn(
+                      "p-3 flex items-center gap-3 text-sm cursor-pointer transition-colors",
+                      "border-b last:border-0",
+                      isDark 
+                        ? "border-border/30 hover:bg-muted/50" 
+                        : "border-border/20 hover:bg-secondary/70",
+                    )}
+                    onClick={() => handleTokenSelect(token)}
+                  >
+                    <div className="relative w-8 h-8 rounded-full overflow-hidden bg-muted flex-shrink-0 shadow-sm">
+                      {token.logo_url && token.logo_url.trim() !== '' ? (
+                        <Image
+                          src={token.logo_url}
+                          alt={token.symbol || 'Token'}
+                          fill
+                          className="object-cover transition-transform hover:scale-110"
+                          style={{ transition: "transform 0.2s ease" }}
+                          onError={(e) => {
+                            // Replace with placeholder image on error
+                            (e.target as HTMLImageElement).src = "/images/token-placeholder.png";
+                          }}
+                        />
+                      ) : (
+                        <div className={cn(
+                          "w-full h-full flex items-center justify-center text-xs font-medium text-white",
+                          `bg-gradient-to-br ${
+                            index % 5 === 0 ? "from-pink-500 to-rose-500" :
+                            index % 5 === 1 ? "from-blue-500 to-indigo-500" :
+                            index % 5 === 2 ? "from-green-500 to-emerald-500" :
+                            index % 5 === 3 ? "from-amber-500 to-orange-500" :
+                            "from-purple-500 to-fuchsia-500"
+                          }`
+                        )}>
+                          {token.symbol?.charAt(0) || '?'}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-grow min-w-0">
+                      <div className="font-medium truncate">{token.symbol}</div>
+                      <div className="text-xs text-muted-foreground truncate">
+                        {token.name} • {token.chain.toUpperCase()}
+                      </div>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <div className="text-xs font-medium">
+                        ${typeof token.current_price_usd === 'string' 
+                          ? parseFloat(token.current_price_usd).toFixed(6) 
+                          : (token.current_price_usd || 0).toFixed(6)}
+                      </div>
+                      {token.price_change_24h && (
+                        <div className={cn(
+                          "text-xs px-1.5 py-0.5 rounded-full mt-1 inline-block",
+                          parseFloat(String(token.price_change_24h)) >= 0 
+                            ? 'text-emerald-500 bg-emerald-500/10' 
+                            : 'text-rose-500 bg-rose-500/10'
+                        )}>
+                          {parseFloat(String(token.price_change_24h)) >= 0 ? '+' : ''}
+                          {parseFloat(String(token.price_change_24h)).toFixed(2)}%
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))
+              ) : searchValue.trim() ? (
+                <div className="p-4 text-center">
+                  <div className="text-muted-foreground text-sm mb-1">未找到相关代币</div>
+                  <div className="text-xs text-muted-foreground/70">
+                    请尝试其他关键词或代币地址
+                  </div>
+                </div>
+              ) : null}
             </div>
           )}
         </div>
-      </div>
-      
-      {showResults && (
-        <div 
-          ref={searchResultsRef} 
-          className={cn(
-            "absolute left-0 right-0 mt-1 max-h-96 overflow-y-auto rounded-md shadow-lg z-50 animate-fade-in",
-            isDark 
-              ? "bg-card border border-border/70" 
-              : "bg-card border border-border/40"
-          )}
-          style={{ marginLeft: showLogo ? `${logoSize + 12}px` : '0' }}
-        >
-          {isSearching ? (
-            <div className="p-4 text-center text-sm">
-              <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full inline-block mr-2"></div>
-              搜索中...
-            </div>
-          ) : searchResults.length > 0 ? (
-            searchResults.map((token, index) => (
-              <div
-                key={index}
-                className={cn(
-                  "p-3 flex items-center gap-3 text-sm cursor-pointer transition-colors",
-                  "border-b last:border-0",
-                  isDark 
-                    ? "border-border/30 hover:bg-muted/50" 
-                    : "border-border/20 hover:bg-secondary/70",
-                )}
-                onClick={() => handleTokenSelect(token)}
+      ) : (
+        // 完整模式：显示LOGO和搜索框
+        <div className="flex items-center gap-3">
+          {/* XAI Logo */}
+          {showLogo && (
+            <Link href="/" className="flex-shrink-0">
+              <div className={cn(
+                "relative overflow-hidden rounded-full",
+                "hover:shadow-md transition-shadow duration-200",
+                "hover:scale-105 transition-transform"
+              )}
+                style={{ width: logoSize, height: logoSize }}
               >
-                <div className="relative w-9 h-9 rounded-full overflow-hidden bg-muted flex-shrink-0 shadow-sm">
-                  {token.logo_url && token.logo_url.trim() !== '' ? (
-                    <Image
-                      src={token.logo_url}
-                      alt={token.symbol || 'Token'}
-                      fill
-                      className="object-cover transition-transform hover:scale-110"
-                      style={{ transition: "transform 0.2s ease" }}
-                      onError={(e) => {
-                        // Replace with placeholder image on error
-                        (e.target as HTMLImageElement).src = "/images/token-placeholder.png";
-                      }}
-                    />
-                  ) : (
-                    <div className={cn(
-                      "w-full h-full flex items-center justify-center text-xs font-medium text-white",
-                      `bg-gradient-to-br ${
-                        index % 5 === 0 ? "from-pink-500 to-rose-500" :
-                        index % 5 === 1 ? "from-blue-500 to-indigo-500" :
-                        index % 5 === 2 ? "from-green-500 to-emerald-500" :
-                        index % 5 === 3 ? "from-amber-500 to-orange-500" :
-                        "from-purple-500 to-fuchsia-500"
-                      }`
-                    )}>
-                      {token.symbol?.charAt(0) || '?'}
-                    </div>
-                  )}
+                <Image
+                  src="/logo.png"
+                  alt="XAI Finance"
+                  width={logoSize}
+                  height={logoSize}
+                  className="object-cover"
+                />
+              </div>
+            </Link>
+          )}
+          
+          {/* 搜索输入框 */}
+          <div className="relative flex-grow">
+            <Input
+              type="text"
+              placeholder={placeholder}
+              className={cn(
+                "w-full h-8 pl-8 pr-4 text-sm rounded-xl border-0 bg-transparent",
+                "transition-all duration-300 placeholder:text-muted-foreground/60",
+                "focus:ring-0 focus:outline-none"
+              )}
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              onKeyDown={handleKeyDown}
+              onFocus={() => setShowResults(true)}
+            />
+            <Search className={cn(
+              "absolute left-2.5 top-2 w-3.5 h-3.5 transition-colors duration-300",
+              searchValue ? "text-xai-purple" : "text-muted-foreground"
+            )} />
+            
+            {/* 搜索状态指示器 */}
+            {isSearching && (
+              <div className="absolute right-2.5 top-2">
+                <div className="w-3.5 h-3.5 border-2 border-xai-purple border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
+          </div>
+          
+          {/* 搜索结果下拉框 */}
+          {showResults && (
+            <div 
+              ref={searchResultsRef} 
+              className={cn(
+                "absolute left-0 right-0 mt-1 max-h-96 overflow-y-auto rounded-md shadow-lg z-50 animate-fade-in",
+                isDark 
+                  ? "bg-card border border-border/70" 
+                  : "bg-card border border-border/40"
+              )}
+              style={{ marginLeft: showLogo ? `${logoSize + 12}px` : '0' }}
+            >
+              {isSearching ? (
+                <div className="p-4 text-center text-sm">
+                  <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full inline-block mr-2"></div>
+                  搜索中...
                 </div>
-                <div className="flex-grow">
-                  <div className="font-medium">{token.symbol}</div>
-                  <div className="text-xs text-muted-foreground truncate max-w-[120px]">
-                    {token.name} • {token.chain.toUpperCase()}
+              ) : searchResults.length > 0 ? (
+                searchResults.map((token, index) => (
+                  <div
+                    key={index}
+                    className={cn(
+                      "p-3 flex items-center gap-3 text-sm cursor-pointer transition-colors",
+                      "border-b last:border-0",
+                      isDark 
+                        ? "border-border/30 hover:bg-muted/50" 
+                        : "border-border/20 hover:bg-secondary/70",
+                    )}
+                    onClick={() => handleTokenSelect(token)}
+                  >
+                    <div className="relative w-9 h-9 rounded-full overflow-hidden bg-muted flex-shrink-0 shadow-sm">
+                      {token.logo_url && token.logo_url.trim() !== '' ? (
+                        <Image
+                          src={token.logo_url}
+                          alt={token.symbol || 'Token'}
+                          fill
+                          className="object-cover transition-transform hover:scale-110"
+                          style={{ transition: "transform 0.2s ease" }}
+                          onError={(e) => {
+                            // Replace with placeholder image on error
+                            (e.target as HTMLImageElement).src = "/images/token-placeholder.png";
+                          }}
+                        />
+                      ) : (
+                        <div className={cn(
+                          "w-full h-full flex items-center justify-center text-xs font-medium text-white",
+                          `bg-gradient-to-br ${
+                            index % 5 === 0 ? "from-pink-500 to-rose-500" :
+                            index % 5 === 1 ? "from-blue-500 to-indigo-500" :
+                            index % 5 === 2 ? "from-green-500 to-emerald-500" :
+                            index % 5 === 3 ? "from-amber-500 to-orange-500" :
+                            "from-purple-500 to-fuchsia-500"
+                          }`
+                        )}>
+                          {token.symbol?.charAt(0) || '?'}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-grow">
+                      <div className="font-medium">{token.symbol}</div>
+                      <div className="text-xs text-muted-foreground truncate max-w-[120px]">
+                        {token.name} • {token.chain.toUpperCase()}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xs font-medium">
+                        ${typeof token.current_price_usd === 'string' 
+                          ? parseFloat(token.current_price_usd).toFixed(6) 
+                          : (token.current_price_usd || 0).toFixed(6)}
+                      </div>
+                      {token.price_change_24h && (
+                        <div className={cn(
+                          "text-xs px-2 py-0.5 rounded-full mt-1 inline-block",
+                          parseFloat(String(token.price_change_24h)) >= 0 
+                            ? 'text-emerald-500 bg-emerald-500/10' 
+                            : 'text-rose-500 bg-rose-500/10'
+                        )}>
+                          {parseFloat(String(token.price_change_24h)) >= 0 ? '+' : ''}
+                          {parseFloat(String(token.price_change_24h)).toFixed(2)}%
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))
+              ) : searchValue.trim() ? (
+                <div className="p-6 text-center">
+                  <div className="text-muted-foreground mb-1">未找到相关代币</div>
+                  <div className="text-xs text-muted-foreground/70">
+                    请尝试其他关键词或代币地址
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="text-xs font-medium">
-                    ${typeof token.current_price_usd === 'string' 
-                      ? parseFloat(token.current_price_usd).toFixed(6) 
-                      : (token.current_price_usd || 0).toFixed(6)}
-                  </div>
-                  {token.price_change_24h && (
-                    <div className={cn(
-                      "text-xs px-2 py-0.5 rounded-full mt-1 inline-block",
-                      parseFloat(String(token.price_change_24h)) >= 0 
-                        ? 'text-emerald-500 bg-emerald-500/10' 
-                        : 'text-rose-500 bg-rose-500/10'
-                    )}>
-                      {parseFloat(String(token.price_change_24h)) >= 0 ? '+' : ''}
-                      {parseFloat(String(token.price_change_24h)).toFixed(2)}%
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))
-          ) : searchValue.trim() ? (
-            <div className="p-6 text-center">
-              <div className="text-muted-foreground mb-1">未找到相关代币</div>
-              <div className="text-xs text-muted-foreground/70">
-                请尝试其他关键词或代币地址
-              </div>
+              ) : null}
             </div>
-          ) : null}
+          )}
         </div>
       )}
     </div>

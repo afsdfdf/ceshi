@@ -10,7 +10,7 @@
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
+    --primary: 262 83% 58%;
     --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 96%;
     --secondary-foreground: 222.2 84% 4.9%;
@@ -22,30 +22,58 @@
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
+    --ring: 262 83% 58%;
     --radius: 0.75rem;
+    
+    /* XAI主题色彩变量 */
+    --xai-primary: 262 83% 58%;      /* 主紫色 */
+    --xai-secondary: 193 95% 68%;    /* 青色 */
+    --xai-accent: 142 76% 36%;       /* 绿色 */
+    --xai-warning: 38 92% 50%;       /* 橙色 */
+    --xai-pink: 330 81% 60%;         /* 粉色 */
+    
+    /* 背景色彩层次 */
+    --bg-primary: 0 0% 100%;
+    --bg-secondary: 240 10% 98%;
+    --bg-tertiary: 240 10% 96%;
+    --bg-quaternary: 240 15% 94%;
+    --bg-quinary: 262 20% 92%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 217.2 32.6% 17.5%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 84% 4.9%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 94.1%;
+    --background: 224 71% 4%;
+    --foreground: 213 31% 91%;
+    --card: 224 71% 4%;
+    --card-foreground: 213 31% 91%;
+    --popover: 224 71% 4%;
+    --popover-foreground: 213 31% 91%;
+    --primary: 262 83% 58%;
+    --primary-foreground: 224 71% 4%;
+    --secondary: 215 28% 17%;
+    --secondary-foreground: 213 31% 91%;
+    --muted: 215 28% 17%;
+    --muted-foreground: 217 11% 65%;
+    --accent: 215 28% 17%;
+    --accent-foreground: 213 31% 91%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 213 31% 91%;
+    --border: 215 28% 17%;
+    --input: 215 28% 17%;
+    --ring: 262 83% 58%;
+    
+    /* 深色主题XAI色彩变量 */
+    --xai-primary: 262 83% 58%;
+    --xai-secondary: 193 95% 68%;
+    --xai-accent: 142 76% 36%;
+    --xai-warning: 38 92% 50%;
+    --xai-pink: 330 81% 60%;
+    
+    /* 深色背景色彩层次 */
+    --bg-primary: 224 71% 4%;
+    --bg-secondary: 215 28% 8%;
+    --bg-tertiary: 215 32% 12%;
+    --bg-quaternary: 215 35% 16%;
+    --bg-quinary: 262 40% 20%;
   }
 }
 
@@ -54,148 +82,333 @@
     @apply border-border;
   }
   
-  /* 强制设置body背景 - 浅色主题 */
+  /* 优化的动态渐变背景 - 浅色主题 */
   body {
     @apply text-foreground;
-    background: linear-gradient(135deg, #faf7ff 0%, #f3f0ff 25%, #e9e2ff 50%, #f3f0ff 75%, #faf7ff 100%) !important;
+    background: linear-gradient(-45deg, 
+      hsl(var(--bg-primary)), 
+      hsl(var(--bg-secondary)), 
+      hsl(var(--bg-tertiary)), 
+      hsl(var(--bg-quaternary)), 
+      hsl(var(--bg-quinary))
+    ) !important;
+    background-size: 400% 400% !important;
     background-attachment: fixed !important;
     min-height: 100vh !important;
+    animation: gradient-flow 20s ease infinite !important;
   }
   
-  /* 强制设置body背景 - 深色主题 */
+  /* 优化的动态渐变背景 - 深色主题 */
   .dark body {
-    background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 25%, #16213e 50%, #1a1a2e 75%, #0f0f23 100%) !important;
+    background: linear-gradient(-45deg, 
+      hsl(var(--bg-primary)), 
+      hsl(var(--bg-secondary)), 
+      hsl(var(--bg-tertiary)), 
+      hsl(var(--bg-quaternary)), 
+      hsl(var(--bg-quinary))
+    ) !important;
+    background-size: 400% 400% !important;
     background-attachment: fixed !important;
+    animation: gradient-flow 20s ease infinite !important;
   }
 }
 
-/* 基础动画 */
+/* 优化的动态背景动画 */
+@keyframes gradient-flow {
+  0% { background-position: 0% 50%; }
+  20% { background-position: 100% 50%; }
+  40% { background-position: 100% 100%; }
+  60% { background-position: 50% 100%; }
+  80% { background-position: 0% 100%; }
+  100% { background-position: 0% 50%; }
+}
+
 @keyframes gradient-shift {
   0%, 100% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-20px); }
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33% { transform: translateY(-20px) rotate(2deg); }
+  66% { transform: translateY(-10px) rotate(-1deg); }
 }
 
-/* 渐变文字效果 */
+@keyframes pulse-glow {
+  0%, 100% { 
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes drift {
+  0% { transform: translateX(0px) translateY(0px); }
+  25% { transform: translateX(15px) translateY(-10px); }
+  50% { transform: translateX(-8px) translateY(-20px); }
+  75% { transform: translateX(-15px) translateY(-8px); }
+  100% { transform: translateX(0px) translateY(0px); }
+}
+
+/* 优化的渐变文字效果 */
 .gradient-text {
-  background: linear-gradient(45deg, #8b5cf6, #06b6d4, #10b981, #f59e0b) !important;
+  background: linear-gradient(45deg, 
+    hsl(var(--xai-primary)), 
+    hsl(var(--xai-secondary)), 
+    hsl(var(--xai-accent)), 
+    hsl(var(--xai-warning)), 
+    hsl(var(--xai-pink))
+  ) !important;
   background-size: 300% 300% !important;
   -webkit-background-clip: text !important;
   -webkit-text-fill-color: transparent !important;
   background-clip: text !important;
-  animation: gradient-shift 4s ease-in-out infinite !important;
+  animation: gradient-shift 6s ease-in-out infinite !important;
 }
 
-/* 背景装饰 */
+/* 动态背景装饰层 */
 .bg-decoration {
   position: fixed !important;
   pointer-events: none !important;
   z-index: -1 !important;
+  filter: blur(1px) !important;
 }
 
+/* 主要装饰球 - 优化的紫色系 */
 .bg-decoration-1 {
-  top: 10% !important;
+  top: 15% !important;
   left: 10% !important;
+  width: 400px !important;
+  height: 400px !important;
+  background: radial-gradient(circle, 
+    hsla(var(--xai-primary), 0.4) 0%, 
+    hsla(var(--xai-primary), 0.2) 40%, 
+    transparent 70%
+  ) !important;
+  border-radius: 50% !important;
+  animation: float 15s ease-in-out infinite, pulse-glow 10s ease-in-out infinite !important;
+}
+
+/* 次要装饰球 - 优化的青色系 */
+.bg-decoration-2 {
+  top: 50% !important;
+  right: 10% !important;
   width: 300px !important;
   height: 300px !important;
-  background: radial-gradient(circle, rgba(139, 92, 246, 0.3) 0%, transparent 70%) !important;
+  background: radial-gradient(circle, 
+    hsla(var(--xai-secondary), 0.4) 0%, 
+    hsla(var(--xai-secondary), 0.2) 40%, 
+    transparent 70%
+  ) !important;
   border-radius: 50% !important;
-  animation: float 8s ease-in-out infinite !important;
+  animation: float 12s ease-in-out infinite reverse, drift 18s ease-in-out infinite !important;
 }
 
-.bg-decoration-2 {
-  top: 60% !important;
-  right: 15% !important;
-  width: 200px !important;
-  height: 200px !important;
-  background: radial-gradient(circle, rgba(6, 182, 212, 0.3) 0%, transparent 70%) !important;
-  border-radius: 50% !important;
-  animation: float 6s ease-in-out infinite reverse !important;
-}
-
+/* 第三装饰球 - 优化的绿色系 */
 .bg-decoration-3 {
-  bottom: 20% !important;
-  left: 50% !important;
+  bottom: 25% !important;
+  left: 45% !important;
+  width: 350px !important;
+  height: 350px !important;
+  background: radial-gradient(circle, 
+    hsla(var(--xai-accent), 0.4) 0%, 
+    hsla(var(--xai-accent), 0.2) 40%, 
+    transparent 70%
+  ) !important;
+  border-radius: 50% !important;
+  animation: float 18s ease-in-out infinite, pulse-glow 8s ease-in-out infinite delay-2s !important;
+}
+
+/* 第四装饰球 - 优化的橙色系 */
+.bg-decoration-4 {
+  top: 70% !important;
+  left: 20% !important;
   width: 250px !important;
   height: 250px !important;
-  background: radial-gradient(circle, rgba(16, 185, 129, 0.3) 0%, transparent 70%) !important;
+  background: radial-gradient(circle, 
+    hsla(var(--xai-warning), 0.35) 0%, 
+    hsla(var(--xai-warning), 0.15) 40%, 
+    transparent 70%
+  ) !important;
   border-radius: 50% !important;
-  animation: float 10s ease-in-out infinite !important;
+  animation: drift 22s ease-in-out infinite, pulse-glow 12s ease-in-out infinite delay-4s !important;
 }
 
-/* 深色主题下的装饰 */
+/* 第五装饰球 - 优化的粉色系 */
+.bg-decoration-5 {
+  top: 30% !important;
+  right: 35% !important;
+  width: 200px !important;
+  height: 200px !important;
+  background: radial-gradient(circle, 
+    hsla(var(--xai-pink), 0.35) 0%, 
+    hsla(var(--xai-pink), 0.15) 40%, 
+    transparent 70%
+  ) !important;
+  border-radius: 50% !important;
+  animation: float 20s ease-in-out infinite reverse, drift 14s ease-in-out infinite delay-3s !important;
+}
+
+/* 深色主题下的装饰优化 */
 .dark .bg-decoration-1 {
-  background: radial-gradient(circle, rgba(139, 92, 246, 0.2) 0%, transparent 70%) !important;
+  background: radial-gradient(circle, 
+    hsla(var(--xai-primary), 0.25) 0%, 
+    hsla(var(--xai-primary), 0.1) 40%, 
+    transparent 70%
+  ) !important;
 }
 
 .dark .bg-decoration-2 {
-  background: radial-gradient(circle, rgba(6, 182, 212, 0.2) 0%, transparent 70%) !important;
+  background: radial-gradient(circle, 
+    hsla(var(--xai-secondary), 0.25) 0%, 
+    hsla(var(--xai-secondary), 0.1) 40%, 
+    transparent 70%
+  ) !important;
 }
 
 .dark .bg-decoration-3 {
-  background: radial-gradient(circle, rgba(16, 185, 129, 0.2) 0%, transparent 70%) !important;
+  background: radial-gradient(circle, 
+    hsla(var(--xai-accent), 0.25) 0%, 
+    hsla(var(--xai-accent), 0.1) 40%, 
+    transparent 70%
+  ) !important;
 }
 
-/* 卡片效果 */
+.dark .bg-decoration-4 {
+  background: radial-gradient(circle, 
+    hsla(var(--xai-warning), 0.2) 0%, 
+    hsla(var(--xai-warning), 0.08) 40%, 
+    transparent 70%
+  ) !important;
+}
+
+.dark .bg-decoration-5 {
+  background: radial-gradient(circle, 
+    hsla(var(--xai-pink), 0.2) 0%, 
+    hsla(var(--xai-pink), 0.08) 40%, 
+    transparent 70%
+  ) !important;
+}
+
+/* 装饰球混合模式优化 */
+.bg-decoration-1, .bg-decoration-2, .bg-decoration-3, .bg-decoration-4, .bg-decoration-5 {
+  mix-blend-mode: multiply;
+}
+
+.dark .bg-decoration-1, 
+.dark .bg-decoration-2, 
+.dark .bg-decoration-3, 
+.dark .bg-decoration-4, 
+.dark .bg-decoration-5 {
+  mix-blend-mode: screen;
+}
+
+/* 优化的卡片悬停效果 */
 .card-hover {
-  transition: all 0.3s ease !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .card-hover:hover {
-  transform: translateY(-4px) !important;
-  box-shadow: 0 20px 40px rgba(139, 92, 246, 0.2) !important;
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px hsla(var(--xai-primary), 0.15);
 }
 
 .dark .card-hover:hover {
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3) !important;
+  box-shadow: 0 20px 40px hsla(var(--xai-primary), 0.25);
 }
 
-/* 按钮效果 */
+/* 优化的按钮光晕效果 */
 .btn-glow {
-  position: relative !important;
-  overflow: hidden !important;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
 }
 
 .btn-glow::before {
-  content: "" !important;
-  position: absolute !important;
-  top: 0 !important;
-  left: -100% !important;
-  width: 100% !important;
-  height: 100% !important;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent) !important;
-  transition: left 0.5s !important;
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent, 
+    hsla(var(--xai-primary), 0.4), 
+    transparent
+  );
+  transition: left 0.5s;
 }
 
 .btn-glow:hover::before {
-  left: 100% !important;
+  left: 100%;
 }
 
-/* 响应式 */
-@media (max-width: 768px) {
-  .bg-decoration {
-    display: none !important;
+.btn-glow:hover {
+  box-shadow: 0 0 20px hsla(var(--xai-primary), 0.5);
+  transform: translateY(-2px);
+}
+
+/* 响应式优化 */
+@media (max-width: 1024px) {
+  .bg-decoration-4, .bg-decoration-5 {
+    opacity: 0.7;
+  }
+  
+  .bg-decoration-1, .bg-decoration-2, .bg-decoration-3 {
+    width: 80%;
+    height: 80%;
   }
 }
 
-/* 滚动条 */
+@media (max-width: 768px) {
+  .bg-decoration {
+    opacity: 0.5;
+  }
+  
+  body {
+    animation-duration: 25s !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .bg-decoration-2, .bg-decoration-3 {
+    display: none;
+  }
+  
+  .bg-decoration-1 {
+    width: 200px !important;
+    height: 200px !important;
+    top: 20% !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+  }
+}
+
+/* 优化的滚动条样式 */
 ::-webkit-scrollbar {
   width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(139, 92, 246, 0.1);
+  background: hsl(var(--bg-secondary));
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(45deg, #8b5cf6, #06b6d4);
+  background: linear-gradient(180deg, 
+    hsl(var(--xai-primary)), 
+    hsl(var(--xai-secondary))
+  );
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(45deg, #7c3aed, #0891b2);
+  background: linear-gradient(180deg, 
+    hsl(var(--xai-secondary)), 
+    hsl(var(--xai-primary))
+  );
 }

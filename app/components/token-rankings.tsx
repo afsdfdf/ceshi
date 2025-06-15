@@ -8,6 +8,7 @@ import { AlertCircle } from "lucide-react"
 import TopicSelector from "./tokens/topic-selector"
 import TokensTable from "./tokens/tokens-table"
 import LoadingState from "./tokens/loading-state"
+import ErrorDisplay from "./ErrorDisplay"
 
 interface TokenRankingsProps {
   darkMode: boolean;
@@ -52,13 +53,13 @@ export default function TokenRankings({
     ? topics.filter(topic => ['hot', 'meme', 'new', 'bsc', 'solana'].includes(topic.id))
     : topics;
 
-  // 计算基本样式 - 响应式设计
+  // 计算基本样式 - 响应式设计，透明背景
   const cardStyle = {
     padding: "12px 0", // 移除左右padding，让内容贴边
     border: "none", // 移除边框
     borderRadius: "0", // 移除圆角
     overflow: "hidden",
-    background: darkMode ? "#111" : "#fff"
+    background: "transparent" // 设置为透明背景
   };
   
   const warningStyle = {
@@ -83,29 +84,18 @@ export default function TokenRankings({
   if (error && tokens.length === 0) {
     return (
       <div style={{
-        padding: "24px",
-        textAlign: "center",
-        border: "1px solid " + (darkMode ? "#333" : "#eee"),
+        padding: "12px",
+        border: "1px solid " + (darkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"),
         borderRadius: "8px",
-        background: darkMode ? "#111" : "#fff"
+        background: "transparent",
+        backdropFilter: "blur(10px)"
       }}>
-        <div style={{color: "#ef4444", marginBottom: "8px"}}>加载失败</div>
-        <div style={{fontSize: "14px", color: darkMode ? "#aaa" : "#777", marginBottom: "16px"}}>
-          {error}
-        </div>
-        <button 
-          style={{
-            background: "none",
-            border: "1px solid " + (darkMode ? "#333" : "#ddd"),
-            borderRadius: "16px",
-            padding: "4px 12px",
-            fontSize: "14px",
-            cursor: "pointer"
-          }}
-          onClick={() => refresh()}
-        >
-          重试
-        </button>
+        <ErrorDisplay 
+          error={error}
+          onRetry={refresh}
+          isRetrying={isLoading}
+          variant="card"
+        />
       </div>
     )
   }

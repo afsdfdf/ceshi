@@ -75,13 +75,13 @@ function TokensTable({
     }
   };
 
-  // 基础样式 - 响应式设计，手机模式下无边框
+  // 基础样式 - 响应式设计，手机模式下无边框，透明背景
   const tableStyle: CSSProperties = {
     width: "100%",
     border: "none", // 移除边框
     borderRadius: "0", // 移除圆角
     overflow: "hidden",
-    background: darkMode ? "#111" : "#fff"
+    background: "transparent" // 设置为透明背景
   };
   
   const headerStyle: CSSProperties = {
@@ -91,8 +91,9 @@ function TokensTable({
     padding: "6px 12px",
     fontSize: "10px",
     fontWeight: "bold",
-    borderBottom: "1px solid " + (darkMode ? "#333" : "#eee"),
-    background: darkMode ? "#222" : "#f5f5f5"
+    borderBottom: "1px solid " + (darkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"),
+    background: darkMode ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)",
+    backdropFilter: "blur(10px)"
   };
   
   const tokenListStyle: CSSProperties = {
@@ -111,13 +112,14 @@ function TokensTable({
   
   const buttonStyle: CSSProperties = {
     background: "none",
-    border: "1px solid " + (darkMode ? "#444" : "#ddd"),
+    border: "1px solid " + (darkMode ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)"),
     borderRadius: "4px",
     padding: "4px 8px",
     fontSize: "12px",
     cursor: "pointer",
     color: darkMode ? "#fff" : "#333",
-    marginLeft: "8px"
+    marginLeft: "8px",
+    backdropFilter: "blur(10px)"
   };
 
   const disabledButtonStyle: CSSProperties = {
@@ -146,9 +148,11 @@ function TokensTable({
     justifyContent: "space-between",
     alignItems: "center",
     padding: "8px 12px",
-    borderTop: "1px solid " + (darkMode ? "#333" : "#eee"),
+    borderTop: "1px solid " + (darkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"),
     fontSize: "12px",
-    color: darkMode ? "#aaa" : "#666"
+    color: darkMode ? "#aaa" : "#666",
+    background: darkMode ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.02)",
+    backdropFilter: "blur(10px)"
   };
 
   return (

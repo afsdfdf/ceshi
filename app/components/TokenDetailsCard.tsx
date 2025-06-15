@@ -28,7 +28,9 @@ export default function TokenDetailsCard({
   const [expanded, setExpanded] = useState(false)
   const [enhancedData, setEnhancedData] = useState<any>(null)
   const [selectedMetricsView, setSelectedMetricsView] = useState<string>("basic")
-  const [apiRequestAttempted, setApiRequestAttempted] = useState(false);
+  const [apiRequestAttempted, setApiRequestAttempted] = useState(false)
+  const [isVisible, setIsVisible] = useState(false)
+  const [hasInitialData, setHasInitialData] = useState(false)
 
   // 用于实现延迟的工具函数
   const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -96,6 +98,25 @@ export default function TokenDetailsCard({
     setEnhancedData(null);
     fetchAllTokenData();
   };
+
+  // 监听地址或链变化，重置状态
+  useEffect(() => {
+    setIsVisible(false)
+    setHasInitialData(false)
+    setApiRequestAttempted(false)
+    setEnhancedData(null)
+  }, [address, chain])
+
+  // 监听tokenDetails变化，控制显示状态
+  useEffect(() => {
+    if (tokenDetails && !hasInitialData) {
+      setHasInitialData(true)
+      // 延迟显示，避免闪烁
+      setTimeout(() => {
+        setIsVisible(true)
+      }, 150)
+    }
+  }, [tokenDetails, hasInitialData])
 
   // 当组件展开时获取增强数据
   useEffect(() => {
@@ -191,26 +212,85 @@ export default function TokenDetailsCard({
     return date.toLocaleDateString();
   }
 
-  if (isLoading) {
-    return null;
-  }
-
   // 获取Logo
   const tokenLogo = getTokenLogo();
 
-  return (
+  // 骨架屏组件
+  const SkeletonCard = () => (
     <Card className={cn(
-      "p-2 w-full overflow-hidden transition-all",
+      "p-2 w-full overflow-hidden transition-all duration-300",
       darkMode ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200"
     )}>
-      {/* Address with copy function */}
+      {/* Address skeleton */}
       <div className="flex items-center gap-1 mb-2">
+        <div className={cn(
+          "h-6 flex-grow rounded animate-pulse",
+          darkMode ? "bg-gray-800" : "bg-gray-200"
+        )} />
+        <div className={cn(
+          "w-6 h-6 rounded animate-pulse",
+          darkMode ? "bg-gray-800" : "bg-gray-200"
+        )} />
+        <div className={cn(
+          "w-6 h-6 rounded animate-pulse",
+          darkMode ? "bg-gray-800" : "bg-gray-200"
+        )} />
+      </div>
+      
+      {/* Metrics skeleton */}
+      <div className="grid grid-cols-4 gap-1">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className={cn(
+            "p-1 rounded animate-pulse",
+            darkMode ? "bg-gray-800" : "bg-gray-200"
+          )}>
+            <div className={cn(
+              "h-3 w-full mb-1 rounded",
+              darkMode ? "bg-gray-700" : "bg-gray-300"
+            )} />
+            <div className={cn(
+              "h-3 w-3/4 rounded",
+              darkMode ? "bg-gray-700" : "bg-gray-300"
+            )} />
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+
+  // 如果正在加载且没有任何数据，显示骨架屏
+  if (isLoading && !hasInitialData) {
+    return <SkeletonCard />;
+  }
+
+  // 如果有初始数据但还在加载中，显示带有加载指示的内容
+  return (
+    <Card className={cn(
+      "p-2 w-full overflow-hidden transition-all duration-500",
+      darkMode ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200",
+      // 平滑的透明度过渡
+      isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2",
+      // 添加变换动画
+      "transform transition-all duration-500 ease-out"
+    )}>
+      {/* Address with copy function */}
+      <div className="flex items-center gap-1 mb-2 relative">
+        {/* 微妙的加载指示器 */}
+        {isLoading && hasInitialData && (
+          <div className={cn(
+            "absolute -top-1 -right-1 w-2 h-2 rounded-full animate-pulse",
+            darkMode ? "bg-blue-400" : "bg-blue-500"
+          )} />
+        )}
+        
         <Button 
           variant="outline" 
           size="sm" 
           className={cn(
-            "text-xs h-6 gap-1 flex-grow justify-between truncate max-w-full",
-            darkMode ? "bg-gray-800 hover:bg-gray-700" : "bg-gray-100 hover:bg-gray-200"
+            "text-xs h-6 gap-1 flex-grow justify-between truncate max-w-full transition-all duration-300",
+            darkMode ? "bg-gray-800 hover:bg-gray-700" : "bg-gray-100 hover:bg-gray-200",
+            // 加载时稍微降低透明度
+            isLoading && hasInitialData ? "opacity-90" : "opacity-100"
           )}
           onClick={copyAddress}
         >
@@ -254,54 +334,62 @@ export default function TokenDetailsCard({
         </Button>
       </div>
       
-      {/* Token Metrics */}
-      <div className="grid grid-cols-3 gap-1">
+      {/* Token Metrics - 单行显示，去除流动性和锁仓比例 */}
+      <div className="grid grid-cols-4 gap-1">
         <div className={cn(
-          "p-1 rounded",
-          darkMode ? "bg-gray-800" : "bg-gray-100"
+          "p-1 rounded transition-all duration-300",
+          darkMode ? "bg-gray-800" : "bg-gray-100",
+          isLoading && hasInitialData ? "animate-pulse" : ""
         )}>
           <div className="text-[8px] text-muted-foreground">交易量</div>
-          <div className="text-[9px] font-medium">${formatNumber(tokenDetails?.volume24h || 0)}</div>
+          <div className={cn(
+            "text-[9px] font-medium transition-all duration-300",
+            isLoading && hasInitialData ? "opacity-70" : "opacity-100"
+          )}>
+            ${formatNumber(tokenDetails?.volume24h || 0)}
+          </div>
         </div>
         
         <div className={cn(
-          "p-1 rounded",
-          darkMode ? "bg-gray-800" : "bg-gray-100"
+          "p-1 rounded transition-all duration-300",
+          darkMode ? "bg-gray-800" : "bg-gray-100",
+          isLoading && hasInitialData ? "animate-pulse" : ""
         )}>
           <div className="text-[8px] text-muted-foreground">市值</div>
-          <div className="text-[9px] font-medium">${formatNumber(tokenDetails?.marketCap || 0)}</div>
+          <div className={cn(
+            "text-[9px] font-medium transition-all duration-300",
+            isLoading && hasInitialData ? "opacity-70" : "opacity-100"
+          )}>
+            ${formatNumber(tokenDetails?.marketCap || 0)}
+          </div>
         </div>
         
         <div className={cn(
-          "p-1 rounded",
-          darkMode ? "bg-gray-800" : "bg-gray-100"
+          "p-1 rounded transition-all duration-300",
+          darkMode ? "bg-gray-800" : "bg-gray-100",
+          isLoading && hasInitialData ? "animate-pulse" : ""
         )}>
           <div className="text-[8px] text-muted-foreground">总供应量</div>
-          <div className="text-[9px] font-medium">{formatNumber(tokenDetails?.totalSupply || 0)}</div>
+          <div className={cn(
+            "text-[9px] font-medium transition-all duration-300",
+            isLoading && hasInitialData ? "opacity-70" : "opacity-100"
+          )}>
+            {formatNumber(tokenDetails?.totalSupply || 0)}
+          </div>
         </div>
         
         <div className={cn(
-          "p-1 rounded",
-          darkMode ? "bg-gray-800" : "bg-gray-100"
+          "p-1 rounded transition-all duration-300",
+          darkMode ? "bg-gray-800" : "bg-gray-100",
+          isLoading && hasInitialData ? "animate-pulse" : ""
         )}>
           <div className="text-[8px] text-muted-foreground">持有人数</div>
-          <div className="text-[9px] font-medium">{formatNumber(tokenDetails?.holders || 0)}</div>
-        </div>
-        
-        <div className={cn(
-          "p-1 rounded",
-          darkMode ? "bg-gray-800" : "bg-gray-100"
-        )}>
-          <div className="text-[8px] text-muted-foreground">流动性</div>
-          <div className="text-[9px] font-medium">${formatNumber(tokenDetails?.lpAmount || 0)}</div>
-        </div>
-        
-        <div className={cn(
-          "p-1 rounded",
-          darkMode ? "bg-gray-800" : "bg-gray-100"
-        )}>
-          <div className="text-[8px] text-muted-foreground">锁仓比例</div>
-          <div className="text-[9px] font-medium">{(tokenDetails?.lockPercent || 0).toFixed(1)}%</div>
+          <div className={cn(
+            "text-[9px] font-medium transition-all duration-300",
+            isLoading && hasInitialData ? "opacity-70" : "opacity-100"
+          )}>
+            {formatNumber(tokenDetails?.holders || 0)}
+          </div>
         </div>
       </div>
 
