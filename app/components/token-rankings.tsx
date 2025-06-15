@@ -53,11 +53,11 @@ export default function TokenRankings({
     ? topics.filter(topic => ['hot', 'meme', 'new', 'bsc', 'solana'].includes(topic.id))
     : topics;
 
-  // 计算基本样式
+  // 计算基本样式 - 响应式设计
   const cardStyle = {
-    padding: "12px",
-    border: "1px solid " + (darkMode ? "#333" : "#eee"),
-    borderRadius: "8px",
+    padding: "12px 0", // 移除左右padding，让内容贴边
+    border: "none", // 移除边框
+    borderRadius: "0", // 移除圆角
     overflow: "hidden",
     background: darkMode ? "#111" : "#fff"
   };

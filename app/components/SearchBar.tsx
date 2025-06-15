@@ -199,19 +199,26 @@ export default function SearchBar({
             type="text"
             placeholder={placeholder}
             className={cn(
-              "w-full h-10 pl-10 rounded-full shadow-sm",
-              "transition-all duration-200 border-opacity-60",
-              "focus:ring-2 focus:ring-primary/30 focus:border-primary/60",
-              isDark 
-                ? "bg-muted/40 border-muted/60 text-foreground" 
-                : "bg-secondary/80 border-border/50 text-foreground"
+              "w-full h-8 pl-8 pr-4 text-sm rounded-xl border-0 bg-transparent",
+              "transition-all duration-300 placeholder:text-muted-foreground/60",
+              "focus:ring-0 focus:outline-none"
             )}
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
             onKeyDown={handleKeyDown}
             onFocus={() => setShowResults(true)}
           />
-          <Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+          <Search className={cn(
+            "absolute left-2.5 top-2 w-3.5 h-3.5 transition-colors duration-300",
+            searchValue ? "text-xai-purple" : "text-muted-foreground"
+          )} />
+          
+          {/* 搜索状态指示器 */}
+          {isSearching && (
+            <div className="absolute right-2.5 top-2">
+              <div className="w-3.5 h-3.5 border-2 border-xai-purple border-t-transparent rounded-full animate-spin" />
+            </div>
+          )}
         </div>
       </div>
       

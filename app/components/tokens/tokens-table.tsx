@@ -75,11 +75,11 @@ function TokensTable({
     }
   };
 
-  // 基础样式
+  // 基础样式 - 响应式设计，手机模式下无边框
   const tableStyle: CSSProperties = {
     width: "100%",
-    border: "1px solid " + (darkMode ? "#333" : "#eee"),
-    borderRadius: "8px",
+    border: "none", // 移除边框
+    borderRadius: "0", // 移除圆角
     overflow: "hidden",
     background: darkMode ? "#111" : "#fff"
   };

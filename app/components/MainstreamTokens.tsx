@@ -148,14 +148,9 @@ export function MainstreamTokens({ darkMode }: MainstreamTokensProps) {
   // 加载状态UI
   if (loading && !token) {
     return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        padding: '12px 8px'
-      }}>
+      <div style={{padding: '12px'}}>
         <div style={{
           width: '100%',
-          maxWidth: 420,
           height: '65px',
           borderRadius: '10px',
           background: darkMode ? '#222' : '#f7f7f7',
@@ -177,14 +172,9 @@ export function MainstreamTokens({ darkMode }: MainstreamTokensProps) {
   // 错误状态UI（仅在没有数据时显示）
   if (error && !token && retryCount >= 3) {
     return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        padding: '12px 8px'
-      }}>
+      <div style={{padding: '12px'}}>
         <div style={{
           width: '100%',
-          maxWidth: 420,
           padding: '10px',
           borderRadius: '10px',
           textAlign: 'center',
@@ -219,13 +209,12 @@ export function MainstreamTokens({ darkMode }: MainstreamTokensProps) {
     return null;
   }
 
-  // 正常状态UI - 更紧凑的布局
+  // 正常状态UI - 响应式布局，手机模式下贴边
   return (
-    <div style={{display: 'flex', justifyContent: 'center', padding: '8px 4px'}}>
+    <div style={{padding: '8px 12px'}}>
       <div
         style={{
           width: '100%',
-          maxWidth: 420,
           padding: '6px 10px',
           border: '1px solid ' + (darkMode ? '#333' : '#eee'),
           borderRadius: '10px',

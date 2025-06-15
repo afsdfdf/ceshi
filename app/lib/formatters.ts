@@ -163,4 +163,63 @@ export const formatUpdatedTime = (date: Date): string => {
     hour: '2-digit',
     minute: '2-digit'
   });
-}; 
+};
+
+/**
+ * 格式化代币价格，特别处理小数价格显示
+ * 当价格低于0.0001时，显示为 0.(N)个0 的格式
+ */
+export function formatTokenPrice(price: number | string): string {
+  const numPrice = typeof price === 'string' ? parseFloat(price) : price;
+  
+  if (isNaN(numPrice) || numPrice === 0) {
+    return '$0.00';
+  }
+  
+  // 如果价格大于等于0.0001，使用常规格式
+  if (numPrice >= 0.0001) {
+    if (numPrice >= 1) {
+      return `$${numPrice.toLocaleString('en-US', { 
+        minimumFractionDigits: 2, 
+        maximumFractionDigits: 6 
+      })}`;
+    } else {
+      return `$${numPrice.toFixed(6)}`;
+    }
+  }
+  
+  // 处理小于0.0001的价格
+  const priceStr = numPrice.toExponential();
+  const [mantissa, exponent] = priceStr.split('e');
+  const exp = parseInt(exponent);
+  
+  if (exp >= -4) {
+    // 如果指数大于等于-4，直接显示小数
+    return `$${numPrice.toFixed(Math.abs(exp) + 2)}`;
+  }
+  
+  // 计算0的个数
+  const zerosCount = Math.abs(exp) - 1;
+  const significantDigits = parseFloat(mantissa).toFixed(2);
+  
+  return `$0.(${zerosCount})${significantDigits.replace('.', '')}`;
+}
+
+/**
+ * 格式化价格变化百分比
+ */
+export function formatPriceChange(change: number | string): {
+  value: string;
+  isPositive: boolean;
+} {
+  const numChange = typeof change === 'string' ? parseFloat(change) : change;
+  
+  if (isNaN(numChange)) {
+    return { value: '0.00%', isPositive: true };
+  }
+  
+  const isPositive = numChange >= 0;
+  const formattedValue = `${isPositive ? '+' : ''}${numChange.toFixed(2)}%`;
+  
+  return { value: formattedValue, isPositive };
+} 

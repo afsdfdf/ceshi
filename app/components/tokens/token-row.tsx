@@ -2,7 +2,7 @@
 
 import React, { memo, CSSProperties, useEffect, useState } from "react";
 import { TokenRanking } from "@/app/types/token";
-import { formatPercentChange } from "@/app/lib/formatters";
+import { formatPercentChange, formatTokenPrice } from "@/app/lib/formatters";
 
 interface TokenRowProps {
   token: TokenRanking;
@@ -27,16 +27,7 @@ function TokenRow({
   const [isClient, setIsClient] = useState(false);
   const [priceChangeColor, setPriceChangeColor] = useState<string>("inherit");
   
-  // 简化的价格格式化 - 移至函数外避免重复创建
-  const formatPrice = (price: number): string => {
-    if (price >= 1) {
-      return "$" + price.toFixed(2);
-    } else if (price >= 0.001) {
-      return "$" + price.toFixed(6);
-    } else {
-      return "$" + price.toFixed(8);
-    }
-  };
+
 
   // 在客户端执行的副作用
   useEffect(() => {
@@ -59,7 +50,7 @@ function TokenRow({
       token.chain.toUpperCase().substring(0, 4);
     
     // 格式化价格和变化百分比
-    const price = formatPrice(token.current_price_usd);
+    const price = formatTokenPrice(token.current_price_usd);
     const change = (token.price_change_24h > 0 ? "+" : "") + 
       token.price_change_24h.toFixed(2) + "%";
     

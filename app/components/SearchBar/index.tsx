@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
-import { Search } from "lucide-react"
+import { Search, Sparkles, Zap } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { useRouter } from "next/navigation"
 import { toast } from "@/components/ui/use-toast"
@@ -25,7 +25,7 @@ interface SearchBarProps {
 }
 
 /**
- * 可复用的搜索栏组件
+ * XAI主题搜索栏组件 - 重制版
  */
 export default function SearchBar({ 
   isDark, 
@@ -41,7 +41,9 @@ export default function SearchBar({
   const [isSearching, setIsSearching] = useState(false)
   const [searchResults, setSearchResults] = useState<TokenPrice[]>([]) 
   const [showResults, setShowResults] = useState(false)
+  const [isFocused, setIsFocused] = useState(false)
   const searchResultsRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
   
   // 添加防抖处理
   const debouncedSearchTerm = useDebounce(searchValue, 400)
@@ -175,58 +177,124 @@ export default function SearchBar({
   }
 
   return (
-    <div className="relative mobile-w-full">
-      <div className="mobile-flex mobile-flex-between">
+    <div className="relative w-full">
+      <div className="flex items-center space-x-3">
         {/* XAI Logo */}
         {showLogo && (
-          <Link href="/" className="flex-shrink-0 mobile-touch-feedback">
+          <Link href="/" className="flex-shrink-0 group">
             <div className={cn(
-              "relative overflow-hidden rounded-full mobile-fade-in",
-              "hover:shadow-md transition-shadow duration-200",
-              "hover:scale-105 transition-transform"
+              "relative overflow-hidden rounded-xl transition-all duration-300",
+              "group-hover:scale-110 group-hover:rotate-3",
+              "bg-gradient-to-r from-xai-purple to-xai-cyan p-1",
+              "shadow-lg group-hover:shadow-xl group-hover:shadow-xai-purple/25"
             )}
-              style={{ width: logoSize, height: logoSize }}
+              style={{ width: logoSize + 8, height: logoSize + 8 }}
             >
-              <LogoBase64 width={logoSize} height={logoSize} className="mobile-w-full mobile-h-full" />
+              <div className="w-full h-full bg-background rounded-lg flex items-center justify-center">
+                <LogoBase64 width={logoSize} height={logoSize} className="transition-transform duration-300" />
+              </div>
             </div>
           </Link>
         )}
         
-        {/* 搜索输入框 */}
-        <div className="relative flex-grow ml-3">
-          <Input
-            type="text"
-            placeholder={placeholder}
-            className={cn(
-              "mobile-input mobile-w-full rounded-full shadow-sm",
-              "transition-all duration-200 border-opacity-60",
-              "focus:ring-2 focus:ring-primary/30 focus:border-primary/60",
-              "pl-10 pr-4 mobile-text-md",
-              isDark 
-                ? "bg-muted/40 border-muted/60 text-foreground" 
-                : "bg-secondary/80 border-border/50 text-foreground"
-            )}
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onFocus={() => setShowResults(true)}
-          />
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 mobile-icon text-muted-foreground" />
+        {/* 搜索输入框容器 */}
+        <div className="relative flex-1">
+          {/* 背景装饰 */}
+          <div className={cn(
+            "absolute inset-0 rounded-2xl transition-all duration-300",
+            isFocused 
+              ? "bg-gradient-to-r from-xai-purple/20 via-xai-cyan/20 to-xai-green/20 blur-sm scale-105" 
+              : "bg-gradient-to-r from-xai-purple/10 via-xai-cyan/10 to-xai-green/10 blur-sm"
+          )} />
+          
+          {/* 主搜索框 */}
+          <div className={cn(
+            "relative backdrop-blur-xl border transition-all duration-300 rounded-2xl",
+            isFocused 
+              ? "border-xai-purple/50 shadow-lg shadow-xai-purple/25" 
+              : "border-border/50",
+            isDark ? "bg-card/70" : "bg-white/70"
+          )}>
+            {/* 搜索图标 */}
+            <div className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10">
+              {isSearching ? (
+                <div className="w-5 h-5 border-2 border-xai-purple border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Search className={cn(
+                  "w-5 h-5 transition-colors duration-300",
+                  isFocused ? "text-xai-purple" : "text-muted-foreground"
+                )} />
+              )}
+            </div>
+            
+            {/* 输入框 */}
+            <Input
+              ref={inputRef}
+              type="text"
+              placeholder={placeholder}
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              onKeyDown={handleKeyDown}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+              className={cn(
+                "pl-12 pr-16 py-4 text-base border-0 bg-transparent",
+                "placeholder:text-muted-foreground/60",
+                "focus:ring-0 focus:outline-none",
+                "transition-all duration-300"
+              )}
+            />
+            
+            {/* 右侧装饰 */}
+            <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
+              {searchValue && (
+                <div className="flex items-center space-x-1">
+                  <Sparkles className="w-4 h-4 text-xai-cyan animate-pulse" />
+                  <Zap className="w-4 h-4 text-xai-green animate-bounce" />
+                </div>
+              )}
+              
+              {/* 搜索按钮 */}
+              <button
+                onClick={() => performSearch(searchValue)}
+                disabled={!searchValue.trim() || isSearching}
+                className={cn(
+                  "px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-300",
+                  "bg-gradient-to-r from-xai-purple to-xai-cyan text-white",
+                  "hover:shadow-lg hover:shadow-xai-purple/25 hover:scale-105",
+                  "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100",
+                  "btn-glow"
+                )}
+              >
+                搜索
+              </button>
+            </div>
+          </div>
+          
+          {/* 搜索结果 */}
+          {showResults && (
+            <div 
+              ref={searchResultsRef}
+              className={cn(
+                "absolute top-full left-0 right-0 mt-2 z-50",
+                "backdrop-blur-xl border border-border/50 rounded-2xl overflow-hidden",
+                "shadow-2xl animate-slide-up",
+                isDark ? "bg-card/90" : "bg-white/90"
+              )}
+            >
+                             <SearchResults
+                 results={searchResults}
+                 isSearching={isSearching}
+                 isDark={isDark}
+                 searchValue={searchValue}
+                 onSelectToken={handleTokenSelect}
+                 showLogo={showLogo}
+                 logoSize={logoSize}
+               />
+            </div>
+          )}
         </div>
       </div>
-      
-      {showResults && (
-        <SearchResults
-          ref={searchResultsRef}
-          results={searchResults}
-          isSearching={isSearching}
-          isDark={isDark}
-          searchValue={searchValue}
-          onSelectToken={handleTokenSelect}
-          showLogo={showLogo}
-          logoSize={logoSize}
-        />
-      )}
     </div>
-  );
+  )
 } 

@@ -8,9 +8,10 @@ import { Toaster } from "@/components/ui/toaster"
 import SplashScreen from './components/splash-screen'
 import BottomNav from './components/BottomNav'
 import TokenRankings from './components/token-rankings'
-import SearchBar from './components/SearchBar/index'
+import SearchBar from './components/SearchBar'
 import Banner from './components/Banner'
 import EthereumProtection from './components/EthereumProtection'
+import LogoBase64 from './components/LogoBase64'
 import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
 import { useThemedBanners } from "./components/DefaultBanners"
@@ -54,44 +55,46 @@ export default function CryptoTracker() {
     }
   }, [pathname])
   
+  // 处理选择代币
+  const handleTokenSelect = (token: any) => {
+    // 导航到代币详情页面
+    if (token && token.chain && token.token) {
+      router.push(`/token/${token.chain}/${token.token}`);
+    }
+  };
+
   // 切换主题
   const toggleTheme = () => {
     setTheme(isDark ? "light" : "dark")
   }
 
   return (
-    <div className={cn(
-      "min-h-screen transition-all duration-300",
-      isDark 
-        ? "bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900" 
-        : "bg-gradient-to-br from-slate-50 via-purple-50/30 to-slate-50"
-    )}>
+    <div className="min-h-screen transition-all duration-300">
       <EthereumProtection />
       
       {/* 背景装饰元素 */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-xai-purple/10 rounded-full blur-3xl animate-float"></div>
-        <div className="absolute top-3/4 right-1/4 w-80 h-80 bg-xai-cyan/10 rounded-full blur-3xl animate-float" style={{animationDelay: '2s'}}></div>
-        <div className="absolute top-1/2 left-3/4 w-64 h-64 bg-xai-green/10 rounded-full blur-3xl animate-float" style={{animationDelay: '4s'}}></div>
-      </div>
+      <div className="bg-decoration bg-decoration-1"></div>
+      <div className="bg-decoration bg-decoration-2"></div>
+      <div className="bg-decoration bg-decoration-3"></div>
 
       {/* 主容器 */}
-      <div className="relative z-10 w-full max-w-7xl mx-auto">
+      <div className="relative z-10 w-full">
         {/* 顶部区域 */}
         <div className="sticky top-0 z-30 backdrop-blur-xl bg-background/80 border-b border-border/50">
-          <div className="px-4 py-3">
+          <div className="px-4 py-1.5 md:max-w-7xl md:mx-auto">
             {/* Logo和标题区域 */}
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-3">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center space-x-2">
+                {/* XAI LOGO */}
                 <div className="relative">
-                  <div className="w-10 h-10 bg-gradient-to-r from-xai-purple to-xai-cyan rounded-xl flex items-center justify-center neon-glow">
-                    <Zap className="w-6 h-6 text-white" />
+                  <div className="w-7 h-7 rounded-lg overflow-hidden shadow-lg">
+                    <LogoBase64 width={28} height={28} className="w-full h-full" />
                   </div>
-                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-xai-green rounded-full animate-pulse"></div>
+                  <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-xai-green rounded-full animate-pulse"></div>
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold gradient-text">XAI Finance</h1>
-                  <p className="text-xs text-muted-foreground">智能加密货币追踪</p>
+                  <h1 className="text-base font-bold gradient-text">XAI Finance</h1>
+                  <p className="text-xs text-muted-foreground leading-none">智能加密货币追踪</p>
                 </div>
               </div>
               
@@ -99,123 +102,72 @@ export default function CryptoTracker() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="rounded-full w-10 h-10 btn-glow"
+                className="rounded-full w-7 h-7 btn-glow"
                 onClick={toggleTheme}
               >
                 {isDark ? (
-                  <Sun className="w-5 h-5 text-xai-orange" />
+                  <Sun className="w-3.5 h-3.5 text-xai-orange" />
                 ) : (
-                  <Moon className="w-5 h-5 text-xai-purple" />
+                  <Moon className="w-3.5 h-3.5 text-xai-purple" />
                 )}
               </Button>
             </div>
             
             {/* 搜索栏区域 */}
             <div className="relative">
-              <SearchBar 
-                isDark={isDark} 
-                showLogo={false}
-                logoSize={40}
-                simplified={true}
-              />
+              <div className="relative">
+                {/* 搜索框背景装饰 */}
+                <div className="absolute inset-0 bg-gradient-to-r from-xai-purple/10 via-xai-cyan/10 to-xai-green/10 rounded-xl blur-sm"></div>
+                
+                {/* 美化的搜索框 */}
+                <div className={cn(
+                  "relative backdrop-blur-sm border rounded-xl transition-all duration-300 h-9",
+                  "hover:border-xai-purple/50 focus-within:border-xai-purple/50 focus-within:shadow-lg focus-within:shadow-xai-purple/25",
+                  isDark ? "bg-card/60 border-border/40" : "bg-white/60 border-border/30"
+                )}>
+                  <SearchBar 
+                    isDark={isDark} 
+                    showLogo={false}
+                    logoSize={40}
+                    simplified={true}
+                    onResultSelect={handleTokenSelect}
+                    placeholder="搜索代币名称或合约地址..."
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
         
         {/* 主要内容区域 */}
-        <div className="px-4 space-y-6">
+        <div className="space-y-6">
           {/* 横幅轮播区域 */}
           <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-xai-purple/20 via-xai-cyan/20 to-xai-green/20 rounded-2xl blur-xl"></div>
-            <div className="relative">
-              <Banner 
-                banners={banners}
-                interval={5000}
-                showArrows={true}
-                showIndicators={true}
-                className={cn(
-                  "overflow-hidden rounded-2xl shadow-2xl card-hover",
-                  isDark ? "shadow-black/20" : "shadow-gray-200/50"
-                )}
-              />
-            </div>
-          </div>
-          
-          {/* 快速统计卡片 */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className={cn(
-              "p-4 rounded-xl card-hover backdrop-blur-sm",
-              isDark ? "bg-card/50 border border-border/50" : "bg-white/70 border border-gray-200/50"
-            )}>
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-xai-green to-xai-cyan rounded-lg flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">热门代币</p>
-                  <p className="text-lg font-bold text-xai-green">+24.5%</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className={cn(
-              "p-4 rounded-xl card-hover backdrop-blur-sm",
-              isDark ? "bg-card/50 border border-border/50" : "bg-white/70 border border-gray-200/50"
-            )}>
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-xai-purple to-xai-pink rounded-lg flex items-center justify-center">
-                  <Star className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">市值排名</p>
-                  <p className="text-lg font-bold text-xai-purple">#1,247</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className={cn(
-              "p-4 rounded-xl card-hover backdrop-blur-sm",
-              isDark ? "bg-card/50 border border-border/50" : "bg-white/70 border border-gray-200/50"
-            )}>
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-xai-cyan to-xai-green rounded-lg flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">新币上线</p>
-                  <p className="text-lg font-bold text-xai-cyan">156</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className={cn(
-              "p-4 rounded-xl card-hover backdrop-blur-sm",
-              isDark ? "bg-card/50 border border-border/50" : "bg-white/70 border border-gray-200/50"
-            )}>
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-xai-orange to-xai-pink rounded-lg flex items-center justify-center">
-                  <Zap className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">活跃度</p>
-                  <p className="text-lg font-bold text-xai-orange">98.7%</p>
+            <div className="md:px-4">
+              <div className="md:max-w-7xl md:mx-auto">
+                <div className="absolute inset-0 bg-gradient-to-r from-xai-purple/20 via-xai-cyan/20 to-xai-green/20 md:rounded-2xl blur-xl"></div>
+                <div className="relative">
+                  <Banner 
+                    banners={banners}
+                    interval={5000}
+                    showArrows={true}
+                    showIndicators={true}
+                    className={cn(
+                      "overflow-hidden md:rounded-2xl shadow-2xl card-hover",
+                      isDark ? "shadow-black/20" : "shadow-gray-200/50"
+                    )}
+                  />
                 </div>
               </div>
             </div>
           </div>
           
-          {/* 代币排行榜区域 */}
+          {/* 代币排行榜区域 - 手机模式下无边距 */}
           <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-xai-purple/5 via-transparent to-xai-cyan/5 rounded-2xl"></div>
-            <div className="relative">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold gradient-text">实时代币排行</h2>
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-xai-green rounded-full animate-pulse"></div>
-                  <span className="text-sm text-muted-foreground">实时更新</span>
-                </div>
+            <div className="md:px-4">
+              <div className="md:max-w-7xl md:mx-auto">
+                <TokenRankings darkMode={isDark} mode="homepage" itemsPerPage={50} />
               </div>
-              <TokenRankings darkMode={isDark} mode="homepage" itemsPerPage={50} />
             </div>
           </div>
         </div>

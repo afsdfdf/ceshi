@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Moon, Sun } from "lucide-react"
+import { Moon, Sun, Zap } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import BottomNav from "@/app/components/BottomNav"
@@ -11,6 +11,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
 import SearchBar from "@/app/components/SearchBar"
+import LogoBase64 from "@/app/components/LogoBase64"
 
 export default function MarketPage() {
   const router = useRouter()
@@ -31,49 +32,96 @@ export default function MarketPage() {
   };
 
   return (
-    <div className={cn(
-      "min-h-screen pb-16",
-      isDark ? "bg-[#0b101a] text-white" : "bg-white text-foreground"
-    )}>
+    <div className="min-h-screen transition-all duration-300">
       <EthereumProtection />
-      <div className="max-w-md mx-auto">
-        {/* 搜索部分 */}
-        <div className="p-4 pb-2 pt-6">
-          <SearchBar 
-            isDark={isDark} 
-            showLogo={true}
-            logoSize={40}
-            simplified={true}
-            onResultSelect={handleTokenSelect}
-            placeholder="搜索代币名称或合约地址 (例如: eth:0x123...)"
-          />
-        </div>
+      
+      {/* 背景装饰元素 */}
+      <div className="bg-decoration bg-decoration-1"></div>
+      <div className="bg-decoration bg-decoration-2"></div>
+      <div className="bg-decoration bg-decoration-3"></div>
 
-        {/* 代币主题模块 */}
-        <div className="p-4 pt-0 relative">
-          {/* 主题内容与排行榜 */}
-          <TokenRankings darkMode={isDark} mode="market" itemsPerPage={50} />
+      {/* 主容器 */}
+      <div className="relative z-10 w-full">
+        {/* 顶部区域 */}
+        <div className="sticky top-0 z-30 backdrop-blur-xl bg-background/80 border-b border-border/50">
+          <div className="px-4 py-1.5 md:max-w-7xl md:mx-auto">
+            {/* Logo和标题区域 */}
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center space-x-2">
+                {/* XAI LOGO */}
+                <div className="relative">
+                  <div className="w-7 h-7 rounded-lg overflow-hidden shadow-lg">
+                    <LogoBase64 width={28} height={28} className="w-full h-full" />
+                  </div>
+                  <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-xai-green rounded-full animate-pulse"></div>
+                </div>
+                <div>
+                  <h1 className="text-base font-bold gradient-text">XAI Finance</h1>
+                  <p className="text-xs text-muted-foreground leading-none">智能加密货币追踪</p>
+                </div>
+              </div>
+              
+              {/* 主题切换按钮 */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-full w-7 h-7 btn-glow"
+                onClick={toggleTheme}
+              >
+                {isDark ? (
+                  <Sun className="w-3.5 h-3.5 text-xai-orange" />
+                ) : (
+                  <Moon className="w-3.5 h-3.5 text-xai-purple" />
+                )}
+              </Button>
+            </div>
+            
+            {/* 搜索栏区域 */}
+            <div className="relative">
+              <div className="relative">
+                {/* 搜索框背景装饰 */}
+                <div className="absolute inset-0 bg-gradient-to-r from-xai-purple/10 via-xai-cyan/10 to-xai-green/10 rounded-xl blur-sm"></div>
+                
+                {/* 美化的搜索框 */}
+                <div className={cn(
+                  "relative backdrop-blur-sm border rounded-xl transition-all duration-300 h-9",
+                  "hover:border-xai-purple/50 focus-within:border-xai-purple/50 focus-within:shadow-lg focus-within:shadow-xai-purple/25",
+                  isDark ? "bg-card/60 border-border/40" : "bg-white/60 border-border/30"
+                )}>
+                  <SearchBar 
+                    isDark={isDark} 
+                    showLogo={false}
+                    logoSize={40}
+                    simplified={true}
+                    onResultSelect={handleTokenSelect}
+                    placeholder="搜索代币名称或合约地址..."
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-
-        {/* 主题开关 */}
-        <div className="absolute top-6 right-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="rounded-full w-8 h-8"
-            onClick={toggleTheme}
-          >
-            {isDark ? (
-              <Sun className="h-4 w-4" />
-            ) : (
-              <Moon className="h-4 w-4" />
-            )}
-          </Button>
+        
+        {/* 主要内容区域 */}
+        <div className="space-y-6">
+          {/* 代币排行榜区域 - 手机模式下无边距 */}
+          <div className="relative">
+            <div className="md:px-4">
+              <div className="md:max-w-7xl md:mx-auto">
+                <TokenRankings darkMode={isDark} mode="market" itemsPerPage={50} />
+              </div>
+            </div>
+          </div>
         </div>
-
-        {/* 底部导航 */}
-        <BottomNav darkMode={isDark} />
+        
+        {/* 底部间距 */}
+        <div className="h-20"></div>
       </div>
+      
+      {/* 底部导航 */}
+      <BottomNav currentTab="market" isDark={isDark} />
+      
+      {/* Toast通知组件 */}
       <Toaster />
     </div>
   )
