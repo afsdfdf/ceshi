@@ -89,7 +89,7 @@ export default function TokenDetailPage() {
             }
           }
         } catch (error) {
-          console.error("快速查询代币失败:", error);
+          // 快速查询代币失败: ${error}
         }
       };
       
@@ -123,7 +123,7 @@ export default function TokenDetailPage() {
         try {
           const details = await getTokenDetails(address, blockchain)
           
-          console.log("获取到的代币详情:", details);
+          // 获取到的代币详情: ${details}
           setTokenDetails(details)
           
           // 直接使用API返回的数据，确保各个字段被正确设置
@@ -155,11 +155,11 @@ export default function TokenDetailPage() {
             
             if (logoUrl && logoUrl.trim() !== '') {
               setCurrentTokenLogo(logoUrl);
-              console.log("设置代币Logo URL:", logoUrl);
+              // 设置代币Logo URL: ${logoUrl}
             }
           }
         } catch (error) {
-          console.error("获取代币详情失败:", error)
+          // 获取代币详情失败: ${error}
           toast({
             title: "获取详情失败",
             description: "无法加载代币详情，请稍后再试",

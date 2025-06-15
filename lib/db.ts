@@ -18,7 +18,7 @@ let client: MongoClient;
 let clientPromise: Promise<MongoClient>;
 
 if (!process.env.MONGODB_URI) {
-  console.warn('请在.env.local文件中设置MONGODB_URI环境变量。目前使用默认本地连接。');
+  // 警告：请在.env.local文件中设置MONGODB_URI环境变量。目前使用默认本地连接。
 }
 
 if (process.env.NODE_ENV === 'development') {
@@ -53,9 +53,9 @@ export const searchDB = {
         address,
         timestamp: new Date()
       });
-      console.log(`Recorded search for ${chain}:${address}`);
+      // Recorded search for ${chain}:${address}
     } catch (error) {
-      console.error('Error recording search:', error);
+      // Error recording search: ${error}
     }
   }
 };

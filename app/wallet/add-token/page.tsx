@@ -50,7 +50,7 @@ export default function AddTokenPage() {
             const accounts = await window.ethereum.request({ method: 'eth_accounts' })
             setIsConnected(accounts && accounts.length > 0)
           } catch (error) {
-            console.error("Failed to check wallet connection:", error)
+            // Failed to check wallet connection: ${error}
           }
         }
       }
@@ -124,7 +124,7 @@ export default function AddTokenPage() {
         })
       }
     } catch (error) {
-      console.error("添加代币错误:", error)
+      // 添加代币错误: ${error}
       toast({
         title: "添加失败",
         description: "无法添加代币到钱包",

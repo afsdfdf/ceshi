@@ -68,7 +68,7 @@ export default function LoginPage() {
       router.push('/chat')
       
     } catch (error: any) {
-      console.error('登录失败:', error)
+      // 登录失败: ${error}
       setLoginError('登录失败，邮箱或密码错误')
     } finally {
       setLoginLoading(false)
@@ -110,11 +110,11 @@ export default function LoginPage() {
       })
       
       if (authError) {
-        console.error('身份验证错误:', authError)
+        // 身份验证错误: ${authError}
         throw new Error(authError.message)
       }
       
-      console.log('用户注册成功:', data)
+      // 用户注册成功: ${data}
       
       // 2. 如果认证成功，创建用户资料
       if (data && data.user) {
@@ -128,13 +128,13 @@ export default function LoginPage() {
           })
           
           if (profileError) {
-            console.error('创建用户资料失败:', profileError)
+            // 创建用户资料失败: ${profileError}
             // 不抛出错误，用户已创建成功，可以登录
           } else {
-            console.log('用户资料创建成功')
+            // 用户资料创建成功
           }
         } catch (profileException) {
-          console.error('创建资料异常:', profileException)
+          // 创建资料异常: ${profileException}
           // 继续执行，不中断流程
         }
         
@@ -145,19 +145,19 @@ export default function LoginPage() {
             data: { username: regUsername }
           })
         } catch (updateError) {
-          console.error('更新用户数据失败:', updateError)
+          // 更新用户数据失败: ${updateError}
         }
         
         // 4. 完成后跳转
         router.push('/chat')
       } else {
         // 如果没有用户数据但也没有错误，可能是Supabase的确认邮件功能
-        console.log('注册成功，但可能需要邮箱验证')
+        // 注册成功，但可能需要邮箱验证
         setRegError('注册邮件已发送，请检查邮箱并确认注册')
       }
       
     } catch (error: any) {
-      console.error('注册失败详细信息:', error)
+      // 注册失败详细信息: ${error}
       if (error.message.includes('User already registered')) {
         setRegError('该邮箱已注册，请直接登录或使用其他邮箱')
       } else if (error.message.includes('Password')) {

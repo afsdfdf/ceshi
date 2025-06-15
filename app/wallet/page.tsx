@@ -42,7 +42,7 @@ export default function WalletPage() {
             handleAccountsChanged(accounts)
           }
         } catch (error) {
-          console.error("获取账户失败:", error)
+          // 获取账户失败: ${error}
         }
       }
     }
@@ -67,7 +67,7 @@ export default function WalletPage() {
       const chainId = await window.ethereum?.request({ method: 'eth_chainId' })
       setChainId(chainId || null)
     } catch (error) {
-      console.error("获取链ID失败:", error)
+              // 获取链ID失败: ${error}
     }
     
     // 获取余额
@@ -83,7 +83,7 @@ export default function WalletPage() {
         setBalance(ethBalance.toFixed(4))
       }
     } catch (error) {
-      console.error("获取余额失败:", error)
+              // 获取余额失败: ${error}
     }
   }
 
@@ -115,7 +115,7 @@ export default function WalletPage() {
         description: "您的钱包已成功连接",
       })
     } catch (error) {
-      console.error("连接钱包失败:", error)
+      // 连接钱包失败: ${error}
       toast({
         title: "连接失败",
         description: "无法连接到您的钱包",

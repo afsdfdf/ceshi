@@ -50,7 +50,7 @@ export default function CryptoTracker() {
   useEffect(() => {
     // 路径是 / 表示在首页
     if (pathname === '/') {
-      console.log('Home page visited via navigation')
+      // 首页访问逻辑
     }
   }, [pathname])
   

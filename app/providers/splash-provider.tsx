@@ -55,7 +55,7 @@ export function SplashProvider({ children }: { children: ReactNode }) {
   // Track route changes
   useEffect(() => {
     // This will run on each route change
-    console.log('Route changed, pathname:', pathname)
+    // Route changed, pathname: ${pathname}
     
     // On route changes, we never show splash
     if (showSplash) {

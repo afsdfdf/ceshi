@@ -119,7 +119,7 @@ export default function KLinePage() {
         router.push(`/token/${chain}/${address}`);
       }
     } catch (error) {
-      console.error("搜索错误:", error);
+              // 搜索错误: ${error}
       setSearchResults([]);
       
       // 如果API搜索失败但是输入是合约地址格式，仍然尝试直接跳转

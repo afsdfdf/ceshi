@@ -71,7 +71,7 @@ export default function KLinePage() {
             }
           }
         } catch (error) {
-          console.error("Error fetching token info:", error);
+          // Error fetching token info: ${error}
           setSelectedPair(`${blockchainParam?.toUpperCase() || 'TOKEN'}/PAIR`);
         }
       };
@@ -125,7 +125,7 @@ export default function KLinePage() {
         router.push(`/kline?blockchain=${chain}&address=${address}`);
       }
     } catch (error) {
-      console.error("搜索错误:", error);
+              // 搜索错误: ${error}
       setSearchResults([]);
       
       // 如果API搜索失败但是输入是合约地址格式，仍然尝试直接跳转

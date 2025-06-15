@@ -33,7 +33,7 @@ export async function fetchTrendingTokens(): Promise<{
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error(`API返回错误 (${response.status}):`, errorText)
+      // API返回错误 (${response.status}): ${errorText}
       throw new Error(`API返回错误: ${response.status}`)
     }
 
@@ -41,7 +41,7 @@ export async function fetchTrendingTokens(): Promise<{
     const contentType = response.headers.get("content-type")
     if (!contentType || !contentType.includes("application/json")) {
       const text = await response.text()
-      console.error("API返回非JSON响应:", text.substring(0, 100) + "...")
+      // API返回非JSON响应: ${text.substring(0, 100)}...
       throw new Error("API返回非JSON响应")
     }
 
@@ -58,7 +58,7 @@ export async function fetchTrendingTokens(): Promise<{
       lastUpdated: data.data.lastUpdated || new Date().toISOString(),
     }
   } catch (error) {
-    console.error("获取热门代币数据错误:", error)
+    // 获取热门代币数据错误: ${error}
 
     // 返回模拟数据作为后备，确保UI不会崩溃
     return {
@@ -118,7 +118,7 @@ export function setupRealtimeUpdates(callback: (data: TrendingToken[]) => void):
       const { trending } = await fetchTrendingTokens()
       callback(trending)
     } catch (error) {
-      console.error("实时更新错误:", error)
+      // 实时更新错误: ${error}
     }
   }, 30000) // 每30秒更新一次
 
