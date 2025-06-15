@@ -44,6 +44,12 @@ const config: Config = {
   			border: 'hsl(var(--border))',
   			input: 'hsl(var(--input))',
   			ring: 'hsl(var(--ring))',
+  			// XAI主题色彩
+  			"xai-purple": "#8b5cf6",
+  			"xai-cyan": "#06b6d4",
+  			"xai-pink": "#ec4899",
+  			"xai-green": "#10b981",
+  			"xai-orange": "#f59e0b",
   			chart: {
   				'1': 'hsl(var(--chart-1))',
   				'2': 'hsl(var(--chart-2))',
@@ -89,11 +95,56 @@ const config: Config = {
   				'50%': { width: '100%', marginLeft: '0%' },
   				'100%': { width: '0%', marginLeft: '100%' },
   			},
+  			pulse: {
+  				"0%, 100%": {
+  					opacity: "1",
+  				},
+  				"50%": {
+  					opacity: ".5",
+  				},
+  			},
+  			float: {
+  				"0%, 100%": {
+  					transform: "translateY(0px)",
+  				},
+  				"50%": {
+  					transform: "translateY(-20px)",
+  				},
+  			},
+  			'gradient-shift': {
+  				'0%, 100%': {
+  					'background-position': '0% 50%'
+  				},
+  				'50%': {
+  					'background-position': '100% 50%'
+  				}
+  			},
+  			'rotate-gradient': {
+  				'0%': {
+  					transform: 'rotate(0deg)'
+  				},
+  				'100%': {
+  					transform: 'rotate(360deg)'
+  				}
+  			},
+  			shimmer: {
+  				'0%': {
+  					'background-position': '-200% 0'
+  				},
+  				'100%': {
+  					'background-position': '200% 0'
+  				}
+  			}
   		},
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
   			'accordion-up': 'accordion-up 0.2s ease-out',
   			'loadingBar': 'loadingBar 2s ease-in-out infinite',
+  			pulse: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+  			float: "float 6s ease-in-out infinite",
+  			'gradient-shift': 'gradient-shift 4s ease-in-out infinite',
+  			'rotate-gradient': 'rotate-gradient 8s linear infinite',
+  			shimmer: 'shimmer 2s infinite',
   		}
   	}
   },
