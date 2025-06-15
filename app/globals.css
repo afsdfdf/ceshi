@@ -4,62 +4,73 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    /* 基础系统颜色 - 现代浅色主题 */
+    --background: 240 10% 99%;        /* 极浅的蓝灰色背景 */
+    --foreground: 240 15% 15%;        /* 深蓝灰色文字 */
+    --card: 0 0% 100%;                /* 纯白卡片 */
+    --card-foreground: 240 15% 15%;   /* 深蓝灰色卡片文字 */
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 262 83% 58%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222.2 84% 4.9%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 222.2 84% 4.9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 262 83% 58%;
+    --popover-foreground: 240 15% 15%;
+    --primary: 262 80% 55%;           /* 优雅的紫色主色 */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 15% 96%;         /* 浅蓝灰色次要色 */
+    --secondary-foreground: 240 15% 25%;
+    --muted: 240 10% 95%;             /* 柔和的静音色 */
+    --muted-foreground: 240 10% 45%;
+    --accent: 193 85% 92%;            /* 浅青色强调色 */
+    --accent-foreground: 193 85% 25%;
+    --destructive: 0 75% 55%;         /* 温和的红色 */
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 15% 90%;            /* 柔和的边框色 */
+    --input: 240 10% 97%;             /* 输入框背景 */
+    --ring: 262 80% 55%;              /* 焦点环颜色 */
     --radius: 0.75rem;
     
-    /* XAI主题色彩变量 */
-    --xai-primary: 262 83% 58%;      /* 主紫色 */
-    --xai-secondary: 193 95% 68%;    /* 青色 */
-    --xai-accent: 142 76% 36%;       /* 绿色 */
-    --xai-warning: 38 92% 50%;       /* 橙色 */
-    --xai-pink: 330 81% 60%;         /* 粉色 */
+    /* XAI主题色彩变量 - 优雅现代配色 */
+    --xai-primary: 262 80% 55%;       /* 优雅紫色 - 主品牌色 */
+    --xai-secondary: 193 85% 60%;     /* 清新青色 - 辅助色 */
+    --xai-accent: 142 70% 45%;        /* 自然绿色 - 成功色 */
+    --xai-warning: 35 85% 55%;        /* 温暖橙色 - 警告色 */
+    --xai-pink: 320 75% 65%;          /* 柔和粉色 - 装饰色 */
     
-    /* 背景色彩层次 */
-    --bg-primary: 0 0% 100%;
-    --bg-secondary: 240 10% 98%;
-    --bg-tertiary: 240 10% 96%;
-    --bg-quaternary: 240 15% 94%;
-    --bg-quinary: 262 20% 92%;
+    /* 背景色彩层次 - 渐进式深度 */
+    --bg-primary: 240 10% 99%;        /* 主背景 - 最浅 */
+    --bg-secondary: 240 15% 97%;      /* 次要背景 */
+    --bg-tertiary: 240 20% 95%;       /* 第三层背景 */
+    --bg-quaternary: 240 25% 93%;     /* 第四层背景 */
+    --bg-quinary: 262 30% 91%;        /* 第五层背景 - 带紫色调 */
+    
+    /* 卡片和表单背景 - 精致层次 */
+    --card-bg: 0 0% 100%;             /* 纯白卡片背景 */
+    --form-bg: 240 20% 98%;           /* 表单背景 */
+    --input-bg: 0 0% 100%;            /* 输入框背景 */
+    --border-color: 240 20% 88%;      /* 边框颜色 */
+    --shadow-color: 240 15% 85%;      /* 阴影颜色 */
+    --text-primary: 240 15% 15%;      /* 主要文字 */
+    --text-secondary: 240 10% 40%;    /* 次要文字 */
+    --text-muted: 240 8% 55%;         /* 静音文字 */
   }
 
   .dark {
-    --background: 224 71% 4%;
-    --foreground: 213 31% 91%;
-    --card: 224 71% 4%;
-    --card-foreground: 213 31% 91%;
-    --popover: 224 71% 4%;
-    --popover-foreground: 213 31% 91%;
-    --primary: 262 83% 58%;
-    --primary-foreground: 224 71% 4%;
-    --secondary: 215 28% 17%;
-    --secondary-foreground: 213 31% 91%;
-    --muted: 215 28% 17%;
-    --muted-foreground: 217 11% 65%;
-    --accent: 215 28% 17%;
-    --accent-foreground: 213 31% 91%;
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 213 31% 91%;
-    --border: 215 28% 17%;
-    --input: 215 28% 17%;
-    --ring: 262 83% 58%;
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 84% 4.9%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 94.1%;
     
     /* 深色主题XAI色彩变量 */
     --xai-primary: 262 83% 58%;
@@ -69,11 +80,21 @@
     --xai-pink: 330 81% 60%;
     
     /* 深色背景色彩层次 */
-    --bg-primary: 224 71% 4%;
-    --bg-secondary: 215 28% 8%;
-    --bg-tertiary: 215 32% 12%;
-    --bg-quaternary: 215 35% 16%;
+    --bg-primary: 222.2 84% 4.9%;
+    --bg-secondary: 217.2 32.6% 8%;
+    --bg-tertiary: 217.2 32.6% 12%;
+    --bg-quaternary: 217.2 32.6% 16%;
     --bg-quinary: 262 40% 20%;
+    
+    /* 深色模式卡片和表单背景 */
+    --card-bg: 222.2 84% 4.9%;
+    --form-bg: 217.2 32.6% 8%;
+    --input-bg: 217.2 32.6% 17.5%;
+    --border-color: 217.2 32.6% 17.5%;
+    --shadow-color: 222.2 84% 4.9%;
+    --text-primary: 210 40% 98%;
+    --text-secondary: 215 20.2% 65.1%;
+    --text-muted: 215 20.2% 50%;
   }
 }
 
@@ -177,76 +198,81 @@
   filter: blur(1px) !important;
 }
 
-/* 主要装饰球 - 优化的紫色系 */
+/* 主要装饰球 - 优雅紫色系 */
 .bg-decoration-1 {
   top: 15% !important;
   left: 10% !important;
   width: 400px !important;
   height: 400px !important;
   background: radial-gradient(circle, 
-    hsla(var(--xai-primary), 0.4) 0%, 
-    hsla(var(--xai-primary), 0.2) 40%, 
-    transparent 70%
+    hsla(var(--xai-primary), 0.15) 0%, 
+    hsla(var(--xai-primary), 0.08) 40%, 
+    hsla(var(--xai-primary), 0.03) 70%,
+    transparent 85%
   ) !important;
   border-radius: 50% !important;
   animation: float 15s ease-in-out infinite, pulse-glow 10s ease-in-out infinite !important;
 }
 
-/* 次要装饰球 - 优化的青色系 */
+/* 次要装饰球 - 清新青色系 */
 .bg-decoration-2 {
   top: 50% !important;
   right: 10% !important;
   width: 300px !important;
   height: 300px !important;
   background: radial-gradient(circle, 
-    hsla(var(--xai-secondary), 0.4) 0%, 
-    hsla(var(--xai-secondary), 0.2) 40%, 
-    transparent 70%
+    hsla(var(--xai-secondary), 0.12) 0%, 
+    hsla(var(--xai-secondary), 0.06) 40%, 
+    hsla(var(--xai-secondary), 0.02) 70%,
+    transparent 85%
   ) !important;
   border-radius: 50% !important;
   animation: float 12s ease-in-out infinite reverse, drift 18s ease-in-out infinite !important;
 }
 
-/* 第三装饰球 - 优化的绿色系 */
+/* 第三装饰球 - 自然绿色系 */
 .bg-decoration-3 {
   bottom: 25% !important;
   left: 45% !important;
   width: 350px !important;
   height: 350px !important;
   background: radial-gradient(circle, 
-    hsla(var(--xai-accent), 0.4) 0%, 
-    hsla(var(--xai-accent), 0.2) 40%, 
-    transparent 70%
+    hsla(var(--xai-accent), 0.12) 0%, 
+    hsla(var(--xai-accent), 0.06) 40%, 
+    hsla(var(--xai-accent), 0.02) 70%,
+    transparent 85%
   ) !important;
   border-radius: 50% !important;
   animation: float 18s ease-in-out infinite, pulse-glow 8s ease-in-out infinite delay-2s !important;
 }
 
-/* 第四装饰球 - 优化的橙色系 */
+/* 第四装饰球 - 温暖橙色系 */
 .bg-decoration-4 {
   top: 70% !important;
   left: 20% !important;
   width: 250px !important;
   height: 250px !important;
   background: radial-gradient(circle, 
-    hsla(var(--xai-warning), 0.35) 0%, 
-    hsla(var(--xai-warning), 0.15) 40%, 
-    transparent 70%
+    hsla(var(--xai-warning), 0.10) 0%, 
+    hsla(var(--xai-warning), 0.05) 40%, 
+    hsla(var(--xai-warning), 0.02) 70%,
+    transparent 85%
   ) !important;
   border-radius: 50% !important;
   animation: drift 22s ease-in-out infinite, pulse-glow 12s ease-in-out infinite delay-4s !important;
 }
 
-/* 第五装饰球 - 优化的粉色系 */
+/* 第五装饰球 - 柔和粉色系 */
 .bg-decoration-5 {
   top: 30% !important;
   right: 35% !important;
   width: 200px !important;
   height: 200px !important;
   background: radial-gradient(circle, 
-    hsla(var(--xai-pink), 0.35) 0%, 
-    hsla(var(--xai-pink), 0.15) 40%, 
-    transparent 70%
+    hsla(var(--xai-pink), 0.10) 0%, 
+    hsla(var(--xai-pink), 0.05) 40%, 
+    hsla(var(--xai-pink), 0.02) 70%,
+    transparent 85%
   ) !important;
   border-radius: 50% !important;
   animation: float 20s ease-in-out infinite reverse, drift 14s ease-in-out infinite delay-3s !important;
@@ -411,4 +437,283 @@
     hsl(var(--xai-secondary)), 
     hsl(var(--xai-primary))
   );
+}
+
+/* ===== 增强的代币主题表单样式 ===== */
+
+/* 卡片和表单样式增强 */
+.enhanced-card {
+  background: hsl(var(--card-bg));
+  border: 1px solid hsl(var(--border-color));
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 16px;
+}
+
+.enhanced-card:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08), 0 4px 10px rgba(0, 0, 0, 0.06);
+  transform: translateY(-2px);
+  border-color: hsla(var(--xai-primary), 0.3);
+  background: linear-gradient(135deg, hsl(var(--card-bg)) 0%, hsla(var(--xai-primary), 0.02) 100%);
+}
+
+.enhanced-form {
+  background: hsl(var(--form-bg));
+  border: 1px solid hsl(var(--border-color));
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.enhanced-form:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.enhanced-input {
+  background: hsl(var(--input-bg));
+  border: 1px solid hsl(var(--border-color));
+  color: hsl(var(--text-primary));
+  transition: all 0.2s ease;
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+.enhanced-input:focus {
+  border-color: hsl(var(--xai-primary));
+  box-shadow: 0 0 0 3px hsla(var(--xai-primary), 0.1);
+  outline: none;
+}
+
+.enhanced-input::placeholder {
+  color: hsl(var(--text-muted));
+}
+
+/* 代币主题样式 */
+.token-card {
+  background: linear-gradient(135deg, hsl(var(--card-bg)) 0%, hsla(var(--xai-primary), 0.02) 100%);
+  border: 1px solid hsla(var(--border-color), 0.8);
+  border-radius: 20px;
+  padding: 24px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+}
+
+.token-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, hsla(var(--xai-primary), 0.08), transparent);
+  transition: left 0.6s ease;
+}
+
+.token-card:hover::before {
+  left: 100%;
+}
+
+.token-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08), 0 8px 16px rgba(0, 0, 0, 0.06);
+  border-color: hsla(var(--xai-primary), 0.4);
+  background: linear-gradient(135deg, hsl(var(--card-bg)) 0%, hsla(var(--xai-primary), 0.05) 100%);
+}
+
+.token-price {
+  background: linear-gradient(45deg, hsl(var(--xai-primary)), hsl(var(--xai-secondary)));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 700;
+  font-size: 1.5rem;
+}
+
+.token-change-positive {
+  color: hsl(var(--xai-accent));
+  font-weight: 600;
+}
+
+.token-change-negative {
+  color: hsl(var(--destructive));
+  font-weight: 600;
+}
+
+.token-symbol {
+  background: linear-gradient(45deg, hsl(var(--xai-primary)), hsl(var(--xai-pink)));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 700;
+}
+
+/* 代币图标样式 */
+.token-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, hsl(var(--xai-primary)), hsl(var(--xai-secondary)));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 1.2rem;
+  box-shadow: 0 4px 12px hsla(var(--xai-primary), 0.3);
+}
+
+/* 交易表单样式 */
+.trade-form {
+  background: linear-gradient(135deg, hsl(var(--form-bg)) 0%, hsl(var(--bg-tertiary)) 100%);
+  border: 2px solid hsl(var(--border-color));
+  border-radius: 20px;
+  padding: 32px;
+  position: relative;
+  overflow: hidden;
+}
+
+.trade-form::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, 
+    hsl(var(--xai-primary)), 
+    hsl(var(--xai-secondary)), 
+    hsl(var(--xai-accent)), 
+    hsl(var(--xai-pink))
+  );
+  background-size: 300% 100%;
+  animation: gradient-shift 3s ease-in-out infinite;
+}
+
+.trade-button {
+  background: linear-gradient(135deg, hsl(var(--xai-primary)), hsl(var(--xai-secondary)));
+  border: none;
+  border-radius: 12px;
+  padding: 16px 32px;
+  color: white;
+  font-weight: 600;
+  font-size: 1.1rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 12px hsla(var(--xai-primary), 0.25);
+}
+
+.trade-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+  transition: left 0.6s ease;
+}
+
+.trade-button:hover::before {
+  left: 100%;
+}
+
+.trade-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px hsla(var(--xai-primary), 0.35);
+  background: linear-gradient(135deg, hsl(var(--xai-primary)), hsl(var(--xai-secondary)), hsl(var(--xai-accent)));
+}
+
+.trade-button:active {
+  transform: translateY(0);
+}
+
+/* 价格图表样式 */
+.price-chart {
+  background: hsl(var(--card-bg));
+  border: 1px solid hsl(var(--border-color));
+  border-radius: 16px;
+  padding: 20px;
+  position: relative;
+}
+
+.price-chart::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    hsla(var(--xai-primary), 0.05) 0%, 
+    hsla(var(--xai-secondary), 0.05) 50%, 
+    hsla(var(--xai-accent), 0.05) 100%
+  );
+  border-radius: 16px;
+  z-index: -1;
+}
+
+/* 统计卡片样式 */
+.stats-card {
+  background: linear-gradient(135deg, hsl(var(--card-bg)) 0%, hsla(var(--xai-secondary), 0.03) 100%);
+  border: 1px solid hsla(var(--border-color), 0.6);
+  border-radius: 16px;
+  padding: 20px;
+  text-align: center;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.stats-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+  border-color: hsla(var(--xai-secondary), 0.3);
+  background: linear-gradient(135deg, hsl(var(--card-bg)) 0%, hsla(var(--xai-secondary), 0.06) 100%);
+}
+
+.stats-value {
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(45deg, hsl(var(--xai-primary)), hsl(var(--xai-secondary)));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.stats-label {
+  color: hsl(var(--text-secondary));
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-top: 8px;
+}
+
+/* 深色模式优化 */
+.dark .enhanced-card {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+}
+
+.dark .enhanced-card:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+}
+
+.dark .enhanced-form {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.dark .enhanced-form:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+.dark .token-card:hover {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+}
+
+.dark .stats-card:hover {
+  box-shadow: 0 12px 20px rgba(0, 0, 0, 0.4);
 }

@@ -6,6 +6,7 @@ import { Home, BarChart2, Compass, MessageSquare, Pickaxe } from "lucide-react"
 import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
 import { useEffect, useState } from "react"
+import { useTranslation } from "@/app/hooks/useTranslation"
 
 interface BottomNavProps {
   darkMode?: boolean;
@@ -16,6 +17,7 @@ interface BottomNavProps {
 export default function BottomNav({ darkMode, currentTab, isDark: propIsDark }: BottomNavProps) {
   const pathname = usePathname()
   const { resolvedTheme } = useTheme()
+  const { t } = useTranslation()
   const [mounted, setMounted] = useState(false)
   
   // 确保组件已挂载，避免hydration错误
@@ -32,31 +34,31 @@ export default function BottomNav({ darkMode, currentTab, isDark: propIsDark }: 
 
   const navItems = [
     {
-      name: "首页",
+      name: t.navigation.home,
       icon: Home,
       href: "/",
       id: "home"
     },
     {
-      name: "市场",
+      name: t.navigation.market,
       icon: BarChart2,
       href: "/market",
       id: "market"
     },
     {
-      name: "发现",
+      name: t.navigation.discover,
       icon: Compass,
       href: "/discover",
       id: "discover"
     },
     {
-      name: "挖矿",
+      name: t.navigation.mining,
       icon: Pickaxe,
       href: "/mining",
       id: "mining"
     },
     {
-      name: "聊天",
+      name: t.navigation.chat,
       icon: MessageSquare,
       href: "/chat",
       id: "chat"

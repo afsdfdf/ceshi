@@ -245,7 +245,7 @@ export default function TradePage() {
       </div>
       
       {/* 底部导航栏 */}
-      <BottomNav darkMode={darkMode} />
+      <BottomNav currentTab="market" isDark={darkMode} />
       
       {/* 添加Toaster组件显示通知 */}
       <Toaster />

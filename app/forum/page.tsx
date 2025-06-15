@@ -28,7 +28,7 @@ export default function ForumPage() {
         </div>
       </div>
       
-      <BottomNav darkMode={false} />
+      <BottomNav currentTab="chat" isDark={false} />
     </div>
   );
 } 

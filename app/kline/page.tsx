@@ -315,7 +315,7 @@ export default function KLinePage() {
       </div>
       
         {/* 底部导航 */}
-      <BottomNav darkMode={darkMode} />
+      <BottomNav currentTab="market" isDark={darkMode} />
       </div>
     </div>
   )

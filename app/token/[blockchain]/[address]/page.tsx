@@ -415,7 +415,7 @@ export default function TokenDetailPage() {
       
       {/* 底部统一导航栏 */}
       <div className="fixed bottom-0 left-0 right-0 z-50">
-        <BottomNav darkMode={isDark} />
+        <BottomNav currentTab="market" isDark={isDark} />
       </div>
       
       <Toaster />

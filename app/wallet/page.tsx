@@ -382,7 +382,7 @@ export default function WalletPage() {
       </div>
       
       {/* 底部导航 */}
-      <BottomNav darkMode={isDark} />
+      <BottomNav isDark={isDark} />
       <Toaster />
     </div>
   )

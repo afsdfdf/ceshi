@@ -17,11 +17,14 @@ import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
 import { useThemedBanners } from "./components/DefaultBanners"
 import { shouldShowSplash } from "./lib/splash-state"
+import LanguageSwitcher from "./components/LanguageSwitcher"
+import { useTranslation } from "./hooks/useTranslation"
 
 export default function CryptoTracker() {
   const router = useRouter()
   const pathname = usePathname()
   const { resolvedTheme, setTheme } = useTheme()
+  const { t } = useTranslation()
   const isDark = resolvedTheme === "dark"
   
   const [showSplash, setShowSplash] = useState<boolean | null>(null)
@@ -99,40 +102,46 @@ export default function CryptoTracker() {
                 </div>
               </div>
               
-              {/* 右侧：搜索框和主题切换 */}
-              <div className="flex items-center gap-2 flex-1 max-w-md">
-                {/* 搜索框 */}
-                <div className="xai-search-container">
-                  <div className={cn(
-                    "relative backdrop-blur-sm border rounded-lg transition-all duration-300 h-9",
-                    "hover:border-xai-purple/50 focus-within:border-xai-purple/50 focus-within:shadow-lg focus-within:shadow-xai-purple/25",
-                    isDark ? "bg-card/60 border-border/40" : "bg-white/60 border-border/30"
-                  )}>
-          <SearchBar 
-            isDark={isDark} 
-                      showLogo={false}
-            logoSize={40}
-            simplified={true}
-                      onResultSelect={handleTokenSelect}
-                      placeholder="搜索代币..."
-                    />
+                              {/* 右侧：搜索框、语言切换和主题切换 */}
+                <div className="flex items-center gap-2 flex-1 max-w-md">
+                  {/* 搜索框 */}
+                  <div className="xai-search-container">
+                    <div className={cn(
+                      "relative backdrop-blur-sm border rounded-lg transition-all duration-300 h-9",
+                      "hover:border-xai-purple/50 focus-within:border-xai-purple/50 focus-within:shadow-lg focus-within:shadow-xai-purple/25",
+                      isDark ? "bg-card/60 border-border/40" : "bg-white/60 border-border/30"
+                    )}>
+            <SearchBar 
+              isDark={isDark} 
+                        showLogo={false}
+              logoSize={40}
+              simplified={true}
+                        onResultSelect={handleTokenSelect}
+                        placeholder={t.home.searchPlaceholder}
+                      />
+                    </div>
                   </div>
+                  
+                  {/* 语言切换按钮 */}
+                  <LanguageSwitcher 
+                    variant="icon-only"
+                    className="w-9 h-9 btn-glow flex-shrink-0"
+                  />
+                  
+                  {/* 主题切换按钮 */}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="xai-theme-toggle w-9 h-9 btn-glow flex-shrink-0"
+                    onClick={toggleTheme}
+                  >
+                    {isDark ? (
+                      <Sun className="w-4 h-4 text-xai-orange" />
+                    ) : (
+                      <Moon className="w-4 h-4 text-xai-purple" />
+                    )}
+                  </Button>
                 </div>
-                
-                {/* 主题切换按钮 */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="xai-theme-toggle w-9 h-9 btn-glow flex-shrink-0"
-                  onClick={toggleTheme}
-                >
-                  {isDark ? (
-                    <Sun className="w-4 h-4 text-xai-orange" />
-                  ) : (
-                    <Moon className="w-4 h-4 text-xai-purple" />
-                  )}
-                </Button>
-              </div>
             </div>
           </div>
         </div>
@@ -143,15 +152,16 @@ export default function CryptoTracker() {
           <div className="relative">
             <div className="md:px-4">
               <div className="md:max-w-7xl md:mx-auto">
-                <div className="absolute inset-0 bg-gradient-to-r from-xai-purple/20 via-xai-cyan/20 to-xai-green/20 md:rounded-2xl blur-xl"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-xai-purple/20 via-xai-cyan/20 to-xai-green/20 blur-xl"></div>
                 <div className="relative">
           <Banner 
             banners={banners}
             interval={5000}
             showArrows={true}
             showIndicators={true}
+            borderRadius={0}
             className={cn(
-                      "overflow-hidden md:rounded-2xl shadow-2xl card-hover",
+                      "overflow-hidden shadow-2xl card-hover",
                       isDark ? "shadow-black/20" : "shadow-gray-200/50"
             )}
           />
@@ -163,7 +173,9 @@ export default function CryptoTracker() {
           {/* XAI价格组件 - 紧贴横幅和代币主题 */}
           <div className="relative">
             <XaiPriceBar darkMode={isDark} />
-        </div>
+          </div>
+
+
         
           {/* 代币排行榜区域 - 手机模式下无边距 */}
           <div className="relative">
