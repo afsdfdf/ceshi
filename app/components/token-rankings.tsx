@@ -8,7 +8,6 @@ import { AlertCircle } from "lucide-react"
 import TopicSelector from "./tokens/topic-selector"
 import TokensTable from "./tokens/tokens-table"
 import LoadingState from "./tokens/loading-state"
-import { MainstreamTokens } from "./MainstreamTokens"
 
 interface TokenRankingsProps {
   darkMode: boolean;
@@ -119,15 +118,6 @@ export default function TokenRankings({
           <AlertCircle size={12} /> 
           <span>使用备用数据</span>
         </div>
-      )}
-
-      {/* 主流币展示区域 */}
-      {mode === 'homepage' && (
-        <div style={{marginBottom: "2px"}}>
-        <MainstreamTokens 
-          darkMode={darkMode} 
-        />
-      </div>
       )}
         
       {/* 主题选择器组件 */}

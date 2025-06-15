@@ -12,6 +12,7 @@ import SearchBar from './components/SearchBar'
 import Banner from './components/Banner'
 import EthereumProtection from './components/EthereumProtection'
 import LogoBase64 from './components/LogoBase64'
+import { XaiPriceBar } from './components/XaiPriceBar'
 import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
 import { useThemedBanners } from "./components/DefaultBanners"
@@ -140,7 +141,7 @@ export default function CryptoTracker() {
         </div>
         
         {/* 主要内容区域 */}
-        <div className="space-y-6">
+        <div className="space-y-0">
           {/* 横幅轮播区域 */}
           <div className="relative">
             <div className="md:px-4">
@@ -160,6 +161,11 @@ export default function CryptoTracker() {
                 </div>
               </div>
             </div>
+          </div>
+          
+          {/* XAI价格组件 - 紧贴横幅和代币主题 */}
+          <div className="relative">
+            <XaiPriceBar darkMode={isDark} />
           </div>
           
           {/* 代币排行榜区域 - 手机模式下无边距 */}
