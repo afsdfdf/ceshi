@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 
 // 缓存配置
-const CACHE_TTL = 300 * 1000; // 5分钟缓存时间（降低频率）
-const FALLBACK_CACHE_TTL = 3600 * 1000; // 1小时备用缓存时间
-const RETRY_INTERVAL = 120 * 1000; // 2分钟重试间隔（增加间隔）
+const CACHE_TTL = 600 * 1000; // 10分钟缓存时间
+const FALLBACK_CACHE_TTL = 1800 * 1000; // 30分钟备用缓存时间
+const RETRY_INTERVAL = 60 * 1000; // 1分钟重试间隔
 
 // 内存缓存对象
 interface CacheObject {
@@ -29,18 +29,6 @@ const XAI_TOKEN_INFO = {
   name: "𝕏AI",
   image: "https://dd.dexscreener.com/ds-data/tokens/bsc/0x1c864c55f0c5e0014e2740c36a1f2378bfabd487.png?key=d597ed"
 };
-
-// 备用数据（当所有API都失败时使用）
-const STATIC_FALLBACK_DATA = {
-  symbol: XAI_TOKEN_INFO.symbol,
-  name: XAI_TOKEN_INFO.name,
-    current_price: 0.00005238,
-    price_change_percentage_24h: 21.38,
-  image: XAI_TOKEN_INFO.image,
-    market_cap: 10000000,
-    volume_24h: 2500000,
-    liquidity_usd: 5000000
-  };
 
 // 数据源1: AVE API
 async function fetchFromAveApi() {
@@ -265,14 +253,8 @@ function getAvailableData() {
     };
   }
   
-  // 3. 最后使用静态备用数据
-  return {
-    data: STATIC_FALLBACK_DATA,
-    cached: true,
-    source: 'static_fallback',
-    cache_age: 'static',
-    data_source: 'fallback'
-  };
+  // 3. 如果没有任何缓存数据，返回null
+  return null;
 }
 
 // 初始化缓存预热函数
@@ -295,6 +277,33 @@ export async function GET() {
   
   // 先检查是否有可用数据
   const availableData = getAvailableData();
+  
+  // 如果没有任何缓存数据，尝试立即获取
+  if (!availableData) {
+    logger.debug('无缓存数据，尝试立即获取', { component: 'MainstreamPricesAPI', action: 'GET' });
+    
+    // 如果没有正在更新，立即更新
+    if (!updateInProgress) {
+      const success = await updateCache();
+      if (success) {
+        const newData = getAvailableData();
+        if (newData) {
+          return NextResponse.json({
+            xai: newData.data,
+            cached: true,
+            cache_age: newData.cache_age,
+            data_source: newData.data_source
+          });
+        }
+      }
+    }
+    
+    // 如果获取失败，返回错误
+    return NextResponse.json(
+      { error: '暂时无法获取价格数据，请稍后重试' },
+      { status: 503 }
+    );
+  }
   
   // 如果有新鲜的主缓存，直接返回
   if (availableData.source === 'primary_cache') {
