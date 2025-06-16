@@ -7,15 +7,44 @@
   box-sizing: border-box;
 }
 
+/* 全局强制底部导航显示规则 - 最高优先级 */
+@media (max-width: 768px) {
+  /* 确保底部导航永远不会被任何规则隐藏 */
+  [class*="mobile-bottom-nav"],
+  nav[class*="mobile-bottom-nav"],
+  .mobile-bottom-nav,
+  nav.mobile-bottom-nav {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 99999 !important;
+    transform: translateY(0) !important;
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
 /* 强制底部导航显示 - 覆盖所有可能的隐藏样式 */
 @media (max-width: 768px) {
   .mobile-bottom-nav {
     display: flex !important;
     visibility: visible !important;
     opacity: 1 !important;
-    transform: none !important;
+    transform: translateY(0) !important;
     height: auto !important;
     overflow: visible !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100vw !important;
+    z-index: 99999 !important;
+    transition: none !important;
+    animation: none !important;
   }
   
   /* 防止任何父元素隐藏底部导航 */
@@ -23,8 +52,26 @@
   html .mobile-bottom-nav,
   div .mobile-bottom-nav,
   main .mobile-bottom-nav,
-  section .mobile-bottom-nav {
+  section .mobile-bottom-nav,
+  * .mobile-bottom-nav {
     display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+    transition: none !important;
+    animation: none !important;
+  }
+  
+  /* 确保导航项也始终可见 */
+  .mobile-nav-item {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  
+  .mobile-nav-icon,
+  .mobile-nav-text {
+    display: block !important;
     visibility: visible !important;
     opacity: 1 !important;
   }
@@ -66,6 +113,16 @@
     visibility: visible !important;
     opacity: 1 !important;
     pointer-events: auto !important;
+    transform: translateY(0) !important;
+    transition: none !important;
+    animation: none !important;
+  }
+  
+  /* 覆盖任何可能隐藏导航的样式 */
+  nav.mobile-bottom-nav {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
   }
   
      .dark .mobile-bottom-nav {

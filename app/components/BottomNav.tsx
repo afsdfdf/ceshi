@@ -85,7 +85,7 @@ export default function BottomNav({ darkMode, currentTab, isDark: propIsDark }: 
     return null
   }
 
-  // 完全独立的样式对象
+  // 完全独立的样式对象 - 确保始终显示
   const navStyle: React.CSSProperties = {
     position: 'fixed',
     bottom: 0,
@@ -105,7 +105,10 @@ export default function BottomNav({ darkMode, currentTab, isDark: propIsDark }: 
     minHeight: '64px',
     visibility: 'visible',
     opacity: 1,
-    pointerEvents: 'auto'
+    pointerEvents: 'auto',
+    transform: 'translateY(0)',
+    transition: 'none', // 移除过渡效果，防止动画隐藏
+    overflow: 'visible'
   }
 
   const getItemStyle = (isActive: boolean): React.CSSProperties => ({
@@ -140,6 +143,7 @@ export default function BottomNav({ darkMode, currentTab, isDark: propIsDark }: 
 
   return (
     <nav 
+      className="mobile-bottom-nav"
       style={navStyle}
       role="navigation"
       aria-label="主导航"
@@ -156,15 +160,20 @@ export default function BottomNav({ darkMode, currentTab, isDark: propIsDark }: 
           <Link 
             key={item.id}
             href={item.href}
+            className="mobile-nav-item"
             style={getItemStyle(isActive)}
             aria-label={`导航到${item.name}`}
             aria-current={isActive ? "page" : undefined}
           >
             <Icon 
+              className="mobile-nav-icon"
               style={getIconStyle()}
               aria-hidden="true"
             />
-            <span style={getTextStyle()}>
+            <span 
+              className="mobile-nav-text"
+              style={getTextStyle()}
+            >
               {item.name}
             </span>
           </Link>
