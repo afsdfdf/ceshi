@@ -4,7 +4,6 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Home, BarChart2, Compass, MessageSquare, Pickaxe } from "lucide-react"
 import { useTheme } from "next-themes"
-import { cn } from "@/lib/utils"
 import { useEffect, useState } from "react"
 import { useTranslation } from "@/app/hooks/useTranslation"
 
@@ -19,10 +18,21 @@ export default function BottomNav({ darkMode, currentTab, isDark: propIsDark }: 
   const { resolvedTheme } = useTheme()
   const { t } = useTranslation()
   const [mounted, setMounted] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
   
   // 确保组件已挂载，避免hydration错误
   useEffect(() => {
     setMounted(true)
+    
+    // 检测是否为移动端
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768)
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    
+    return () => window.removeEventListener('resize', checkMobile)
   }, [])
   
   // 优先使用传入的isDark，其次是darkMode，最后从主题中获取
@@ -70,12 +80,67 @@ export default function BottomNav({ darkMode, currentTab, isDark: propIsDark }: 
     return null
   }
 
+  // 只在移动端显示
+  if (!isMobile) {
+    return null
+  }
+
+  // 完全独立的样式对象
+  const navStyle: React.CSSProperties = {
+    position: 'fixed',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    width: '100vw',
+    zIndex: 99999,
+    background: isDark ? 'rgba(0, 0, 0, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+    backdropFilter: 'blur(20px)',
+    WebkitBackdropFilter: 'blur(20px)',
+    borderTop: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+    padding: '8px 0',
+    display: 'flex',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    boxShadow: isDark ? '0 -4px 20px rgba(0, 0, 0, 0.3)' : '0 -4px 20px rgba(0, 0, 0, 0.1)',
+    minHeight: '64px',
+    visibility: 'visible',
+    opacity: 1,
+    pointerEvents: 'auto'
+  }
+
+  const getItemStyle = (isActive: boolean): React.CSSProperties => ({
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '8px 12px',
+    borderRadius: '8px',
+    transition: 'all 0.2s ease',
+    cursor: 'pointer',
+    minWidth: '60px',
+    textDecoration: 'none',
+    color: isActive ? '#6366f1' : (isDark ? '#999' : '#666'),
+    background: isActive ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(59, 130, 246, 0.2))' : 'transparent',
+    boxShadow: isActive ? '0 4px 12px rgba(99, 102, 241, 0.2)' : 'none'
+  })
+
+  const getIconStyle = (): React.CSSProperties => ({
+    width: '20px',
+    height: '20px',
+    marginBottom: '4px',
+    transition: 'all 0.2s ease'
+  })
+
+  const getTextStyle = (): React.CSSProperties => ({
+    fontSize: '10px',
+    fontWeight: '500',
+    transition: 'all 0.2s ease',
+    lineHeight: 1
+  })
+
   return (
     <nav 
-      className={cn(
-        "mobile-bottom-nav",
-        "md:hidden" // 在桌面端隐藏底部导航栏
-      )}
+      style={navStyle}
       role="navigation"
       aria-label="主导航"
     >
@@ -91,18 +156,15 @@ export default function BottomNav({ darkMode, currentTab, isDark: propIsDark }: 
           <Link 
             key={item.id}
             href={item.href}
-            className={cn(
-              "mobile-nav-item",
-              isActive && "active"
-            )}
+            style={getItemStyle(isActive)}
             aria-label={`导航到${item.name}`}
             aria-current={isActive ? "page" : undefined}
           >
             <Icon 
-              className="mobile-nav-icon"
+              style={getIconStyle()}
               aria-hidden="true"
             />
-            <span className="mobile-nav-text">
+            <span style={getTextStyle()}>
               {item.name}
             </span>
           </Link>
