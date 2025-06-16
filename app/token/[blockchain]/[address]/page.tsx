@@ -125,56 +125,56 @@ export default function TokenDetailPage() {
   }, [klineDataLoaded, blockchain, address])
   
   // 加载代币详情
-  const fetchTokenDetails = async () => {
-    if (blockchain && address) {
-      setIsLoadingDetails(true)
-      try {
-        const details = await getTokenDetails(address, blockchain)
-        
-        setTokenDetails(details)
-        
-        // 直接使用API返回的数据，确保各个字段被正确设置
-        if (details) {
-          // 设置代币符号和名称
-          const symbol = details.tokenInfo?.symbol || "";
-          const name = details.tokenInfo?.name || "";
+    const fetchTokenDetails = async () => {
+      if (blockchain && address) {
+        setIsLoadingDetails(true)
+        try {
+          const details = await getTokenDetails(address, blockchain)
           
-          if (symbol) {
-            setTokenSymbol(symbol);
-          }
-          if (name) {
-            setTokenName(name);
-          }
+          setTokenDetails(details)
           
-          // 设置价格和价格变化
-          if (details.price !== undefined) {
-            setTokenPrice(details.price);
+          // 直接使用API返回的数据，确保各个字段被正确设置
+          if (details) {
+            // 设置代币符号和名称
+            const symbol = details.tokenInfo?.symbol || "";
+            const name = details.tokenInfo?.name || "";
+            
+            if (symbol) {
+              setTokenSymbol(symbol);
+            }
+            if (name) {
+              setTokenName(name);
+            }
+            
+            // 设置价格和价格变化
+            if (details.price !== undefined) {
+              setTokenPrice(details.price);
+            }
+            if (details.priceChange !== undefined) {
+              setPriceChange(details.priceChange);
+            }
+            
+            // 依次尝试不同的可能字段
+            const logoUrl = 
+              details.tokenInfo?.logo_url || 
+              (details.tokenInfo as any)?.logo || 
+              '';
+            
+            if (logoUrl && logoUrl.trim() !== '') {
+              setCurrentTokenLogo(logoUrl);
+            }
           }
-          if (details.priceChange !== undefined) {
-            setPriceChange(details.priceChange);
-          }
-          
-          // 依次尝试不同的可能字段
-          const logoUrl = 
-            details.tokenInfo?.logo_url || 
-            (details.tokenInfo as any)?.logo || 
-            '';
-          
-          if (logoUrl && logoUrl.trim() !== '') {
-            setCurrentTokenLogo(logoUrl);
-          }
+        } catch (error) {
+          toast({
+            title: "获取详情失败",
+            description: "无法加载代币详情，请稍后再试",
+            variant: "destructive",
+          })
+        } finally {
+          setIsLoadingDetails(false)
         }
-      } catch (error) {
-        toast({
-          title: "获取详情失败",
-          description: "无法加载代币详情，请稍后再试",
-          variant: "destructive",
-        })
-      } finally {
-        setIsLoadingDetails(false)
       }
     }
-  }
     
   // 当地址或链改变时，重置K线数据加载状态
   useEffect(() => {
@@ -325,30 +325,30 @@ export default function TokenDetailPage() {
           isDark ? "bg-[#131722] border-gray-800" : "bg-white border-gray-200"
         )}>
           {/* 顶部时间范围选择器 - 专业风格 */}
-          <div className={cn(
+            <div className={cn(
             "py-2 px-3 flex justify-between items-center border-b",
             isDark ? "border-gray-800 bg-[#1e222d]" : "border-gray-200 bg-gray-50"
-          )}>
+            )}>
             <div className="flex gap-1 overflow-x-auto hide-scrollbar">
               {timeframes.map(timeframe => (
-                <button 
+                  <button 
                   key={timeframe.key}
-                  className={cn(
+                    className={cn(
                     "px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200",
                     selectedTimeframe === timeframe.key 
-                      ? isDark 
+                        ? isDark 
                         ? "bg-blue-600 text-white shadow-lg" 
                         : "bg-blue-500 text-white shadow-md"
-                      : isDark 
+                        : isDark 
                         ? "bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white" 
                         : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
-                  )}
+                    )}
                   onClick={() => setSelectedTimeframe(timeframe.key)}
                   title={timeframe.description}
-                >
+                  >
                   {timeframe.label}
-                </button>
-              ))}
+                  </button>
+                ))}
             </div>
             
 
@@ -359,23 +359,23 @@ export default function TokenDetailPage() {
             height: 'min(calc(100vw * 1.0), 500px)', 
             minHeight: '350px' 
           }}>
-            <ChartWrapper 
+              <ChartWrapper 
               key={`chart-${selectedSubIndicator}-${selectedTimeframe}`}
-              darkMode={isDark} 
-              tokenAddress={address}
-              tokenChain={blockchain}
-              interval={klineInterval}
-              subIndicator={selectedSubIndicator}
-              onDataLoaded={handleKlineDataLoaded}
-            />
-          </div>
-          
+                darkMode={isDark} 
+                tokenAddress={address}
+                tokenChain={blockchain}
+                interval={klineInterval}
+                subIndicator={selectedSubIndicator}
+                onDataLoaded={handleKlineDataLoaded}
+              />
+            </div>
+            
           {/* 副图切换按钮区域 - 专业风格 */}
-          <div className={cn(
+            <div className={cn(
             "py-2 px-3 flex justify-center border-t",
             isDark ? "bg-[#1e222d] border-gray-800" : "bg-gray-50 border-gray-200"
-          )}>
-            <div className="flex gap-2 flex-wrap justify-center">
+            )}>
+              <div className="flex gap-2 flex-wrap justify-center">
               {subIndicators.map(indicator => {
                 const IconComponent = indicator.icon;
                 return (
@@ -399,9 +399,9 @@ export default function TokenDetailPage() {
                   </button>
                 );
               })}
+              </div>
             </div>
           </div>
-        </div>
         
         <div className="px-3">
           {/* 添加交易历史、持币排名和风险检测组件 */}

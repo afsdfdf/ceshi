@@ -3,6 +3,7 @@
 import type React from "react"
 import "./globals.css"
 import "./mobile-responsive.css"
+import "./bottom-nav.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import ClientErrorBoundary from '@/app/components/client-error-boundary'
 import EthereumProtection from '@/app/components/EthereumProtection'
@@ -35,3 +36,4 @@ export default function RootLayout({
     </html>
   )
 }
+

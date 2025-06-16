@@ -117,6 +117,8 @@
     background-attachment: fixed !important;
     min-height: 100vh !important;
     animation: gradient-flow 20s ease infinite !important;
+    /* 为底部导航预留空间 - 全局设置 */
+    padding-bottom: 72px !important;
   }
   
   /* 优化的动态渐变背景 - 深色主题 */
@@ -398,6 +400,8 @@
   
   body {
     animation-duration: 25s !important;
+    /* 移动端底部导航空间 */
+    padding-bottom: 72px !important;
   }
 }
 
@@ -717,3 +721,159 @@
 .dark .stats-card:hover {
   box-shadow: 0 12px 20px rgba(0, 0, 0, 0.4);
 }
+/* 确保iframe和其他全屏元素不会覆盖底部导航 */
+iframe {
+  max-height: calc(100vh - 72px) !important;
+}
+
+/* 紧凑头部样式 */
+.xai-compact-header {
+  background: hsla(var(--bg-primary), 0.9);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid hsla(var(--border-color), 0.2);
+  box-shadow: 0 4px 20px hsla(var(--shadow-color), 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.xai-header-logo {
+  transition: all 0.3s ease;
+}
+
+.xai-header-logo:hover {
+  transform: scale(1.05) rotate(5deg);
+}
+
+/* 搜索容器样式 */
+.xai-search-container {
+  flex: 1;
+  max-width: 400px;
+}
+
+/* 主题切换按钮 */
+.xai-theme-toggle {
+  transition: all 0.3s ease;
+}
+
+.xai-theme-toggle:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 20px hsla(var(--xai-primary), 0.3);
+}
+
+/* 响应式优化 */
+@media (max-width: 640px) {
+  .xai-compact-header {
+    padding: 8px 0;
+  }
+  
+  .gradient-text {
+    font-size: 16px;
+  }
+  
+  .bg-decoration {
+    display: none; /* 移动端隐藏装饰元素以提升性能 */
+  }
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsla(var(--muted), 0.3);
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsla(var(--xai-primary), 0.5);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsla(var(--xai-primary), 0.7);
+}
+
+
+
+
+.dark .stats-card:hover {
+  box-shadow: 0 12px 20px rgba(0, 0, 0, 0.4);
+}
+/* 确保iframe和其他全屏元素不会覆盖底部导航 */
+iframe {
+  max-height: calc(100vh - 72px) !important;
+}
+
+/* 紧凑头部样式 */
+.xai-compact-header {
+  background: hsla(var(--bg-primary), 0.9);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid hsla(var(--border-color), 0.2);
+  box-shadow: 0 4px 20px hsla(var(--shadow-color), 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.xai-header-logo {
+  transition: all 0.3s ease;
+}
+
+.xai-header-logo:hover {
+  transform: scale(1.05) rotate(5deg);
+}
+
+/* 搜索容器样式 */
+.xai-search-container {
+  flex: 1;
+  max-width: 400px;
+}
+
+/* 主题切换按钮 */
+.xai-theme-toggle {
+  transition: all 0.3s ease;
+}
+
+.xai-theme-toggle:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 20px hsla(var(--xai-primary), 0.3);
+}
+
+/* 响应式优化 */
+@media (max-width: 640px) {
+  .xai-compact-header {
+    padding: 8px 0;
+  }
+  
+  .gradient-text {
+    font-size: 16px;
+  }
+  
+  .bg-decoration {
+    display: none; /* 移动端隐藏装饰元素以提升性能 */
+  }
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsla(var(--muted), 0.3);
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsla(var(--xai-primary), 0.5);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsla(var(--xai-primary), 0.7);
+}
+
+
+

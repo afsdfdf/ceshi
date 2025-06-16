@@ -32,7 +32,7 @@ export default function MarketPage() {
   };
 
   return (
-    <div className="min-h-screen transition-all duration-300">
+    <div className="min-h-screen pb-20 transition-all duration-300">
       <EthereumProtection />
       
       {/* 背景装饰元素 */}
@@ -63,19 +63,19 @@ export default function MarketPage() {
               <div className="flex items-center gap-2 flex-1 max-w-md">
                 {/* 搜索框 */}
                 <div className="xai-search-container">
-                  <div className={cn(
+                <div className={cn(
                     "relative backdrop-blur-sm border rounded-lg transition-all duration-300 h-9",
-                    "hover:border-xai-purple/50 focus-within:border-xai-purple/50 focus-within:shadow-lg focus-within:shadow-xai-purple/25",
-                    isDark ? "bg-card/60 border-border/40" : "bg-white/60 border-border/30"
-                  )}>
-                    <SearchBar 
-                      isDark={isDark} 
-                      showLogo={false}
-                      logoSize={40}
-                      simplified={true}
-                      onResultSelect={handleTokenSelect}
+                  "hover:border-xai-purple/50 focus-within:border-xai-purple/50 focus-within:shadow-lg focus-within:shadow-xai-purple/25",
+                  isDark ? "bg-card/60 border-border/40" : "bg-white/60 border-border/30"
+                )}>
+                  <SearchBar 
+                    isDark={isDark} 
+                    showLogo={false}
+                    logoSize={40}
+                    simplified={true}
+                    onResultSelect={handleTokenSelect}
                       placeholder="搜索代币..."
-                    />
+                  />
                   </div>
                 </div>
                 

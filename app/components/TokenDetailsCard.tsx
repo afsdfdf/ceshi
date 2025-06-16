@@ -384,12 +384,12 @@ export default function TokenDetailsCard({
           isLoading && hasInitialData ? "animate-pulse" : ""
         )}>
           <div className="text-[8px] text-muted-foreground">持有人数</div>
-          <div className={cn(
+        <div className={cn(
             "text-[9px] font-medium transition-all duration-300",
             isLoading && hasInitialData ? "opacity-70" : "opacity-100"
-          )}>
+        )}>
             {formatNumber(tokenDetails?.holders || 0)}
-          </div>
+        </div>
         </div>
       </div>
 

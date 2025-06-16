@@ -60,7 +60,7 @@ export default function ChartWrapper({
     try {
       const points = pointsConfig[interval as keyof typeof pointsConfig] || 120;
       
-      logger.info('请求K线数据', { tokenAddress, tokenChain, interval, points }, { component: 'ChartWrapper', action: 'fetchKlineData' });
+        logger.info('请求K线数据', { tokenAddress, tokenChain, interval, points }, { component: 'ChartWrapper', action: 'fetchKlineData' });
       
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000); // 15秒超时
@@ -71,16 +71,16 @@ export default function ChartWrapper({
       );
       
       clearTimeout(timeoutId);
-      
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status} ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      
-      if (data?.success && data?.klines?.length > 0) {
-        logger.info('成功获取K线数据', { count: data.klines.length }, { component: 'ChartWrapper', action: 'fetchKlineData' });
         
+        if (!response.ok) {
+        throw new Error(`API error: ${response.status} ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+      if (data?.success && data?.klines?.length > 0) {
+          logger.info('成功获取K线数据', { count: data.klines.length }, { component: 'ChartWrapper', action: 'fetchKlineData' });
+          
         // 数据转换和验证
         const formattedData: KLineData[] = data.klines
           .map((item: any) => {
@@ -106,46 +106,46 @@ export default function ChartWrapper({
         
         // 按时间排序
         formattedData.sort((a, b) => a.timestamp - b.timestamp);
-        
-        // 分析价格范围
-        const prices = formattedData.map(item => item.close);
-        const minPrice = Math.min(...prices);
-        const maxPrice = Math.max(...prices);
-        setPriceRange({ min: minPrice, max: maxPrice });
-        
-        setKlineData(formattedData);
+          
+          // 分析价格范围
+            const prices = formattedData.map(item => item.close);
+            const minPrice = Math.min(...prices);
+            const maxPrice = Math.max(...prices);
+            setPriceRange({ min: minPrice, max: maxPrice });
+          
+          setKlineData(formattedData);
         setLastUpdate(new Date());
         setRetryCount(0);
-        
-        // 更新图表
-        if (chartInstance.current) {
+          
+          // 更新图表
+          if (chartInstance.current) {
           const precision = getPriceDecimalPlaces(minPrice);
           chartInstance.current.setPriceVolumePrecision(precision, 0);
-          chartInstance.current.applyNewData(formattedData);
-          updateCandleWidthForInterval(chartInstance.current, interval);
-        }
-        
+            chartInstance.current.applyNewData(formattedData);
+            updateCandleWidthForInterval(chartInstance.current, interval);
+          }
+          
         onDataLoaded?.();
-      } else {
+        } else {
         throw new Error(data?.message || "API返回无效数据");
-      }
-    } catch (error: any) {
-      if (error.name === 'AbortError') {
+        }
+      } catch (error: any) {
+        if (error.name === 'AbortError') {
         setError("请求超时，请检查网络连接");
-        logger.warn('K线数据请求超时', { component: 'ChartWrapper', action: 'fetchKlineData' });
-      } else {
-        logger.error('获取K线数据失败', error, { component: 'ChartWrapper', action: 'fetchKlineData' });
-        
+          logger.warn('K线数据请求超时', { component: 'ChartWrapper', action: 'fetchKlineData' });
+        } else {
+          logger.error('获取K线数据失败', error, { component: 'ChartWrapper', action: 'fetchKlineData' });
+          
         // 智能重试逻辑
         if (retryCount < 3) {
           const retryDelay = Math.min(1000 * Math.pow(2, retryCount), 8000);
           setError(`获取数据失败，${Math.ceil(retryDelay / 1000)}秒后重试...`);
-          
-          setTimeout(() => {
-            setRetryCount(prev => prev + 1);
-            fetchKlineData();
-          }, retryDelay);
-        } else {
+            
+            setTimeout(() => {
+              setRetryCount(prev => prev + 1);
+              fetchKlineData();
+            }, retryDelay);
+          } else {
           setError("无法获取K线数据，请稍后重试");
         }
       }
@@ -178,24 +178,24 @@ export default function ChartWrapper({
       if (chartInstance.current) {
         // 应用主题
         chartInstance.current.setStyles(darkMode ? DARK_THEME : LIGHT_THEME);
-        
-        // 设置技术指标
+      
+      // 设置技术指标
         setupIndicators(chartInstance.current, 'MA', subIndicator);
         
         // 获取数据
         fetchKlineData();
-      }
+        }
     } catch (error) {
       logger.error('图表初始化失败', error, { component: 'ChartWrapper', action: 'init' });
       setError("图表初始化失败");
     }
     
-    return () => {
-      if (chartInstance.current && chartRef.current) {
-        dispose(chartRef.current);
-        chartInstance.current = null;
-      }
-    };
+      return () => {
+        if (chartInstance.current && chartRef.current) {
+          dispose(chartRef.current);
+          chartInstance.current = null;
+        }
+      };
   }, []);
   
   // 主题变化
@@ -291,11 +291,11 @@ export default function ChartWrapper({
   return (
     <div className="relative w-full h-full min-h-[300px]">
       {/* 图表容器 */}
-      <div 
-        ref={chartRef} 
-        className="w-full h-full"
-        style={{ 
-          backgroundColor: darkMode ? '#131722' : '#ffffff',
+    <div 
+      ref={chartRef} 
+      className="w-full h-full"
+      style={{ 
+        backgroundColor: darkMode ? '#131722' : '#ffffff',
           borderRadius: '8px',
           overflow: 'hidden'
         }}

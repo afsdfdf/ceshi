@@ -80,68 +80,14 @@ export default function BottomNav({ darkMode, currentTab, isDark: propIsDark }: 
     return null
   }
 
-  // 在所有设备上都显示底部导航
-
-  // 完全独立的样式对象 - 确保始终显示
-  const navStyle: React.CSSProperties = {
-    position: 'fixed',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    width: '100vw',
-    zIndex: 99999,
-    background: isDark ? 'rgba(0, 0, 0, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-    backdropFilter: 'blur(20px)',
-    WebkitBackdropFilter: 'blur(20px)',
-    borderTop: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
-    padding: isMobile ? '8px 0' : '12px 0',
-    display: 'flex',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    boxShadow: isDark ? '0 -4px 20px rgba(0, 0, 0, 0.3)' : '0 -4px 20px rgba(0, 0, 0, 0.1)',
-    minHeight: isMobile ? '64px' : '72px',
-    visibility: 'visible',
-    opacity: 1,
-    pointerEvents: 'auto',
-    transform: 'translateY(0)',
-    transition: 'none', // 移除过渡效果，防止动画隐藏
-    overflow: 'visible'
+  // 只在移动端显示
+  if (!isMobile) {
+    return null
   }
-
-  const getItemStyle = (isActive: boolean): React.CSSProperties => ({
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: isMobile ? '8px 12px' : '10px 16px',
-    borderRadius: '8px',
-    transition: 'all 0.2s ease',
-    cursor: 'pointer',
-    minWidth: isMobile ? '60px' : '80px',
-    textDecoration: 'none',
-    color: isActive ? '#6366f1' : (isDark ? '#999' : '#666'),
-    background: isActive ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(59, 130, 246, 0.2))' : 'transparent',
-    boxShadow: isActive ? '0 4px 12px rgba(99, 102, 241, 0.2)' : 'none'
-  })
-
-  const getIconStyle = (): React.CSSProperties => ({
-    width: isMobile ? '20px' : '24px',
-    height: isMobile ? '20px' : '24px',
-    marginBottom: '4px',
-    transition: 'all 0.2s ease'
-  })
-
-  const getTextStyle = (): React.CSSProperties => ({
-    fontSize: isMobile ? '10px' : '12px',
-    fontWeight: '500',
-    transition: 'all 0.2s ease',
-    lineHeight: 1
-  })
 
   return (
     <nav 
-      className="mobile-bottom-nav"
-      style={navStyle}
+      className={`bottom-nav-container ${isDark ? 'dark' : ''}`}
       role="navigation"
       aria-label="主导航"
     >
@@ -157,20 +103,15 @@ export default function BottomNav({ darkMode, currentTab, isDark: propIsDark }: 
           <Link 
             key={item.id}
             href={item.href}
-            className="mobile-nav-item"
-            style={getItemStyle(isActive)}
+            className={`bottom-nav-item ${isActive ? 'active' : ''}`}
             aria-label={`导航到${item.name}`}
             aria-current={isActive ? "page" : undefined}
           >
             <Icon 
-              className="mobile-nav-icon"
-              style={getIconStyle()}
+              className="bottom-nav-icon"
               aria-hidden="true"
             />
-            <span 
-              className="mobile-nav-text"
-              style={getTextStyle()}
-            >
+            <span className="bottom-nav-text">
               {item.name}
             </span>
           </Link>

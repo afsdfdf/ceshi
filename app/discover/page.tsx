@@ -906,7 +906,7 @@ export default function DiscoverPage() {
 
   return (
     <div className={cn(
-      "min-h-screen transition-colors duration-300",
+      "min-h-screen pb-20 transition-colors duration-300",
       isDark ? "bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900" : "bg-gradient-to-br from-gray-50 via-white to-gray-50"
     )}>
       <EthereumProtection />
@@ -932,7 +932,7 @@ export default function DiscoverPage() {
             <div className="flex items-center gap-2 flex-1 max-w-md">
               {/* 搜索框 */}
               <div className="xai-search-container">
-                <div className={cn(
+      <div className={cn(
                   "relative backdrop-blur-sm border rounded-lg transition-all duration-300 h-9",
                   "hover:border-xai-purple/50 focus-within:border-xai-purple/50 focus-within:shadow-lg focus-within:shadow-xai-purple/25",
                   isDark ? "bg-card/60 border-border/40" : "bg-white/60 border-border/30"
@@ -976,7 +976,7 @@ export default function DiscoverPage() {
           <h1 className={cn(
             "text-lg font-semibold",
             isDark ? "text-white" : "text-gray-900"
-          )}>
+      )}>
             发现应用
           </h1>
           <div className={cn(
