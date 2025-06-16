@@ -7,74 +7,130 @@
   box-sizing: border-box;
 }
 
-/* 全局强制底部导航显示规则 - 最高优先级 */
-@media (max-width: 768px) {
-  /* 确保底部导航永远不会被任何规则隐藏 */
-  [class*="mobile-bottom-nav"],
-  nav[class*="mobile-bottom-nav"],
-  .mobile-bottom-nav,
-  nav.mobile-bottom-nav {
-    display: flex !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    position: fixed !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    z-index: 99999 !important;
-    transform: translateY(0) !important;
-    transition: none !important;
-    animation: none !important;
-  }
+/* 全局强制底部导航显示规则 - 最高优先级 - 所有设备 */
+/* 确保底部导航永远不会被任何规则隐藏 */
+[class*="mobile-bottom-nav"],
+nav[class*="mobile-bottom-nav"],
+.mobile-bottom-nav,
+nav.mobile-bottom-nav {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 99999 !important;
+  transform: translateY(0) !important;
+  transition: none !important;
+  animation: none !important;
 }
 
-/* 强制底部导航显示 - 覆盖所有可能的隐藏样式 */
-@media (max-width: 768px) {
-  .mobile-bottom-nav {
-    display: flex !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    transform: translateY(0) !important;
-    height: auto !important;
-    overflow: visible !important;
-    position: fixed !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    width: 100vw !important;
-    z-index: 99999 !important;
-    transition: none !important;
-    animation: none !important;
-  }
-  
-  /* 防止任何父元素隐藏底部导航 */
-  body .mobile-bottom-nav,
-  html .mobile-bottom-nav,
-  div .mobile-bottom-nav,
-  main .mobile-bottom-nav,
-  section .mobile-bottom-nav,
-  * .mobile-bottom-nav {
-    display: flex !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    transform: translateY(0) !important;
-    transition: none !important;
-    animation: none !important;
-  }
-  
-  /* 确保导航项也始终可见 */
-  .mobile-nav-item {
-    display: flex !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-  }
-  
-  .mobile-nav-icon,
-  .mobile-nav-text {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-  }
+/* 强制底部导航显示 - 覆盖所有可能的隐藏样式 - 所有设备 */
+.mobile-bottom-nav {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+  height: auto !important;
+  overflow: visible !important;
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100vw !important;
+  z-index: 99999 !important;
+  transition: none !important;
+  animation: none !important;
+}
+
+/* 防止任何父元素隐藏底部导航 */
+body .mobile-bottom-nav,
+html .mobile-bottom-nav,
+div .mobile-bottom-nav,
+main .mobile-bottom-nav,
+section .mobile-bottom-nav,
+* .mobile-bottom-nav {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+  transition: none !important;
+  animation: none !important;
+}
+
+/* 确保导航项也始终可见 - 所有设备 */
+.mobile-nav-item {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 8px 12px !important;
+  border-radius: 8px !important;
+  transition: all 0.2s ease !important;
+  cursor: pointer !important;
+  min-width: 60px !important;
+  text-decoration: none !important;
+  color: #666 !important;
+}
+
+.mobile-nav-icon,
+.mobile-nav-text {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.mobile-nav-icon {
+  width: 20px !important;
+  height: 20px !important;
+  margin-bottom: 4px !important;
+  transition: all 0.2s ease !important;
+}
+
+.mobile-nav-text {
+  font-size: 10px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+  line-height: 1 !important;
+}
+
+/* 暗色主题支持 */
+.dark .mobile-nav-item {
+  color: #999 !important;
+}
+
+/* 悬停和激活状态 */
+.mobile-nav-item:hover {
+  background: rgba(99, 102, 241, 0.1) !important;
+  transform: translateY(-2px) !important;
+  color: #6366f1 !important;
+}
+
+.mobile-nav-item:active {
+  transform: translateY(0) !important;
+}
+
+.mobile-nav-item.active,
+.mobile-nav-item.active:hover {
+  background: linear-gradient(135deg, 
+    rgba(99, 102, 241, 0.2), 
+    rgba(59, 130, 246, 0.2)
+  ) !important;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2) !important;
+  color: #6366f1 !important;
+}
+
+.mobile-nav-item.active .mobile-nav-icon,
+.mobile-nav-item:hover .mobile-nav-icon {
+  transform: scale(1.1) !important;
+}
+
+.mobile-nav-item.active .mobile-nav-text,
+.mobile-nav-item:hover .mobile-nav-text {
+  font-weight: 600 !important;
 }
 
 /* Navigation and Fixed Elements - Full Screen */
@@ -1507,4 +1563,47 @@ body {
     padding-left: 0 !important;
     padding-right: 0 !important;
   }
+}
+
+/* 全局底部导航空间保留 - 所有设备 */
+body {
+  padding-bottom: 80px !important; /* 为底部导航留出空间 */
+}
+
+.content-area,
+.page-wrapper,
+main,
+.container {
+  padding-bottom: 80px !important; /* 为底部导航留出空间 */
+}
+
+/* 桌面端稍微增加底部空间 */
+@media (min-width: 769px) {
+  body {
+    padding-bottom: 90px !important;
+  }
+  
+  .content-area,
+  .page-wrapper,
+  main,
+  .container {
+    padding-bottom: 90px !important;
+  }
+}
+
+/* 确保底部导航在所有设备上都显示 */
+.mobile-bottom-nav {
+  display: flex !important;
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100vw !important;
+  z-index: 99999 !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  transform: translateY(0) !important;
+  transition: none !important;
+  animation: none !important;
 } 
