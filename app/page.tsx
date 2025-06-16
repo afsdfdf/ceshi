@@ -85,24 +85,26 @@ export default function CryptoTracker() {
 
       {/* 主容器 */}
       <div className="relative z-10 w-full">
-        {/* 顶部区域 */}
-        <div className="xai-compact-header">
-          <div className="px-4 py-2 md:max-w-7xl md:mx-auto">
-            {/* 页头：左边LOGO，右边搜索框 */}
-            <div className="flex items-center justify-between gap-3">
-              {/* 左侧：XAI LOGO */}
-              <div className="flex items-center space-x-2 flex-shrink-0">
-                <div className="xai-header-logo">
-                  <div className="w-8 h-8 rounded-lg overflow-hidden shadow-lg">
-                    <LogoBase64 width={32} height={32} className="w-full h-full" />
+        {/* 固定顶部区域 - 包含页头、横幅和价格条 */}
+        <div className="fixed-header">
+          {/* 顶部页头 */}
+          <div className="xai-compact-header">
+            <div className="px-4 py-2 md:max-w-7xl md:mx-auto">
+              {/* 页头：左边LOGO，右边搜索框 */}
+              <div className="flex items-center justify-between gap-3">
+                {/* 左侧：XAI LOGO */}
+                <div className="flex items-center space-x-2 flex-shrink-0">
+                  <div className="xai-header-logo">
+                    <div className="w-8 h-8 rounded-lg overflow-hidden shadow-lg">
+                      <LogoBase64 width={32} height={32} className="w-full h-full" />
+                    </div>
+                  </div>
+                  <div className="hidden sm:block">
+                    <h1 className="text-lg font-bold gradient-text">XAI Finance</h1>
                   </div>
                 </div>
-                <div className="hidden sm:block">
-                  <h1 className="text-lg font-bold gradient-text">XAI Finance</h1>
-                </div>
-              </div>
-              
-                              {/* 右侧：搜索框、语言切换和主题切换 */}
+                
+                {/* 右侧：搜索框、语言切换和主题切换 */}
                 <div className="flex items-center gap-2 flex-1 max-w-md">
                   {/* 搜索框 */}
                   <div className="xai-search-container">
@@ -111,11 +113,11 @@ export default function CryptoTracker() {
                       "hover:border-xai-purple/50 focus-within:border-xai-purple/50 focus-within:shadow-lg focus-within:shadow-xai-purple/25",
                       isDark ? "bg-card/60 border-border/40" : "bg-white/60 border-border/30"
                     )}>
-            <SearchBar 
-              isDark={isDark} 
+                      <SearchBar 
+                        isDark={isDark} 
                         showLogo={false}
-              logoSize={40}
-              simplified={true}
+                        logoSize={40}
+                        simplified={true}
                         onResultSelect={handleTokenSelect}
                         placeholder={t.home.searchPlaceholder}
                       />
@@ -142,41 +144,40 @@ export default function CryptoTracker() {
                     )}
                   </Button>
                 </div>
+              </div>
             </div>
           </div>
-        </div>
-        
-        {/* 主要内容区域 */}
-        <div className="space-y-0">
+          
           {/* 横幅轮播区域 */}
           <div className="relative">
             <div className="md:px-4">
               <div className="md:max-w-7xl md:mx-auto">
                 <div className="absolute inset-0 bg-gradient-to-r from-xai-purple/20 via-xai-cyan/20 to-xai-green/20 blur-xl"></div>
                 <div className="relative">
-          <Banner 
-            banners={banners}
-            interval={5000}
-            showArrows={true}
-            showIndicators={true}
-            borderRadius={0}
-            className={cn(
-                      "overflow-hidden shadow-2xl card-hover",
+                  <Banner 
+                    banners={banners}
+                    interval={5000}
+                    showArrows={true}
+                    showIndicators={true}
+                    borderRadius={0}
+                    className={cn(
+                      "overflow-hidden shadow-2xl card-hover mobile-banner",
                       isDark ? "shadow-black/20" : "shadow-gray-200/50"
-            )}
-          />
+                    )}
+                  />
                 </div>
               </div>
             </div>
           </div>
           
-          {/* XAI价格组件 - 紧贴横幅和代币主题 */}
+          {/* XAI价格组件 - 紧贴横幅 */}
           <div className="relative">
             <XaiPriceBar darkMode={isDark} />
           </div>
-
-
+        </div>
         
+        {/* 主要内容区域 - 添加顶部边距避免被固定头部遮挡 */}
+        <div className="content-with-fixed-header">
           {/* 代币排行榜区域 - 手机模式下无边距 */}
           <div className="relative">
             <div className="md:px-4">
