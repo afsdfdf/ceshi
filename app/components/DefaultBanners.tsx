@@ -5,28 +5,28 @@ import { BannerItem } from "./Banner"
 import { cn } from "@/lib/utils"
 
 /**
- * 生成渐变背景的临时横幅组件
- * 注意：这只是临时解决方案，最终应替换为实际图片
+ * 生成演示横幅组件
+ * 使用网络图片或纯CSS绘制
  */
 export function generateDefaultBanners(): BannerItem[] {
   return [
     {
-      imageUrl: "/hf/hf.png",
-      link: "https://t.me/xai_2024chinese",
-      title: "加入XAI官方社区",
-      description: "与社区成员一起探讨XAI的最新动态"
+      imageUrl: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&h=200&fit=crop&crop=center",
+      link: "#demo1",
+      title: "加密货币交易",
+      description: "安全可靠的数字资产交易平台"
     },
     {
-      imageUrl: "/hf/fx.png",
-      link: "/discover",
-      title: "发现新机会",
-      description: "最新上线的代币和潜力项目"
+      imageUrl: "https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=400&h=200&fit=crop&crop=center",
+      link: "#demo2",
+      title: "区块链技术",
+      description: "探索去中心化金融的未来"
     },
     {
-      imageUrl: "/hf/sh.png",
-      link: "/chat",
-      title: "社区讨论",
-      description: "与其他投资者交流加密货币投资心得"
+      imageUrl: "https://images.unsplash.com/photo-1518186285589-2f7649de83e0?w=400&h=200&fit=crop&crop=center",
+      link: "#demo3",
+      title: "数字钱包",
+      description: "便捷的加密货币管理工具"
     }
   ];
 }
@@ -38,42 +38,48 @@ export function useThemedBanners(): BannerItem[] {
   const { resolvedTheme } = useTheme()
   const isDark = resolvedTheme === "dark"
   
-  // 特定的第一个横幅（Telegram链接）
-  const telegramBanner = {
-    imageUrl: "/hf/hf.png",
-    link: "https://t.me/xai_2024chinese",
-    title: "加入XAI官方社区",
-    description: "与社区成员一起探讨XAI的最新动态"
-  };
-  
-  // 发现新机会横幅
-  const discoverBanner = {
-    imageUrl: "/hf/fx.png",
-    link: "/discover",
-    title: "发现新机会",
-    description: "最新上线的代币和潜力项目"
-  };
-  
-  // 社区讨论横幅
-  const chatBanner = {
-    imageUrl: "/hf/sh.png",
-    link: "/chat",
-    title: "社区讨论",
-    description: "与其他投资者交流加密货币投资心得"
-  };
-  
-  // 根据主题选择不同的横幅样式
+  // 根据主题选择不同的横幅
   if (isDark) {
-    const darkBanners = generateDefaultBanners();
-    // 确保第一个是Telegram横幅
-    darkBanners[0] = telegramBanner;
-    return darkBanners;
-  } else {
-    // 浅色主题横幅
     return [
-      telegramBanner,
-      discoverBanner,
-      chatBanner
+      {
+        imageUrl: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&h=200&fit=crop&crop=center&sat=-50",
+        link: "#demo1",
+        title: "暗色主题交易",
+        description: "适合夜间使用的交易界面"
+      },
+      {
+        imageUrl: "https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=400&h=200&fit=crop&crop=center&sat=-50",
+        link: "#demo2",
+        title: "区块链探索",
+        description: "深色模式下的技术展示"
+      },
+      {
+        imageUrl: "https://images.unsplash.com/photo-1518186285589-2f7649de83e0?w=400&h=200&fit=crop&crop=center&sat=-50",
+        link: "#demo3",
+        title: "数字资产管理",
+        description: "专业的钱包管理界面"
+      }
+    ];
+  } else {
+    return [
+      {
+        imageUrl: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&h=200&fit=crop&crop=center&brightness=110",
+        link: "#demo1",
+        title: "明亮主题交易",
+        description: "清晰易读的交易界面"
+      },
+      {
+        imageUrl: "https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=400&h=200&fit=crop&crop=center&brightness=110",
+        link: "#demo2",
+        title: "技术创新",
+        description: "明亮模式下的技术展示"
+      },
+      {
+        imageUrl: "https://images.unsplash.com/photo-1518186285589-2f7649de83e0?w=400&h=200&fit=crop&crop=center&brightness=110",
+        link: "#demo3",
+        title: "便捷管理",
+        description: "用户友好的管理界面"
+      }
     ];
   }
 } 

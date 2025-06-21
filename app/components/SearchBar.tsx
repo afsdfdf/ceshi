@@ -297,7 +297,7 @@ export default function SearchBar({
       ) : (
         // 完整模式：显示LOGO和搜索框
         <div className="flex items-center gap-3">
-          {/* XAI Logo */}
+          {/* BNB Logo */}
           {showLogo && (
             <Link href="/" className="flex-shrink-0">
               <div className={cn(
@@ -307,13 +307,23 @@ export default function SearchBar({
               )}
                 style={{ width: logoSize, height: logoSize }}
               >
-                <Image
-                  src="/logo.png"
-                  alt="XAI Finance"
-                  width={logoSize}
-                  height={logoSize}
-                  className="object-cover"
-                />
+                <div 
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: "50%",
+                    background: "linear-gradient(135deg, #F3BA2F 0%, #F7931E 100%)",
+                    color: "white",
+                    fontSize: `${Math.max(logoSize * 0.4, 12)}px`,
+                    fontWeight: "bold",
+                    boxShadow: "0 2px 8px rgba(243, 186, 47, 0.3)"
+                  }}
+                >
+                  BNB
+                </div>
               </div>
             </Link>
           )}

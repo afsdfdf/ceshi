@@ -170,7 +170,7 @@ export default function CryptoTracker() {
             </div>
           </div>
           
-          {/* XAI价格组件 - 紧贴横幅和代币主题 */}
+          {/* 主流币价格组件 - 紧贴横幅和代币主题 */}
           <div className="relative">
             <XaiPriceBar darkMode={isDark} />
         </div>
